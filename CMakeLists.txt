@@ -28,7 +28,7 @@ MESSAGE(STATUS "BLAS Libraries: ${BLAS_LIBRARIES}")
 
 
 # Download and unpack googletest at configure time
-CONFIGURE_FILE(CMakeLists.gtest.txt googletest-download/CMakeLists.txt)
+# CONFIGURE_FILE(CMakeLists.gtest.txt googletest-download/CMakeLists.txt)
 EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
 	RESULT_VARIABLE result
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
