@@ -27,7 +27,7 @@ TEST(MultiGPUTest, ResultTest) {
 
 	PyObject * pModule1 = PyModule("column_merge");
 	PyObject * find_files = PyFunc(pModule1, "find_series_files");
-	PyObject * filename = PyTuple("s", "v.data");
+	PyObject * filename = PyTuple("s", "v.gpu.data");
 	PyObject * files = PyCall(find_files, filename);
 
 	PyObject * column_merge = PyObject_GetAttrString(pModule1, "column_merge");
@@ -35,7 +35,7 @@ TEST(MultiGPUTest, ResultTest) {
 
 	PyObject * pModule2 = PyModule("data_compare");
 	PyObject * column_sub = PyFunc(pModule2, "column_sub");
-	PyObject * delta = PyCall(column_sub, Py_BuildValue("ss", "v.data", "v_merge.data"));
+	PyObject * delta = PyCall(column_sub, Py_BuildValue("ss", "v.cpu.data", "v_merge.gpu.data"));
 	double res = PyFloat_AsDouble(delta);
 	ASSERT_LT(res, 1e-7);
 
@@ -85,10 +85,10 @@ int main(int argc, char **argv)
 	c.connect(pn0, pn1, weight0, delay, NULL, N*N);
 	c.connect(pn1, pn2, weight1, delay, NULL, N*N);
 
-	STSim sg(&c, 1.0e-3);
-	sg.run(0.1);
+	STSim st(&c, 1.0e-3);
+	st.run(0.1);
 	MGSim mg(&c, 1.0e-3);
-	mg.run_single(0.1);
+	mg.run(0.1);
 
 	if (!load) {
 		printf("SAVE DATA...\n");

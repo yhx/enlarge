@@ -37,12 +37,14 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 	GNetwork *pNetCPU = _network->buildNetwork(info);
 
 	FILE *v_file = openFile("v.cpu.data", "w+");
-	// FILE *input_e_file = openFile("input_e.cpu.data", "w+");
-	// FILE *input_i_file = openFile("input_i.cpu.data", "w+");
-	// FILE *ie_file = openFile("ie.cpu.data", "w+");
-	// FILE *ii_file = openFile("ii.cpu.data", "w+");
-	// FILE *fire_file = openFile("fire.cpu.log", "w+");
 	FILE *log_file = openFile("sim.cpu.log", "w+");
+#ifdef MY_DEBUG
+	FILE *input_e_file = openFile("input_e.cpu.data", "w+");
+	FILE *input_i_file = openFile("input_i.cpu.data", "w+");
+	FILE *ie_file = openFile("ie.cpu.data", "w+");
+	FILE *ii_file = openFile("ii.cpu.data", "w+");
+	FILE *fire_file = openFile("fire.cpu.log", "w+");
+#endif
 
 	int nTypeNum = pNetCPU->nTypeNum;
 	int sTypeNum = pNetCPU->sTypeNum;
@@ -76,6 +78,8 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 		//fflush(stdout);
 #ifdef LOG_DATA
 		int copy_idx = getIndex(pNetCPU->pNTypes, nTypeNum, LIF);
+#endif
+#ifdef MY_DEBUG
 		for (int i=pNetCPU->pNeuronNums[copy_idx]; i<pNetCPU->pNeuronNums[copy_idx+1]; i++) {
 			fprintf(input_e_file, "%.10lf \t", c_gNeuronInput[i]);
 		}

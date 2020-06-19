@@ -1,7 +1,7 @@
 
 #include <iostream>
 #include <string>
-#include <python3.6/Python.h>
+#include <Python.h>
 
 #include "utils.h"
 #include "python.h"
