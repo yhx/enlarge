@@ -1,7 +1,10 @@
 
 #include <iostream>
 #include <string>
-#include <python2.7/Python.h>
+#include <python3.6/Python.h>
+
+#include "utils.h"
+#include "python.h"
 
 using std::string;
 using std::cout;
@@ -10,7 +13,8 @@ using std::endl;
 int vision(float ** fire_rate, int argc, char **argv)
 {
 	Py_Initialize();
-	PySys_SetArgv(argc, argv);
+	wchar_t **argv_w = argv2argv_w(argv, argc);
+	PySys_SetArgv(argc, argv_w);
 
 	string path = "/home/yhx/BSim/script";
 	string chdir_cmd = string("sys.path.append(\"") + path + "\")";
@@ -18,7 +22,7 @@ int vision(float ** fire_rate, int argc, char **argv)
 	PyRun_SimpleString("import sys");
 	PyRun_SimpleString(cstr_cmd);
 
-	PyObject* moduleName = PyString_FromString("vision"); //模块名，不是文件名
+	PyObject* moduleName = PyUnicode_FromString("vision"); //模块名，不是文件名
 	PyObject* pModule = PyImport_Import(moduleName);
 	if (!pModule) // 加载模块失败
 	{
@@ -69,6 +73,8 @@ int vision(float ** fire_rate, int argc, char **argv)
 	}
 
 	Py_Finalize();  
+
+	free_argv_w(argv_w, argc);
 
 	return ret;
 }
