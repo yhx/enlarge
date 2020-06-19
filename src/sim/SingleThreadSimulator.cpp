@@ -37,11 +37,11 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 	GNetwork *pNetCPU = _network->buildNetwork(info);
 
 	FILE *v_file = openFile("v.cpu.data", "w+");
-	FILE *input_e_file = openFile("input_e.cpu.data", "w+");
-	FILE *input_i_file = openFile("input_i.cpu.data", "w+");
-	FILE *ie_file = openFile("ie.cpu.data", "w+");
-	FILE *ii_file = openFile("ii.cpu.data", "w+");
-	FILE *fire_file = openFile("fire.cpu.log", "w+");
+	// FILE *input_e_file = openFile("input_e.cpu.data", "w+");
+	// FILE *input_i_file = openFile("input_i.cpu.data", "w+");
+	// FILE *ie_file = openFile("ie.cpu.data", "w+");
+	// FILE *ii_file = openFile("ii.cpu.data", "w+");
+	// FILE *fire_file = openFile("fire.cpu.log", "w+");
 	FILE *log_file = openFile("sim.cpu.log", "w+");
 
 	int nTypeNum = pNetCPU->nTypeNum;

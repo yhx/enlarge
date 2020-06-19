@@ -97,12 +97,12 @@ void * run_thread_gpu(void *para) {
 	DistriNetwork *network = (DistriNetwork*)para;
 
 	char log_filename[512];
-	sprintf(log_filename, "sim_%d.log", network->_nodeIdx); 
+	sprintf(log_filename, "sim_%d.gpu.log", network->_nodeIdx); 
 	FILE *log_file = fopen(log_filename, "w+");
 	assert(log_file != NULL);
 
 	char v_filename[512];
-	sprintf(v_filename, "v_%d.data", network->_nodeIdx); 
+	sprintf(v_filename, "v_%d.gpu.data", network->_nodeIdx); 
 	FILE *v_file = fopen(v_filename, "w+");
 	assert(v_file != NULL);
 
@@ -288,7 +288,7 @@ void * run_thread_gpu(void *para) {
 	copyFromGPU<int>(rate, buffers->c_gFireCount, nodeNeuronNum);
 
 	char fire_filename[512];
-	sprintf(fire_filename, "fire_%d.count", network->_nodeIdx); 
+	sprintf(fire_filename, "fire_%d.gpu.count", network->_nodeIdx); 
 	FILE *rate_file = fopen(fire_filename, "w+");
 	if (rate_file == NULL) {
 		printf("Open file Sim.log failed\n");

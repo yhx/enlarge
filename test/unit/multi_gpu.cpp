@@ -85,7 +85,7 @@ int main(int argc, char **argv)
 	c.connect(pn0, pn1, weight0, delay, NULL, N*N);
 	c.connect(pn1, pn2, weight1, delay, NULL, N*N);
 
-	SGSim sg(&c, 1.0e-3);
+	STSim sg(&c, 1.0e-3);
 	sg.run(0.1);
 	MGSim mg(&c, 1.0e-3);
 	mg.run(0.1);
