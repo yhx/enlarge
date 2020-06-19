@@ -2,7 +2,28 @@
 
 #include <string.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include "python.h"
+
+wchar_t **argv2argv_w(char **argv, int argc)
+{
+	wchar_t **ret = (wchar_t **)PyMem_RawMalloc(sizeof(wchar_t *) * argc);
+	for (int i=0; i<argc; i++) {
+		ret[i] = Py_DecodeLocale(argv[i], NULL);
+	}
+
+	return ret;
+}
+
+void free_argv_w(wchar_t **argv_w, int argc)
+{
+	for (int i=0; i<argc; i++) {
+		PyMem_RawFree(argv_w[i]);
+		argv_w[i] = NULL;
+	}
+	PyMem_RawFree(argv_w);
+	argv_w = NULL;
+}
 
 void printPyErr() 
 {
@@ -52,7 +73,7 @@ PyObject * PyTuple(const char * types, ...)
 	}
 
 	va_list valist;
-	va_start(valist, num);
+	va_start(valist, types);
 	for (int i=0; i<num; i++) {
 		if (types[i] == 's') {
 			PyTuple_SetItem(tuple, i, PyUnicode_FromString(va_arg(valist, char *)));
