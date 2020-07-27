@@ -56,8 +56,8 @@ int freeNetworkGPU(GNetwork *);
 
 // MPI
 int copyNetwork(GNetwork *dNet, GNetwork *sNet, int rank, int rankSize);
-int mpiSendNetwork(GNetwork *network, int rank, int rankSize);
-int mpiRecvNetwork(GNetwork *network, int rank, int rankSize);
+int sendNetwork(GNetwork *network, int dest, int tag, MPI_Comm comm);
+GNetwork *recvNetwork(int src, int tag, MPI_Comm comm);
 
 
 // Other utils

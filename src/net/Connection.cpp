@@ -119,3 +119,61 @@ bool isEqualConnection(Connection *c1, Connection *c2)
 
 	return ret;
 }
+
+
+int sendConnection(Connection *conn, int dest, int tag, MPI_Comm comm)
+{
+	int ret = 0;
+	ret = MPI_Send(conn, sizeof(Connection), MPI_UNSIGNED_CHAR, dest, tag, comm);
+	assert(ret == MPI_SUCCESS);
+
+	int length = (conn->maxDelay - conn->minDelay + 1) * conn->nNum;
+
+	ret = MPI_Send(conn->pDelayStart, length, MPI_INT, dest+1, tag, comm);
+	assert(ret == MPI_SUCCESS);
+	ret = MPI_Send(conn->pDelayNum, length, MPI_INT, dest+2, tag, comm);
+	assert(ret == MPI_SUCCESS);
+
+	ret = MPI_Send(conn->pDelayStartRev, length, MPI_INT, dest+3, tag, comm);
+	assert(ret == MPI_SUCCESS);
+	ret = MPI_Send(conn->pDelayNumRev, length, MPI_INT, dest+4, tag, comm);
+	assert(ret == MPI_SUCCESS);
+
+	ret = MPI_Send(conn->pSidMapRev, conn->sNum, MPI_INT, dest+5, tag, comm);
+	assert(ret == MPI_SUCCESS);
+	
+	return ret;
+}
+
+Connection *recvConnection(int src, int tag, MPI_Comm comm)
+{
+	Connection *ret = (Connection *)malloc(sizeof(Connection));
+	MPI_Status status;
+	MPI_Recv(ret, sizeof(Connection), MPI_UNSIGNED_CHAR, src, tag, comm, &status);
+	assert(status.MPI_ERROR==MPI_SUCCESS);
+
+	int length = (ret->maxDelay - ret->minDelay + 1) * (ret->nNum);
+
+	ret->pDelayStart = (int *)malloc(sizeof(int) * length);
+	ret->pDelayNum = (int *)malloc(sizeof(int) * length);
+
+	MPI_Recv(ret->pDelayStart, length, MPI_INT, src, tag+1, comm, &status);
+	assert(status.MPI_ERROR==MPI_SUCCESS);
+	MPI_Recv(ret->pDelayNum, length, MPI_INT, src, tag+2, comm, &status);
+	assert(status.MPI_ERROR==MPI_SUCCESS);
+
+	ret->pDelayStartRev = (int *)malloc(sizeof(int) * length);
+	ret->pDelayNumRev = (int *)malloc(sizeof(int) * length);
+
+	MPI_Recv(ret->pDelayStartRev, length, MPI_INT, src, tag+3, comm, &status);
+	assert(status.MPI_ERROR==MPI_SUCCESS);
+	MPI_Recv(ret->pDelayNumRev, length, MPI_INT, src, tag+4, comm, &status);
+	assert(status.MPI_ERROR==MPI_SUCCESS);
+
+	ret->pSidMapRev = (int *)malloc(sizeof(int) * (ret->sNum));
+
+	MPI_Recv(ret->pSidMapRev, ret->sNum, MPI_INT, src, tag+5, comm, &status);
+	assert(status.MPI_ERROR==MPI_SUCCESS);
+
+	return ret;
+}

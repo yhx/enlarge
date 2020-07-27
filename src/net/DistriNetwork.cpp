@@ -57,3 +57,31 @@ void freeDistriNet(DistriNetwork * net)
 	}
 	free(net);
 }
+
+
+int sendDistriNet(DistriNetwork *network, int dest, int tag, MPI_Comm comm) 
+{
+	int ret = 0;
+	ret = MPI_Send(network, sizeof(DistriNetwork), MPI_UNSIGNED_CHAR, dest, tag, comm);
+	assert(ret == MPI_SUCCESS);
+	ret = sendGNetwork(network->_network, dest, tag+1, comm);
+	assert(ret == MPI_SUCCESS);
+	ret = sendMap(network->_crossnodeMap, dest, tag+NET_TAG, comm);
+	assert(ret == MPI_SUCCESS);
+	return MPI_SUCCESS;
+}
+
+DistriNetwork *recvDistriNet(int src, int tag, MPI_Comm comm) 
+{
+	DistriNetwork *ret = (DistriNetwork*)malloc(sizeof(DistriNetwork));
+	MPI_Status status;
+	MPI_Recv(ret, sizeof(DistriNetwork), MPI_UNSIGNED_CHAR, src, tag, comm, &status);
+	assert(status.MPI_ERROR==MPI_SUCCESS);
+	ret->_network = recvGNetwork(src, tag+1, comm);
+	assert(ret->_network != NULL);
+	ret->_crossnodeMap = recvMap(src, tag+NET_TAG);
+	assert(ret->_crossnodeMap != NULL);
+
+	return ret;
+}
+

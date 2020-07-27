@@ -771,6 +771,7 @@ CrossNodeMap* Network::arrangeCrossNodeMap(int n_num, int node_idx, int node_num
 {
 	CrossNodeMap* crossMap = (CrossNodeMap*)malloc(sizeof(CrossNodeMap));
 	assert(crossMap != NULL);
+	crossMap->_num = n_num;
 
 	crossMap->_idx2index = (int*)malloc(sizeof(int)*n_num);
 	assert(crossMap->_idx2index != NULL);

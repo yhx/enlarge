@@ -5,6 +5,7 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
 
+#include <mpi.h>
 #include <stdio.h>
 
 struct Connection {
@@ -36,6 +37,9 @@ int saveConnection(Connection *conn, FILE *f);
 Connection * loadConnection(FILE *f);
 
 bool isEqualConnection(Connection *c1, Connection *c2);
+
+int sendConnection(Connection *conn, int dest, int tag, MPI_Comm comm);
+Connection *recvConnection(int src, int tag, MPI_Comm comm);
 
 #endif /* CONNECTION_H */
 

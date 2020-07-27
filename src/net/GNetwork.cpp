@@ -171,82 +171,75 @@ int copyNetwork(GNetwork *dNet, GNetwork *sNet, int rank, int rankSize)
 }
 
 
-int mpiSendNetwork(GNetwork *network, int rank, int rankSize) 
+int sendNetwork(GNetwork *network, int dest, int tag, MPI_Comm comm) 
 {
-	//for (int idx = 0; idx < rankSize; idx++) {
-	//	if (idx == rank) {
-	//		continue;
-	//	}
+	int ret = 0;
+	ret = MPI_Send(network, sizeof(GNetwork), MPI_UNSIGNED_CHAR, dest, tag, comm);
+	assert(ret == MPI_SUCCESS);
+	ret = MPI_Send(network->pNTypes, sizeof(Type)*(network->nTypeNum), MPI_UNSIGNED_CHAR, dest, tag+1, comm);
+	assert(ret == MPI_SUCCESS);
+	ret = MPI_Send(network->pSTypes, sizeof(Type)*(network->sTypeNum), MPI_UNSIGNED_CHAR, dest, tag+2, comm);
+	assert(ret == MPI_SUCCESS);
 
-	//	printf("SERVER: %d SENDING...\n", rank);
-	//	for (int i=0; i<network->nTypeNum; i++) {
-	//		//int num_i = network->gNeuronNums[i+1] - network->gNeuronNums[i];
-	//		int size = num_i/rankSize;
-	//		int range = num_i%size;
+	ret = MPI_Send(network->pNeuronNums, network->nTypeNum+1, MPI_INT, dest, tag+3, comm);
+	assert(ret == MPI_SUCCESS);
+	ret = MPI_Send(network->pSynapseNums, network->sTypeNum+1, MPI_INT, dest, tag+4, comm);
+	assert(ret == MPI_SUCCESS);
 
-	//		//int nOffsets = 0;
-	//		if (idx <= range) {
-	//			//nOffsets = (size+1)*idx;
-	//		} else {
-	//			//nOffsets = (size+1)*range + size*(idx-range);
-	//		}
-	//		//Copy neurons
-	//		//MPI_Send(&nOffsets, 1, MPI_INT, idx, 2*idx*network->nTypeNum + i, MPI_COMM_WORLD);
-	//		//MPI_Send(&size, 1, MPI_INT, idx, 2*idx*network->nTypeNum + i + 1, MPI_COMM_WORLD);
-	//		//mpiSendType[network->nTypes[i]](network->pNeurons[i], idx, nOffsets, size);
-	//	}
-	//	printf("SERVER: %d SENDED NEURONS\n", rank);
-	//	for (int i=0; i<network->sTypeNum; i++) {
-	//		//int num_i = network->gSynapseNums[i+1] - network->gSynapseNums[i];
-	//		//int size = num_i/rankSize;
-	//		//int range = num_i%size;
+	int tag_t = tag+5;
+	for(int i=0; i<network->nTypeNum; i++) {
+		sendType[network->pNTypes[i]](network->ppNeurons, dest, tag_t, comm);
+		tag_t += TYPE_TAG;
+	}
+	for(int i=0; i<network->sTypeNum; i++) {
+		sendType[network->pSTypes[i]](network->ppSynapses, dest, tag_t, comm);
+		tag_t += TYPE_TAG;
+	}
 
-	//		//int sOffsets = 0;
-	//		//if (idx < range) {
-	//			sOffsets = (size+1)*range;
-	//		} else {
-	//			sOffsets = (size+1)*range + size*(idx-range);
-	//		}
-	//		MPI_Send(&sOffsets, 1, MPI_INT, idx, 2*idx*network->nTypeNum + i, MPI_COMM_WORLD);
-	//		MPI_Send(&size, 1, MPI_INT, idx, 2*idx*network->nTypeNum + i + 1, MPI_COMM_WORLD);
-	//		//Copy synapse
-	//		mpiSendType[network->sTypes[i]](network->pSynapses[i], idx, sOffsets, size);
-	//	}
-	//	printf("SERVER: %d SENDED SYNAPSES\n", rank);
-	//}
+	ret = sendConnection(network->pConnection, dest, tag_t+1, comm);
+	assert(ret == MPI_SUCCESS);
 
-	return 0;
+	return ret;
 }
 
-int mpiRecvNetwork(GNetwork *network, int rank, int rankSize) 
+GNetwork * mpiRecvNetwork(GNetwork *network, int src, int tag, MPI_Comm comm) 
 {
-	//MPI_Status Status;
-	//printf("SERVER: %d RECEIVING...\n", rank);
-	//for (int i=0; i<network->nTypeNum; i++) {
+	GNetwork *ret = (GNetwork*)malloc(sizeof(GNetwork));
+	MPI_Status status;
+	MPI_Recv(ret, sizeof(GNetwork), MPI_UNSIGNED_CHAR, src, tag, comm, &status);
+	assert(status.MPI_ERROR==MPI_SUCCESS);
 
-	//	int nOffsets = 0;
-	//	int size = 0;
+	ret->pNTypes = (Type *)malloc(sizeof(Type) * (ret->nTypeNum));
+	ret->pSTypes = (Type *)malloc(sizeof(Type) * (ret->sTypeNum));
 
-	//	MPI_Recv(&nOffsets, 1, MPI_INT, 0, 2*rank*network->nTypeNum + i, MPI_COMM_WORLD, &Status);
-	//	network->nOffsets[i] = nOffsets;
-	//	MPI_Recv(&size, 1, MPI_INT, 0, 2*rank*network->nTypeNum + i + 1, MPI_COMM_WORLD, &Status);
-	//	//Copy neurons
-	//	mpiRecvType[network->nTypes[i]](&(network->pNeurons[i]), 0, size);
-	//}
-	//printf("SERVER: %d RECEIVED NEURONS\n", rank);
-	//for (int i=0; i<network->sTypeNum; i++) {
-	//	int sOffsets = 0;
-	//	int size = 0;
+	MPI_Recv(ret->pNTypes, sizeof(Type)*(ret->nTypeNum), MPI_UNSIGNED_CHAR, src, tag+1, comm, &status);
+	assert(status.MPI_ERROR==MPI_SUCCESS);
+	MPI_Recv(ret->pSTypes, sizeof(Type)*(ret->sTypeNum), MPI_UNSIGNED_CHAR, src, tag+2, comm, &status);
+	assert(status.MPI_ERROR==MPI_SUCCESS);
 
-	//	MPI_Recv(&sOffsets, 1, MPI_INT, 0, 2*rank*network->nTypeNum + i, MPI_COMM_WORLD, &Status);
-	//	network->sOffsets[i] = sOffsets;
-	//	MPI_Recv(&size, 1, MPI_INT, 0, 2*rank*network->nTypeNum + i + 1, MPI_COMM_WORLD, &Status);
-	//	//Copy synapse
-	//	mpiRecvType[network->sTypes[i]](&(network->pSynapses[i]), 0, size);
-	//}
-	//printf("SERVER: %d RECEIVED SYNAPSES\n", rank);
+	ret->pNeuronNums = (int *)malloc(sizeof(int) * (ret->nTypeNum + 1));
+	ret->pSynapseNums = (int *)malloc(sizeof(int) * (ret->sTypeNum + 1));
 
-	return 0;
+	MPI_Recv(ret->pNeuronNums, ret->nTypeNum+1, MPI_INT, src, tag+3, comm, &status);
+	assert(status.MPI_ERROR==MPI_SUCCESS);
+	MPI_Recv(ret->pSynapseNums, ret->sTypeNum+1, MPI_INT, src, tag+4, comm, &status);
+	assert(status.MPI_ERROR==MPI_SUCCESS);
+
+	ret->ppNeurons = (void **)malloc(sizeof(void *) * (ret->nTypeNum));
+	ret->ppSynapses = (void **)malloc(sizeof(void *) * (ret->sTypeNum));
+
+	int tag_t = tag+5;
+	for(int i=0; i<network->nTypeNum; i++) {
+		ret->ppNeuron[i] = recvType[network->pNTypes[i]](network->ppNeurons, src, tag_t, comm);
+		tag_t += TYPE_TAG;
+	}
+	for(int i=0; i<network->sTypeNum; i++) {
+		ret->ppSynapse[i] = recvType[network->pSTypes[i]](network->ppSynapses, src, tag_t, comm);
+		tag_t += TYPE_TAG;
+	}
+
+	ret->pConnection = recvConnection(network->pConnection, dest, tag_t+1, comm);
+	return ret;
 }
 
 bool isEqualNetwork(GNetwork *n1, GNetwork *n2)
