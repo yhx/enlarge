@@ -13,8 +13,8 @@
 
 #include "GNetwork.h"
 
-GNetwork * deepcopyNetwork(GNetwork * net) {
-	GNetwork * ret = allocNetwork(net->nTypeNum, net->sTypeNum);
+GNetwork * deepcopyGNetwork(GNetwork * net) {
+	GNetwork * ret = allocGNetwork(net->nTypeNum, net->sTypeNum);
 
 	for (int i=0; i<net->nTypeNum; i++) {
 		ret->pNTypes[i] = net->pNTypes[i];
@@ -36,7 +36,7 @@ GNetwork * deepcopyNetwork(GNetwork * net) {
 	return ret;
 }
 
-GNetwork * allocNetwork(int nTypeNum, int sTypeNum) {
+GNetwork * allocGNetwork(int nTypeNum, int sTypeNum) {
 	GNetwork *ret = (GNetwork *)malloc(sizeof(GNetwork));
 	assert(ret != NULL);
 
@@ -126,7 +126,7 @@ GNetwork *loadGNetwork(const char *filename)
 	fread(&nTypeNum, sizeof(int), 1, f);
 	fread(&sTypeNum, sizeof(int), 1, f);
 
-	GNetwork * net = allocNetwork(nTypeNum, sTypeNum);
+	GNetwork * net = allocGNetwork(nTypeNum, sTypeNum);
 
 	// fread(&(net->maxDelay), sizeof(int), 1, f);
 	// fread(&(net->minDelay), sizeof(int), 1, f);
@@ -149,7 +149,7 @@ GNetwork *loadGNetwork(const char *filename)
 	return net;
 }
 
-int copyNetwork(GNetwork *dNet, GNetwork *sNet, int rank, int rankSize)
+int copyGNetwork(GNetwork *dNet, GNetwork *sNet, int rank, int rankSize)
 {
 	dNet->ppNeurons = sNet->ppNeurons;
 	dNet->ppSynapses = sNet->ppSynapses;
@@ -171,7 +171,7 @@ int copyNetwork(GNetwork *dNet, GNetwork *sNet, int rank, int rankSize)
 }
 
 
-int sendNetwork(GNetwork *network, int dest, int tag, MPI_Comm comm) 
+int sendGNetwork(GNetwork *network, int dest, int tag, MPI_Comm comm) 
 {
 	int ret = 0;
 	ret = MPI_Send(network, sizeof(GNetwork), MPI_UNSIGNED_CHAR, dest, tag, comm);
@@ -202,7 +202,7 @@ int sendNetwork(GNetwork *network, int dest, int tag, MPI_Comm comm)
 	return ret;
 }
 
-GNetwork * mpiRecvNetwork(GNetwork *network, int src, int tag, MPI_Comm comm) 
+GNetwork * recvGNetwork(int src, int tag, MPI_Comm comm) 
 {
 	GNetwork *ret = (GNetwork*)malloc(sizeof(GNetwork));
 	MPI_Status status;
@@ -229,20 +229,20 @@ GNetwork * mpiRecvNetwork(GNetwork *network, int src, int tag, MPI_Comm comm)
 	ret->ppSynapses = (void **)malloc(sizeof(void *) * (ret->sTypeNum));
 
 	int tag_t = tag+5;
-	for(int i=0; i<network->nTypeNum; i++) {
-		ret->ppNeuron[i] = recvType[network->pNTypes[i]](network->ppNeurons, src, tag_t, comm);
+	for(int i=0; i<ret->nTypeNum; i++) {
+		ret->ppNeurons[i] = recvType[ret->pNTypes[i]](src, tag_t, comm);
 		tag_t += TYPE_TAG;
 	}
-	for(int i=0; i<network->sTypeNum; i++) {
-		ret->ppSynapse[i] = recvType[network->pSTypes[i]](network->ppSynapses, src, tag_t, comm);
+	for(int i=0; i<ret->sTypeNum; i++) {
+		ret->ppSynapses[i] = recvType[ret->pSTypes[i]](src, tag_t, comm);
 		tag_t += TYPE_TAG;
 	}
 
-	ret->pConnection = recvConnection(network->pConnection, dest, tag_t+1, comm);
+	ret->pConnection = recvConnection(src, tag_t+1, comm);
 	return ret;
 }
 
-bool isEqualNetwork(GNetwork *n1, GNetwork *n2)
+bool isEqualGNetwork(GNetwork *n1, GNetwork *n2)
 {
 	bool ret = true;
 	ret = ret && (n1->nTypeNum == n2->nTypeNum);

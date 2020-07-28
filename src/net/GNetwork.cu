@@ -7,7 +7,7 @@
 #include "../gpu_utils/mem_op.h"
 #include "GNetwork.h"
 
-GNetwork* copyNetworkToGPU(GNetwork *pCpuNet)
+GNetwork* copyGNetworkToGPU(GNetwork *pCpuNet)
 {
 	if (pCpuNet == NULL) {
 		printf("NULL POINTER: GNETWORK\n");
@@ -17,7 +17,7 @@ GNetwork* copyNetworkToGPU(GNetwork *pCpuNet)
 	int nTypeNum = pCpuNet->nTypeNum;
 	int sTypeNum = pCpuNet->sTypeNum;
 
-	GNetwork *tmp = allocNetwork(nTypeNum, sTypeNum);
+	GNetwork *tmp = allocGNetwork(nTypeNum, sTypeNum);
 
 	// tmp->maxDelay = pCpuNet->maxDelay;
 	// tmp->minDelay = pCpuNet->minDelay;
@@ -48,7 +48,7 @@ GNetwork* copyNetworkToGPU(GNetwork *pCpuNet)
 	return tmp;
 }
 
-int fetchNetworkFromGPU(GNetwork *pCpuNet, GNetwork *pGpuNet)
+int fetchGNetworkFromGPU(GNetwork *pCpuNet, GNetwork *pGpuNet)
 {
 	if (pCpuNet == NULL || pGpuNet == NULL) {
 		printf("NULL POINTER: FETCH GNETWORK\n");
@@ -87,7 +87,7 @@ int fetchNetworkFromGPU(GNetwork *pCpuNet, GNetwork *pGpuNet)
 	return 0;
 }
 
-int freeNetworkGPU(GNetwork *pGpuNet)
+int freeGNetworkGPU(GNetwork *pGpuNet)
 {
 	GNetwork *pTmp = pGpuNet;
 
@@ -113,7 +113,7 @@ int freeNetworkGPU(GNetwork *pGpuNet)
 
 
 
-int checkNetworkGPU(GNetwork *g, GNetwork *c)
+int checkGNetworkGPU(GNetwork *g, GNetwork *c)
 {
 	int ret = -1;
 

@@ -3,6 +3,7 @@
 #define TRAUBMILESDATA_H
 
 #include <stdio.h>
+#include "mpi.h"
 
 #include "../../net/Connection.h"
 
@@ -52,7 +53,7 @@ int cudaTraubMilesParaToGPU(void *pCPU, void *pGPU, int num);
 int cudaTraubMilesParaFromGPU(void *pCPU, void *pGPU, int num);
 void cudaUpdateTraubMiles(Connection *conn, void *data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int num, int start_id, int t, BlockSize *pSize);
 
-int mpiSendTraubMiles(void *data, int rank, int offset, int size);
-int mpiRecvTraubMiles(void **data, int rank, int size);
+int sendTraubMiles(void *data, int dest, int tag, MPI_Comm comm);
+void * recvTraubMiles(int src, int tag, MPI_Comm comm);
 
 #endif /* TRAUBMILESDATA_H */

@@ -32,7 +32,7 @@ int MultiGPUSimulator::run_single(real time)
 	SimInfo info(_dt);
 	DistriNetwork *node_nets = _network->buildNetworks(info);
 	assert(node_nets != NULL);
-	CrossNodeDataGPU *gCrossDataGPU = _network->arrangeCrossNodeDataGPU(device_count);
+	CrossThreadDataGPU *gCrossDataGPU = _network->arrangeCrossThreadDataGPU(device_count);
 	assert(gCrossDataGPU != NULL);
 
 
@@ -73,7 +73,7 @@ int MultiGPUSimulator::run_single(real time)
 		assert(v_file != NULL);
 
 		GNetwork *pNetCPU = node_nets[d]._network;
-		c_pNetGPU[d] = copyNetworkToGPU(pNetCPU);
+		c_pNetGPU[d] = copyGNetworkToGPU(pNetCPU);
 
 		int nTypeNum = c_pNetGPU[d]->nTypeNum;
 		int sTypeNum = c_pNetGPU[d]->sTypeNum;
@@ -251,7 +251,7 @@ int MultiGPUSimulator::run_single(real time)
 		fclose(v_file[d]);
 
 		free_buffers(buffers[d]);
-		freeNetworkGPU(c_pNetGPU[d]);
+		freeGNetworkGPU(c_pNetGPU[d]);
 	}
 
 	return 0;

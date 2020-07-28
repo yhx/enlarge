@@ -42,7 +42,7 @@ __global__ void update_traubmiles(Connection *connection, TraubMilesData *data, 
 		real i = currentE[gnid] * (EE-v);
 		i += currentI[gnid] * (EI-v);
 
-		const bool oldSpike = (v >= 0);
+		// const bool oldSpike = (v >= 0);
 
 		for (int i=0; i<25; i++) {
            real iTmp = -(m*m*m*h*gNa*(v-ENa) + n*n*n*n*gK*(v-EK) + gl*(v-El)- i);
@@ -59,7 +59,7 @@ __global__ void update_traubmiles(Connection *connection, TraubMilesData *data, 
            v += iTmp/C*mDt;
 		}
 
-		bool spikeLikeEvent = false;
+		// bool spikeLikeEvent = false;
 
 		// data->pGNa[nid] = gNa;
 		// data->pENa[nid] = ENa;

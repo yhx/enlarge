@@ -6,8 +6,7 @@
 #define CONSTANT_H
 
 #include <stddef.h>
-
-#define MPI_CREAL MPI_FLOAT
+#include "mpi.h"
 
 #ifndef USE_DOUBLE
 typedef float real;
@@ -16,9 +15,9 @@ typedef double real;
 #endif
 
 #ifndef USE_DOUBLE
-typedef MPI_FLOAT MPI_U_REAL;
+#define MPI_U_REAL MPI_FLOAT
 #else
-typedef MPI_DOUBLE MPI_U_REAL;
+#define MPI_U_REAL MPI_DOUBLE
 #endif
 
 typedef int ID;

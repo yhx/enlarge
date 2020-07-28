@@ -3,9 +3,9 @@
 #include "Network.h"
 
 //Alloc cross device gmem, will set device to 0 before return
-CrossNodeDataGPU* Network::arrangeCrossNodeDataGPU(int node_num)
+CrossThreadDataGPU* Network::arrangeCrossThreadDataGPU(int node_num)
 {
-	CrossNodeDataGPU * cross_data = static_cast<CrossNodeDataGPU*>(malloc(sizeof(CrossNodeDataGPU)));
+	CrossThreadDataGPU * cross_data = static_cast<CrossThreadDataGPU*>(malloc(sizeof(CrossThreadDataGPU)));
 	assert(cross_data != NULL);
 
 	cross_data->_maxNum = static_cast<int*>(malloc(sizeof(int)*node_num*node_num));

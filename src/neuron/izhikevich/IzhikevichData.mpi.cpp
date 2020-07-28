@@ -2,15 +2,12 @@
 
 #include "IzhikevichData.h"
 
-int mpiSendIzhikevich(void *data, int rank, int offset, int size)
+int sendIzhikevich(void *data, int dest, int tag, MPI_Comm comm)
 {
 	return 0;
 }
 
-
-int mpiRecvIzhikevich(void **data, int rank, int size)
+void * recvIzhikevich(int src, int tag, MPI_Comm comm)
 {
-	return 0;
+	return NULL;
 }
-
-

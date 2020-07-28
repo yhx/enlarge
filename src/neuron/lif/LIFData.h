@@ -3,13 +3,15 @@
 #define LIFDATA_H
 
 #include <stdio.h>
+#include "mpi.h"
 
 #include "../../net/Connection.h"
-
 #include "../../utils/type.h"
 #include "../../utils/BlockSize.h"
 
 struct LIFData {
+	int num;
+
 	int *pRefracTime;
 	int *pRefracStep;
 
@@ -26,7 +28,6 @@ struct LIFData {
 	real *pC_e;
 	real *pC_m;
 	real *pC_i;
-
 };
 
 
@@ -51,7 +52,7 @@ int cudaLIFParaToGPU(void *pCPU, void *pGPU, int num);
 int cudaLIFParaFromGPU(void *pCPU, void *pGPU, int num);
 void cudaUpdateLIF(Connection *conn, void *data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int num, int start_id, int t, BlockSize *pSize);
 
-int mpiSendLIF(void *data, int rank, int offset, int size);
-int mpiRecvLIF(void **data, int rank, int size);
+int sendLIF(void *data, int dest, int tag, MPI_Comm comm);
+void * recvLIF(int src, int tag, MPI_Comm comm);
 
 #endif /* LIFDATA_H */

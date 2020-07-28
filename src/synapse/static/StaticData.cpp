@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "../../utils/utils.h"
 
@@ -21,6 +22,8 @@ void *mallocStatic()
 int allocStaticPara(void *pCPU, int num)
 {
 	StaticData *p = (StaticData*)pCPU;
+
+	p->num = num;
 
 	p->pDst = (int*)malloc(num*sizeof(int));
 	memset(p->pDst, 0, num*sizeof(int));
@@ -65,6 +68,13 @@ int saveStatic(void *pCPU, int num, FILE *f)
 {
 
 	StaticData *p = (StaticData*)pCPU;
+	assert(num <= p->num);
+	if (num <= 0) {
+		num = p->num;
+	}
+
+	fwrite(&(num), sizeof(int), 1, f);
+
 	fwrite(p->pDst, sizeof(int), num, f);
 
 	fwrite(p->pWeight, sizeof(real), num, f);
@@ -75,6 +85,10 @@ int saveStatic(void *pCPU, int num, FILE *f)
 void *loadStatic(int num, FILE *f)
 {
 	StaticData *p = (StaticData*)allocStatic(num);
+
+
+	fread(&(p->num), sizeof(int), 1, f);
+	assert(num == p->num);
 
 	fread(p->pDst, sizeof(int), num, f);
 

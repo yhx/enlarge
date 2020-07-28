@@ -23,7 +23,6 @@
 using std::cout;
 using std::endl;
 
-CrossNodeDataGPU * gCrossDataNet;
 
 SingleGPUSimulator::SingleGPUSimulator(Network *network, real dt) : Simulator(network, dt)
 {
@@ -53,7 +52,7 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 
 	//findCudaDevice(0, NULL);
 	checkCudaErrors(cudaSetDevice(0));
-	GNetwork *c_pNetGPU = copyNetworkToGPU(pNetCPU);
+	GNetwork *c_pNetGPU = copyGNetworkToGPU(pNetCPU);
 
 	int nTypeNum = c_pNetGPU->nTypeNum;
 	int sTypeNum = c_pNetGPU->sTypeNum;
@@ -63,7 +62,7 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 	printf("NeuronNum: %d, SynapseNum: %d\n", totalNeuronNum, totalSynapseNum);
 
 	int maxDelay = pNetCPU->pConnection->maxDelay;
-	int deltaDelay = pNetCPU->pConnection->maxDelay - pNetCPU->pConnection->minDelay + 1;
+	// int deltaDelay = pNetCPU->pConnection->maxDelay - pNetCPU->pConnection->minDelay + 1;
 	printf("maxDelay: %d minDelay: %d\n", pNetCPU->pConnection->maxDelay, pNetCPU->pConnection->minDelay);
 
 
@@ -247,7 +246,7 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 	closeFile(log_file);
 
 	free_buffers(buffers);
-	freeNetworkGPU(c_pNetGPU);
+	freeGNetworkGPU(c_pNetGPU);
 	freeGNetwork(pNetCPU);
 
 	return 0;
@@ -265,8 +264,8 @@ int SingleGPUSimulator::runMultiNets(real time, int parts, FireInfo &log) {
 	SimInfo info(_dt);
 	DistriNetwork *subnets = _network->buildNetworks(info);
 	assert(subnets != NULL);
-	CrossNodeDataGPU *crossData = _network->arrangeCrossNodeDataGPU(parts);
-	assert(crossData != NULL);
+	// CrossThreadDataGPU *crossData = _network->arrangeCrossThreadDataGPU(parts);
+	// assert(crossData != NULL);
 
 	GNetwork ** networks = (GNetwork **)malloc(sizeof(GNetwork *) * parts);
 	GBuffers **buffers = (GBuffers **)malloc(sizeof(GBuffers *) * parts);
@@ -279,7 +278,7 @@ int SingleGPUSimulator::runMultiNets(real time, int parts, FireInfo &log) {
 		subnets[i]._dt = _dt;
 
 		GNetwork *pNetCPU = subnets[i]._network;
-		networks[i] = copyNetworkToGPU(pNetCPU);
+		networks[i] = copyGNetworkToGPU(pNetCPU);
 		GNetwork *c_pNetGPU = networks[i];
 
 		int nTypeNum = c_pNetGPU->nTypeNum;
@@ -319,7 +318,7 @@ int SingleGPUSimulator::runMultiNets(real time, int parts, FireInfo &log) {
 	}
 
 	for (int i=0; i<parts; i++) {
-		freeNetworkGPU(networks[i]);
+		freeGNetworkGPU(networks[i]);
 		free_buffers(buffers[i]);
 	}
 

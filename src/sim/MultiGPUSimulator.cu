@@ -1,5 +1,4 @@
 /* This program is writen by qp09.
- * usually just for fun.
  * Sat October 24 2015
  */
 
@@ -24,7 +23,7 @@ using std::endl;
 
 pthread_barrier_t gpuCycleBarrier;
 
-CrossNodeDataGPU * gCrossDataGPU;
+CrossThreadDataGPU * gCrossDataGPU;
 
 MultiGPUSimulator::MultiGPUSimulator(Network *network, real dt) : Simulator(network, dt)
 {
@@ -66,7 +65,7 @@ int MultiGPUSimulator::run(real time, FireInfo &log)
 	SimInfo info(_dt);
 	DistriNetwork *node_nets = _network->buildNetworks(info);
 	assert(node_nets != NULL);
-	gCrossDataGPU = _network->arrangeCrossNodeDataGPU(device_count);
+	gCrossDataGPU = _network->arrangeCrossThreadDataGPU(device_count);
 	assert(gCrossDataGPU != NULL);
 
 	pthread_t *thread_ids = (pthread_t *)malloc(sizeof(pthread_t) * device_count);
@@ -109,7 +108,7 @@ void * run_thread_gpu(void *para) {
 	checkCudaErrors(cudaSetDevice(network->_nodeIdx));
 
 	GNetwork *pNetCPU = network->_network;
-	GNetwork *c_pNetGPU = copyNetworkToGPU(pNetCPU);
+	GNetwork *c_pNetGPU = copyGNetworkToGPU(pNetCPU);
 
 	int nTypeNum = c_pNetGPU->nTypeNum;
 	int sTypeNum = c_pNetGPU->sTypeNum;
@@ -306,7 +305,7 @@ void * run_thread_gpu(void *para) {
 	fclose(v_file);
 
 	free_buffers(buffers);
-	freeNetworkGPU(c_pNetGPU);
+	freeGNetworkGPU(c_pNetGPU);
 
 	return NULL;
 }

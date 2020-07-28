@@ -17,8 +17,8 @@ public:
 	// virtual int single_run(real time);
 	int init(int argc, char**argv);
 protected:
-	int rank;
-	int rankSize;
+	int node_id;
+	int node_num;
 };
 
 #endif /* MULTIGPUSIMULATOR_H */

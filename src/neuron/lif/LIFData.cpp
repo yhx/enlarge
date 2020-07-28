@@ -1,5 +1,7 @@
+
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "../../utils/utils.h"
 
@@ -21,6 +23,8 @@ void *mallocLIF()
 int allocLIFPara(void *pCPU, int num)
 {
 	LIFData *p = (LIFData*)pCPU;
+
+	p->num = num;
 
 	p->pRefracTime = (int*)malloc(num*sizeof(int));
 	memset(p->pRefracTime, 0, num*sizeof(int));
@@ -67,6 +71,8 @@ void *allocLIF(int num)
 int freeLIFPara(void *pCPU)
 {
 	LIFData *p = (LIFData*)pCPU;
+
+	p->num = 0;
 
 	free(p->pRefracTime);
 	p->pRefracTime = NULL;
@@ -117,6 +123,12 @@ int saveLIF(void *pCPU, int num, FILE *f)
 {
 
 	LIFData *p = (LIFData*)pCPU;
+	assert(num <= p->num);
+	if (num <= 0)
+		num = p->num;
+
+	fwrite(&num, sizeof(int), 1, f);
+
 	fwrite(p->pRefracTime, sizeof(int), num, f);
 	fwrite(p->pRefracStep, sizeof(int), num, f);
 
@@ -140,6 +152,10 @@ int saveLIF(void *pCPU, int num, FILE *f)
 void *loadLIF(int num, FILE *f)
 {
 	LIFData *p = (LIFData*)allocLIF(num);
+
+	fread(&(p->num), sizeof(int), 1, f);
+
+	assert(num == p->num);
 
 	fread(p->pRefracTime, sizeof(int), num, f);
 	fread(p->pRefracStep, sizeof(int), num, f);
@@ -166,7 +182,7 @@ bool isEqualLIF(void *p1, void *p2, int num)
 	LIFData *t1 = (LIFData*)p1;
 	LIFData *t2 = (LIFData*)p2;
 
-	bool ret = true;
+	bool ret = t1->num == t2->num;
 	ret = ret && isEqualArray(t1->pRefracTime, t2->pRefracTime, num);
 	ret = ret && isEqualArray(t1->pRefracStep, t2->pRefracStep, num);
 

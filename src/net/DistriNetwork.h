@@ -4,6 +4,7 @@
 
 #include "GNetwork.h"
 #include "CrossNodeMap.h"
+#include "CrossThreadData.h"
 
 struct DistriNetwork {
 	int _simCycle;
@@ -12,7 +13,6 @@ struct DistriNetwork {
 	real _dt;
 	GNetwork * _network;
 	CrossNodeMap *_crossnodeMap;
-	//CrossNodeData *_crossnodeData;
 };
 
 // Pointers inited to NULL, specific funcs in MultiNetwork will deal with these pointers later 

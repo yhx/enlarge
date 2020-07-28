@@ -556,9 +556,9 @@ void Network::logMap() {
 	//}
 }
 
-CrossNodeData* Network::arrangeCrossNodeData(int node_num)
+CrossThreadData* Network::arrangeCrossThreadData(int node_num)
 {
-	CrossNodeData * cross_data = (CrossNodeData*)malloc(sizeof(CrossNodeData) * node_num * node_num);
+	CrossThreadData * cross_data = (CrossThreadData*)malloc(sizeof(CrossThreadData) * node_num * node_num);
 	assert(cross_data != NULL);
 
 	for (int i=0; i<_nodeNum; i++) {
@@ -626,7 +626,7 @@ GNetwork* Network::arrangeData(int nodeIdx, const SimInfo &info) {
 	int nTypeNum = _globalNTypeNum[nodeIdx].size();
 	int sTypeNum = _globalSTypeNum[nodeIdx].size();
 
-	GNetwork * net = allocNetwork(nTypeNum, sTypeNum);
+	GNetwork * net = allocGNetwork(nTypeNum, sTypeNum);
 
 	int maxDelaySteps = static_cast<int>(round(_maxDelay/info.dt));
 	int minDelaySteps = static_cast<int>(round(_minDelay/info.dt));

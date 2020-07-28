@@ -21,14 +21,6 @@ DistriNetwork* initDistriNet(int num, real dt)
 
 		ret_net[i]._network = NULL;
 		ret_net[i]._crossnodeMap = NULL; 
-
-		//ret_net[i]._crossnode_data = (CrossNodeData*)malloc(sizeof(CrossNodeData)*num);
-		//assert(ret_net[i]._crossnode_data != NULL);
-		//for (int j=0; j<num; j++) {
-		//	ret_net[i]._crossnode_data[j]._max_n_num = 0;
-		//	ret_net[i]._crossnode_data[j]._fired_n_num = 0;
-		//	ret_net[i]._crossnode_data[j]._fired_n_idxs = NULL;
-		//}
 	}
 
 	return ret_net;
@@ -38,13 +30,6 @@ void freeDistriNet(DistriNetwork * net)
 {
 	int num = net->_nodeNum;
 	for (int i=0; i<num; i++) {
-		//if (net[i]._crossnode_data != NULL) {
-		//	for (int j=0; j<num; j++) {
-		//		free(net[i]._crossnode_data[j]._fired_n_idxs);
-		//	}
-		//	free(net[i]._crossnode_data);
-		//	net[i]._crossnode_data = NULL;
-		//}
 
 		if (net[i]._crossnodeMap != NULL) {
 			free(net[i]._crossnodeMap->_idx2index);
@@ -79,7 +64,7 @@ DistriNetwork *recvDistriNet(int src, int tag, MPI_Comm comm)
 	assert(status.MPI_ERROR==MPI_SUCCESS);
 	ret->_network = recvGNetwork(src, tag+1, comm);
 	assert(ret->_network != NULL);
-	ret->_crossnodeMap = recvMap(src, tag+NET_TAG);
+	ret->_crossnodeMap = recvMap(src, tag+NET_TAG, comm);
 	assert(ret->_crossnodeMap != NULL);
 
 	return ret;

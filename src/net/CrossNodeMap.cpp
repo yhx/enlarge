@@ -1,4 +1,7 @@
 
+#include <stdlib.h>
+#include <assert.h>
+
 #include "CrossNodeMap.h"
 
 int sendMap(CrossNodeMap *map_, int dest, int tag, MPI_Comm comm) 

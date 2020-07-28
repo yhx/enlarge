@@ -3,6 +3,7 @@
 #define STATICDATA_H
 
 #include <stdio.h>
+#include "mpi.h"
 
 #include "../../net/Connection.h"
 
@@ -10,10 +11,10 @@
 #include "../../utils/BlockSize.h"
 
 struct StaticData {
+	int num;
+
 	int *pDst;
-
 	real *pWeight;
-
 };
 
 
@@ -38,7 +39,7 @@ int cudaStaticParaToGPU(void *pCPU, void *pGPU, int num);
 int cudaStaticParaFromGPU(void *pCPU, void *pGPU, int num);
 void cudaUpdateStatic(Connection *conn, void *data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int num, int start_id, int t, BlockSize *pSize);
 
-int mpiSendStatic(void *data, int rank, int offset, int size);
-int mpiRecvStatic(void **data, int rank, int size);
+int sendStatic(void *data, int dest, int tag, MPI_Comm comm);
+void * recvStatic(int src, int tag, MPI_Comm comm);
 
 #endif /* STATICDATA_H */

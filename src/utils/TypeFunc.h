@@ -6,6 +6,8 @@
 #define TYPEFUNC_H
 
 #include <stdio.h>
+#include "mpi.h"
+
 #include "type.h"
 #include "../net/Connection.h"
 #include "BlockSize.h"
@@ -32,8 +34,8 @@ extern int (*cudaFreeType[TYPESIZE])(void *);
 // extern void (*cudaUpdateSynapse[TYPESIZE])(void *, void *, real *, real *, int *, int*, int, int, int, BlockSize *);
 extern void (*cudaUpdateType[TYPESIZE])(Connection *, void *, real *, real *, int *, int*, int, int, int, BlockSize *);
 
-extern int (*mpiSendType[TYPESIZE])(void *data, int rank, int offset, int size);
-extern int (*mpiRecvType[TYPESIZE])(void **data, int rank, int size);
+extern int (*sendType[TYPESIZE])(void *data, int dest, int tag, MPI_Comm comm);
+extern void * (*recvType[TYPESIZE])(int src, int tag, MPI_Comm comm);
 
 extern BlockSize * getBlockSize(int nSize, int sSize);
 

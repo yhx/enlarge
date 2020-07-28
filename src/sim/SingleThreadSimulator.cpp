@@ -54,7 +54,7 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 	printf("NeuronNum: %d, SynapseNum: %d\n", totalNeuronNum, totalSynapseNum);
 
 	int maxDelay = pNetCPU->pConnection->maxDelay;
-	int deltaDelay = pNetCPU->pConnection->maxDelay - pNetCPU->pConnection->minDelay + 1;
+	// int deltaDelay = pNetCPU->pConnection->maxDelay - pNetCPU->pConnection->minDelay + 1;
 	printf("maxDelay: %d minDelay: %d\n", pNetCPU->pConnection->maxDelay, pNetCPU->pConnection->minDelay);
 
 	cFiredTableCap = totalNeuronNum;

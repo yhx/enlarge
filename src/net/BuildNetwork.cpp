@@ -49,7 +49,7 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 	int minDelaySteps = static_cast<int>(round(_minDelay/info.dt));
 	int deltaDelay = maxDelaySteps - minDelaySteps + 1;
 
-	GNetwork * ret = allocNetwork(neuronTypeNum, synapseTypeNum);
+	GNetwork * ret = allocGNetwork(neuronTypeNum, synapseTypeNum);
 
 	for (int i=0; i<neuronTypeNum; i++) {
 		ret->pNTypes[i] = _nTypes[i];

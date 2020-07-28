@@ -54,7 +54,7 @@ TEST(ConnectionAPITest, SynapseTemplTest) {
 	DistriNetwork *n0 = c0.buildNetworks(SimInfo(1.0e-4));
 	DistriNetwork *n1 = c1.buildNetworks(SimInfo(1.0e-4));
 
-	ASSERT_TRUE(isEqualNetwork(n0->_network, n1->_network));
+	ASSERT_TRUE(isEqualGNetwork(n0->_network, n1->_network));
 
 }
 

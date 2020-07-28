@@ -39,8 +39,8 @@ struct GNetwork {
 
 // init and free
 // This func just set pConnection to NULL
-GNetwork * allocNetwork(int nTypeNum, int sTypeNum);
-GNetwork * deepcopyNetwork(GNetwork *net);
+GNetwork * allocGNetwork(int nTypeNum, int sTypeNum);
+GNetwork * deepcopyGNetwork(GNetwork *net);
 // TODO freeGNetwork
 void freeGNetwork(GNetwork * network);
 
@@ -50,19 +50,19 @@ GNetwork *loadGNetwork(const char *filename);
 
 // Transfer GNetwork between CPU and GPU
 // Only copy inside data arrays to GPU, the info data is left on CPU
-GNetwork* copyNetworkToGPU(GNetwork *);
-int fetchNetworkFromGPU(GNetwork *, GNetwork*);
-int freeNetworkGPU(GNetwork *);
+GNetwork* copyGNetworkToGPU(GNetwork *);
+int fetchGNetworkFromGPU(GNetwork *, GNetwork*);
+int freeGNetworkGPU(GNetwork *);
 
 // MPI
-int copyNetwork(GNetwork *dNet, GNetwork *sNet, int rank, int rankSize);
-int sendNetwork(GNetwork *network, int dest, int tag, MPI_Comm comm);
-GNetwork *recvNetwork(int src, int tag, MPI_Comm comm);
+int copyGNetwork(GNetwork *dNet, GNetwork *sNet, int rank, int rankSize);
+int sendGNetwork(GNetwork *network, int dst, int tag, MPI_Comm comm);
+GNetwork * recvGNetwork(int src, int tag, MPI_Comm comm);
 
 
 // Other utils
-bool isEqualNetwork(GNetwork *n1, GNetwork *n2);
-int printNetwork(GNetwork *net, int rank = 0);
+bool isEqualGNetwork(GNetwork *n1, GNetwork *n2);
+int printGNetwork(GNetwork *net, int rank = 0);
 
 #endif /* GNETWORK_H */
 

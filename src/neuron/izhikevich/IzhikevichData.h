@@ -3,6 +3,7 @@
 #define IZHIKEVICHDATA_H
 
 #include <stdio.h>
+#include "mpi.h"
 
 #include "../../net/Connection.h"
 
@@ -42,7 +43,7 @@ int cudaIzhikevichParaToGPU(void *pCPU, void *pGPU, int num);
 int cudaIzhikevichParaFromGPU(void *pCPU, void *pGPU, int num);
 void cudaUpdateIzhikevich(Connection *conn, void *data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int num, int start_id, int t, BlockSize *pSize);
 
-int mpiSendIzhikevich(void *data, int rank, int offset, int size);
-int mpiRecvIzhikevich(void **data, int rank, int size);
+int sendIzhikevich(void *data, int dest, int tag, MPI_Comm comm);
+void * recvIzhikevich(int src, int tag, MPI_Comm comm);
 
 #endif /* IZHIKEVICHDATA_H */

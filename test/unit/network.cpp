@@ -136,7 +136,7 @@ TEST(NetworkTest, BuildTest1) {
 	SimInfo info(1e-4);
 	DistriNetwork* n1 = network->buildNetworks(info);
 	GNetwork * n2 = network->buildNetwork(info);
-	ASSERT_TRUE(isEqualNetwork(n1->_network, n2));
+	ASSERT_TRUE(isEqualGNetwork(n1->_network, n2));
 }
 
 TEST(NetworkTest, BuildTest2) {
@@ -393,7 +393,7 @@ TEST(NetworkTest, BuildTest2) {
 TEST(NetworkTest, SaveLoadTest) {
 	saveGNetwork(net, "tmp.net");
 	GNetwork *t = loadGNetwork("tmp.net");
-	ASSERT_TRUE(isEqualNetwork(net, t));
+	ASSERT_TRUE(isEqualGNetwork(net, t));
 }
 
 TEST(NetworkTest, RunTest) {

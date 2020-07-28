@@ -74,10 +74,15 @@ Connection * loadConnection(FILE *f)
 {
 	Connection *conn = (Connection *)malloc(sizeof(Connection));
 
-	fread(&(conn->nNum), sizeof(int), 1, f);
-	fread(&(conn->sNum), sizeof(int), 1, f);
-	fread(&(conn->maxDelay), sizeof(int), 1, f);
-	fread(&(conn->minDelay), sizeof(int), 1, f);
+	int ret = 0;
+	ret = fread(&(conn->nNum), sizeof(int), 1, f);
+	assert(ret == 1);
+	ret = fread(&(conn->sNum), sizeof(int), 1, f);
+	assert(ret == 1);
+	ret = fread(&(conn->maxDelay), sizeof(int), 1, f);
+	assert(ret == 1);
+	ret = fread(&(conn->minDelay), sizeof(int), 1, f);
+	assert(ret == 1);
 
 	int length = (conn->maxDelay - conn->minDelay + 1) * conn->nNum;
 
@@ -88,12 +93,17 @@ Connection * loadConnection(FILE *f)
 	conn->pDelayNumRev = (int*)malloc(sizeof(int)*length);
 	conn->pSidMapRev = (int*)malloc(sizeof(int)*conn->sNum);
 
-	fread(conn->pDelayStart, sizeof(int), length, f);
-	fread(conn->pDelayNum, sizeof(int), length, f);
+	ret = fread(conn->pDelayStart, sizeof(int), length, f);
+	assert(ret == length);
+	ret = fread(conn->pDelayNum, sizeof(int), length, f);
+	assert(ret == length);
 
-	fread(conn->pDelayStartRev, sizeof(int), length, f);
-	fread(conn->pDelayNumRev, sizeof(int), length, f);
-	fread(conn->pSidMapRev, sizeof(int), conn->sNum, f);
+	ret = fread(conn->pDelayStartRev, sizeof(int), length, f);
+	assert(ret == length);
+	ret = fread(conn->pDelayNumRev, sizeof(int), length, f);
+	assert(ret == length);
+	ret = fread(conn->pSidMapRev, sizeof(int), conn->sNum, f);
+	assert(ret == conn->sNum);
 
 	return conn;
 }

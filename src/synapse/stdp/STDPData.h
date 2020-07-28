@@ -45,7 +45,7 @@ int cudaSTDPParaToGPU(void *pCPU, void *pGPU, int num);
 int cudaSTDPParaFromGPU(void *pCPU, void *pGPU, int num);
 void cudaUpdateSTDP(Connection *conn, void *data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int num, int start_id, int t, BlockSize *pSize);
 
-int mpiSendSTDP(void *data, int rank, int offset, int size);
-int mpiRecvSTDP(void **data, int rank, int size);
+int sendSTDP(void *data, int dst, int tag, MPI_Comm comm);
+void * recvSTDP(int src, int tag, MPI_Comm comm);
 
 #endif /* STDPDATA_H */

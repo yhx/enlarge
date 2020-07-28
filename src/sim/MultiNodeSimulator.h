@@ -16,8 +16,8 @@ public:
 	virtual int run(real time, FireInfo &log);
 	int init(int argc, char**argv);
 protected:
-	int rank;
-	int rankSize;
+	int node_id;
+	int node_num;
 };
 
 #endif /* MULTIGPUSIMULATOR_H */
