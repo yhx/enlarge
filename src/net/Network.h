@@ -77,8 +77,13 @@ public:
 	void logMap();
 
 	DistriNetwork * buildNetworks(const SimInfo &info, bool auto_splited = true);
+
 	CrossThreadData* arrangeCrossThreadData(int node_num);
 	CrossThreadDataGPU* arrangeCrossThreadDataGPU(int node_num);
+
+	CrossNodeData * arrangeCrossThreadData(int node_num);
+
+
 
 private:
 	void mapIDtoIdx(GNetwork *net);

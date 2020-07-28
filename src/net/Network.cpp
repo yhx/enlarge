@@ -595,6 +595,42 @@ CrossThreadData* Network::arrangeCrossThreadData(int node_num)
 	return cross_data;
 }
 
+CrossNodeData* Network::arrangeCrossNodeData(int node_num)
+{
+	CrossNodeData * cross_data = (CrossNodeData*)malloc(sizeof(CrossNodeData) * node_num);
+	assert(cross_data != NULL);
+
+	for (int i=0; i<node_num; i++) {
+		cross_data[i]._send_offset[0] = 0;
+		for (int j=0; j<node_num; j++) {
+
+			int count = 0;
+			for (auto iter = _crossnodeNeuronsSend[i].begin(); iter != _crossnodeNeuronsSend[i].end(); iter++) {
+				if (_crossnodeNeuronsRecv[j].find(*iter) != _crossnodeNeuronsRecv[j].end()) {
+					count++;
+				}
+			}
+			cross_data[i]._send_offset[j+1] = cross_data[i]._send_offset[j] + count;
+		}
+		cross_data[i]._send_data = (int*)malloc(sizeof(int)*(cross_data[i]._send_offset[node_num]));
+		assert(cross_data[i]._send_data != NULL || cross_data[i]._send_offset[node_num] == 0);
+	}
+
+
+	for (int i=0; i<node_num; i++) {
+		cross_data[i]._recv_offset[0] = 0;
+		assert(0 ==  cross_data[i]._send_offset[i+1] - cross_data[i]._send_offset[i]; 
+		for (int j=0; j<node_num; j++) {
+			int count_t = cross_data[j]._send_offset[i+1] - cross_data[j]._send_offset[i]; 
+			cross_data[i]._recv_offset[j+1] = cross_data[i]._recv_offset[j] + count_t;
+		}
+		cross_data[i]._recv_data = (int*)malloc(sizeof(int)*(cross_data[i]._recv_offset[node_num]));
+		assert(cross_data[i]._recv_data != NULL || cross_data[i]._recv_offset[node_num] == 0);
+	}
+
+	return cross_data;
+}
+
 void Network::countTypeNum() 
 {
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end();  pIter++) {
