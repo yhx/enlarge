@@ -612,8 +612,8 @@ CrossNodeData* Network::arrangeCrossNodeData(int node_num)
 			}
 			cross_data[i]._send_offset[j+1] = cross_data[i]._send_offset[j] + count;
 		}
-		cross_data[i]._send_data = (int*)malloc(sizeof(int)*(cross_data[i]._send_offset[node_num]));
-		assert(cross_data[i]._send_data != NULL || cross_data[i]._send_offset[node_num] == 0);
+		// cross_data[i]._send_data = (int*)malloc(sizeof(int)*(cross_data[i]._send_offset[node_num]));
+		// assert(cross_data[i]._send_data != NULL || cross_data[i]._send_offset[node_num] == 0);
 	}
 
 
@@ -624,8 +624,8 @@ CrossNodeData* Network::arrangeCrossNodeData(int node_num)
 			int count_t = cross_data[j]._send_offset[i+1] - cross_data[j]._send_offset[i]; 
 			cross_data[i]._recv_offset[j+1] = cross_data[i]._recv_offset[j] + count_t;
 		}
-		cross_data[i]._recv_data = (int*)malloc(sizeof(int)*(cross_data[i]._recv_offset[node_num]));
-		assert(cross_data[i]._recv_data != NULL || cross_data[i]._recv_offset[node_num] == 0);
+		// cross_data[i]._recv_data = (int*)malloc(sizeof(int)*(cross_data[i]._recv_offset[node_num]));
+		// assert(cross_data[i]._recv_data != NULL || cross_data[i]._recv_offset[node_num] == 0);
 	}
 
 	return cross_data;

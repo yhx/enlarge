@@ -31,9 +31,9 @@ const int DECAY_MULTIPLE_TAU = 5;
 
 const int DATA_TAG = 0x80000000;
 const int MSG_TAG = 0;
-const int DNET_TAG = 100000;
-const int NET_TAG = 10000;
-const int TYPE_TAG = 100;
+const int DNET_TAG = 1000000;
+const int NET_TAG = 100000;
+const int TYPE_TAG = 1000;
 
 #endif /* CONSTANT_H */
 

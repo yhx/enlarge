@@ -32,7 +32,7 @@ MultiNodeSimulator::~MultiNodeSimulator()
 {
 }
 
-int run_node_gpu(DistriNetwork *network) {
+int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 	char log_filename[512];
 	sprintf(log_filename, "sim_%d.gpu.log", network->_nodeIdx); 
 	FILE *log_file = fopen(log_filename, "w+");
@@ -47,6 +47,8 @@ int run_node_gpu(DistriNetwork *network) {
 
 	GNetwork *pNetCPU = network->_network;
 	GNetwork *c_pNetGPU = copyGNetworkToGPU(pNetCPU);
+
+	CrossNodeData * cnd_gpu = copyCNDtoGPU(cnd);
 
 	int nTypeNum = c_pNetGPU->nTypeNum;
 	int sTypeNum = c_pNetGPU->sTypeNum;
@@ -103,18 +105,16 @@ int run_node_gpu(DistriNetwork *network) {
 			cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->pConnection, c_pNetGPU->ppNeurons[i], buffers->c_gNeuronInput, buffers->c_gNeuronInput_I, buffers->c_gFiredTable, buffers->c_gFiredTableSizes, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i], time, &updateSize[c_pNetGPU->pNTypes[i]]);
 		}
 
-		cudaMemset(c_g_fired_n_num, 0, sizeof(int)*network->_nodeNum);
-
-		cudaDeliverNeurons<<<(allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(c_pNetGPU->pConnection, buffers->c_gFiredTable, buffers->c_gFiredTableSizes, c_g_idx2index, c_g_cross_index2idx, c_g_global_cross_data, c_g_fired_n_num, network->_nodeNum, time);
+		cudaMemset(cnd_gpu->_send_num, 0, sizeof(int)*(cnd_gpu->_node_num));
+		cudaGenerateCND<<<(allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(c_pNetGP->pConnection, buffers->c_gFiredTable, buffers->c_gFiredTableSizes, c_g_idx2index, c_g_cross_index2idx, cnd_gpu->_send_data, cnd_gpu->_send_offset, cnd_gpu->_send_num, network->_nodeNum, time);
 
 		// checkCudaErrors(cudaMemcpy(gCrossDataGPU->_firedNum + network->_nodeIdx * network->_nodeNum, c_g_fired_n_num, sizeof(int)*network->_nodeNum, cudaMemcpyDeviceToHost));
 
+		checkCudaErrors(cudaMemcpy(cnd->_send_num, cnd_gpu->_send_num, sizeof(int)*(cnd->_node_num), cudaMemcpyDeviceToHost));
 		for (int i=0; i< network->_nodeNum; i++) {
-			// int idx2i = network->_nodeIdx * network->_nodeNum + i;
-			// assert(gCrossDataGPU->_firedNum[idx2i] <= gCrossDataGPU->_maxNum[idx2i]);
-			// if (gCrossDataGPU->_firedNum[idx2i] > 0) {
-			// 	checkCudaErrors(cudaMemcpyPeer(gCrossDataGPU->_firedArrays[idx2i], i, c_g_global_cross_data + allNeuronNum * i, network->_nodeIdx, gCrossDataGPU->_firedNum[idx2i] * sizeof(int)));
-			// }
+
+			if (cnd->_send_[i] > 0) {
+			}
 		}
 
 #ifdef LOG_DATA
@@ -213,10 +213,12 @@ int MultiNodeSimulator::run(real time, FireInfo &log)
 	SimInfo info(_dt);
 
 	DistriNetwork *network = NULL;
+	CrossNodeData *data = NULL;
 
 	if (node_id == 0) {
 		_network->setNodeNum(node_num);
 		DistriNetwork *node_nets = _network->buildNetworks(info);
+		CrossNodeData *node_datas = _network->arrangeNodeData(node_num);
 
 		for (int i=0; i<node_num; i++) {
 			node_nets[i]._simCycle = sim_cycle;
@@ -226,17 +228,20 @@ int MultiNodeSimulator::run(real time, FireInfo &log)
 		}
 
 		network = &(node_nets[0]);
+		data = &(node_datas[0]);
+		allocDataCND(data);
 
 		for (int i=1; i<node_num; i++) {
 			sendDistriNet(&(node_nets[i]), i, DATA_TAG, MPI_COMM_WORLD);
+			sendCND(&(node_datas[i]), i, DATA_TAG + DNET_TAG, MPI_COMM_WORLD);
 		}
 	} else {
 		network = recvDistriNet(0, DATA_TAG, MPI_COMM_WORLD);
+		data = recvCND(0, DATA_TAG + DNET_TAG, MPI_COMM_WORLD);
 	}
 
-
 	MPI_Barrier(MPI_COMM_WORLD);
-	run_node_gpu(network);
+	run_node_gpu(network, data);
 
 	return 0;
 }

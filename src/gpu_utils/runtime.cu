@@ -163,6 +163,47 @@ __global__ void cudaAddCrossNeurons(Connection *connection, int *firedTable, int
 	}
 }
 
+__global__ void cudaGenerateCND(Connection *conn, int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, int *send_data, int *send_offset, int *sendnum, int node_num, int time)
+{
+	__shared__ int cross_neuron_id[MAXBLOCKSIZE];
+	__shared__ volatile int cross_cnt;
+
+	if (threadIdx.x == 0) {
+		cross_cnt = 0;
+	}
+	__syncthreads();
+
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
+	// int delayIdx = time % (conn->maxDelay-conn->minDelay+1);
+	int delayIdx = time % (conn->maxDelay+1);
+	int fired_size = firedTableSizes[delayIdx];
+	for (int node = 0; node < node_num; node++) {
+		for (int idx = tid; idx < fired_size; idx += blockDim.x * gridDim.x) {
+			int nid = firedTable[gFiredTableCap*delayIdx + idx];
+			int tmp = idx2index[nid];
+			if (tmp >= 0) {
+				int map_nid = crossnode_index2idx[tmp*node_num + node];
+				if (map_nid >= 0) {
+					int test_loc = atomicAdd((int*)&cross_cnt, 1);
+					if (test_loc < MAXBLOCKSIZE) {
+						cross_neuron_id[test_loc] = map_nid;
+					}
+				}
+			}
+			__syncthreads();
+
+			if (cross_cnt > 0) {
+				commit2globalTable(cross_neuron_id, cross_cnt, send_data, &(send_num[node]), send_offset[node]);
+				if (threadIdx.x == 0) {
+					cross_cnt = 0;
+				}
+			}
+			__syncthreads();
+		}
+		__syncthreads();
+	}
+}
+
 __global__ void cudaDeliverNeurons(Connection *conn, int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, int *global_cross_data, int *fired_n_num, int node_num, int time)
 {
 	__shared__ int cross_neuron_id[MAXBLOCKSIZE];
