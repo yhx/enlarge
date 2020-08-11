@@ -619,7 +619,7 @@ CrossNodeData* Network::arrangeCrossNodeData(int node_num)
 
 	for (int i=0; i<node_num; i++) {
 		cross_data[i]._recv_offset[0] = 0;
-		assert(0 ==  cross_data[i]._send_offset[i+1] - cross_data[i]._send_offset[i]; 
+		assert(0 ==  cross_data[i]._send_offset[i+1] - cross_data[i]._send_offset[i]); 
 		for (int j=0; j<node_num; j++) {
 			int count_t = cross_data[j]._send_offset[i+1] - cross_data[j]._send_offset[i]; 
 			cross_data[i]._recv_offset[j+1] = cross_data[i]._recv_offset[j] + count_t;

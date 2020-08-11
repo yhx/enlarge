@@ -71,6 +71,10 @@ __global__ void curand_setup_kernel(curandState *state, int num);
 
 __global__ void reset_active_synapse();
 
+__global__ void cudaGenerateCND(Connection *conn, int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, int *send_data, int *send_offset, int *send_num, int node_num, int time);
+
+__global__ void cudaUpdateFTS(int * firedTableSizes, int num, int idx);
+
 __global__ void cudaAddCrossNeurons(Connection *conn, int *firedTable, int *firedTableSizes, int *ids, int num, int time);
 
 __global__ void cudaDeliverNeurons(Connection *conn, int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, int *global_cross_data, int *fired_n_num, int node_num, int time);

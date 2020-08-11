@@ -4,6 +4,7 @@
 
 #include "GNetwork.h"
 #include "CrossNodeMap.h"
+#include "CrossNodeData.h"
 #include "CrossThreadData.h"
 
 struct DistriNetwork {

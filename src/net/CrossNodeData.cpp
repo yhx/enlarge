@@ -1,6 +1,7 @@
 
-#include<stdlib.h>
-#include<assert.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <string.h>
 
 #include "CrossNodeData.h"
 

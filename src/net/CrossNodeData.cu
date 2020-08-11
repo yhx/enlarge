@@ -1,4 +1,6 @@
 
+#include <assert.h>
+
 #include "../third_party/cuda/helper_cuda.h"
 
 #include "CrossNodeData.h"
@@ -46,4 +48,5 @@ int freeCNDGPU(CrossNodeData *data)
 	data->_node_num = 0;
 	free(data);
 	data = NULL;
+	return 0;
 }

@@ -148,6 +148,13 @@ __global__ void curand_setup_kernel(curandState *state, int num)
 	}
 }
 
+__global__ void cudaUpdateFTS(int *firedTableSizes, int num, int idx)
+{
+	if (blockIdx.x == 0 && threadIdx.x == 0) {
+		firedTableSizes[idx] += num;
+	}
+}
+
 __global__ void cudaAddCrossNeurons(Connection *connection, int *firedTable, int *firedTableSizes, int *ids, int num, int time)
 {
 	int tid = blockIdx.x * blockDim.x + threadIdx.x;
@@ -163,7 +170,7 @@ __global__ void cudaAddCrossNeurons(Connection *connection, int *firedTable, int
 	}
 }
 
-__global__ void cudaGenerateCND(Connection *conn, int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, int *send_data, int *send_offset, int *sendnum, int node_num, int time)
+__global__ void cudaGenerateCND(Connection *conn, int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, int *send_data, int *send_offset, int *send_num, int node_num, int time)
 {
 	__shared__ int cross_neuron_id[MAXBLOCKSIZE];
 	__shared__ volatile int cross_cnt;
