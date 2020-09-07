@@ -4,7 +4,7 @@
 
 #include "IzhikevichData.h"
 
-void updateIzhikevich(Connection *connection, void *_data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int num, int offset, int time)
+void updateIzhikevich(Connection *connection, void *_data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int firedTableCap, int num, int offset, int time)
 {
 	// IzhikevichData *data = (IzhikevichData *)_data;
 	// int currentIdx = time % (connection->maxDelay+1);

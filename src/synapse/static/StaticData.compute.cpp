@@ -7,7 +7,7 @@
 #include "StaticData.h"
 
 
-void updateStatic(Connection *connection, void *_data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int num, int start_id, int time)
+void updateStatic(Connection *connection, void *_data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int firedTableCap, int num, int start_id, int time)
 {
 	StaticData * data = (StaticData *)_data;
 	int delayLength = connection->maxDelay - connection->minDelay + 1;
@@ -16,7 +16,7 @@ void updateStatic(Connection *connection, void *_data, real *currentE, real *cur
 		int firedSize = firedTableSizes[time_idx];
 
 		for (int i=0; i<firedSize; i++) {
-			int nid = firedTable[time_idx*cFiredTableCap + i];
+			int nid = firedTable[time_idx*firedTableCap + i];
 			int startLoc = connection->pDelayStart[delta_t + nid * delayLength];
 			int synapseNum = connection->pDelayNum[delta_t + nid * delayLength];
 			for (int j=0; j<synapseNum; j++) {

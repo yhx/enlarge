@@ -4,7 +4,7 @@
 
 #include "LIFData.h"
 
-void updateLIF(Connection *connection, void *_data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int num, int offset, int time)
+void updateLIF(Connection *connection, void *_data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int firedTableCap, int num, int offset, int time)
 {
 	LIFData *data = (LIFData *)_data;
 	int currentIdx = time % (connection->maxDelay+1);
@@ -22,7 +22,7 @@ void updateLIF(Connection *connection, void *_data, real *currentE, real *curren
 			bool fired = data->pV_m[nid] >= data->pV_thresh[nid];
 
 			if (fired) {
-				firedTable[firedTableSizes[currentIdx] + cFiredTableCap * currentIdx] = gnid;
+				firedTable[firedTableSizes[currentIdx] + firedTableCap * currentIdx] = gnid;
 				firedTableSizes[currentIdx]++;
 
 				data->pRefracStep[nid] = data->pRefracTime[nid] - 1;

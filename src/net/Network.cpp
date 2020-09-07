@@ -599,6 +599,9 @@ CrossNodeData* Network::arrangeCrossNodeData(int node_num)
 {
 	CrossNodeData * cross_data = (CrossNodeData*)malloc(sizeof(CrossNodeData) * node_num);
 	assert(cross_data != NULL);
+	for (int i=0; i<node_num; i++) {
+		allocParaCND(&(cross_data[i]), node_num);
+	}
 
 	for (int i=0; i<node_num; i++) {
 		cross_data[i]._send_offset[0] = 0;

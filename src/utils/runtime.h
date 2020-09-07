@@ -1,5 +1,5 @@
 
 #include "constant.h"
 
-extern int cFiredTableCap;
+// extern int cFiredTableCap;
 // extern real cDT;

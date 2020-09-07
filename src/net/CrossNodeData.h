@@ -3,6 +3,7 @@
 #define CROSSNODEDATA_H
 
 #include "mpi.h"
+#include "Connection.h"
 
 // Assuming node number is N, then the offset and num parameter both have N elements. offset[i] means the offset location on data array for ith node, num[i] records the actual data recived from/sended to the ith node. offset[N] is the size of data array.
 struct CrossNodeData {
@@ -30,5 +31,7 @@ CrossNodeData * recvCND(int src, int tag, MPI_Comm comm);
 
 CrossNodeData * copyCNDtoGPU(CrossNodeData * data);
 int freeCNDGPU(CrossNodeData *data);
+
+int generateCND(Connection *conn, int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, int *send_data, int *send_offset, int *send_num, int node_num, int time, int gFiredTableCap);
 
 #endif // CROSSNODEDATA_H

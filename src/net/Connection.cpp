@@ -139,17 +139,17 @@ int sendConnection(Connection *conn, int dest, int tag, MPI_Comm comm)
 
 	int length = (conn->maxDelay - conn->minDelay + 1) * conn->nNum;
 
-	ret = MPI_Send(conn->pDelayStart, length, MPI_INT, dest+1, tag, comm);
+	ret = MPI_Send(conn->pDelayStart, length, MPI_INT, dest, tag+1, comm);
 	assert(ret == MPI_SUCCESS);
-	ret = MPI_Send(conn->pDelayNum, length, MPI_INT, dest+2, tag, comm);
-	assert(ret == MPI_SUCCESS);
-
-	ret = MPI_Send(conn->pDelayStartRev, length, MPI_INT, dest+3, tag, comm);
-	assert(ret == MPI_SUCCESS);
-	ret = MPI_Send(conn->pDelayNumRev, length, MPI_INT, dest+4, tag, comm);
+	ret = MPI_Send(conn->pDelayNum, length, MPI_INT, dest, tag+2, comm);
 	assert(ret == MPI_SUCCESS);
 
-	ret = MPI_Send(conn->pSidMapRev, conn->sNum, MPI_INT, dest+5, tag, comm);
+	ret = MPI_Send(conn->pDelayStartRev, length, MPI_INT, dest, tag+3, comm);
+	assert(ret == MPI_SUCCESS);
+	ret = MPI_Send(conn->pDelayNumRev, length, MPI_INT, dest, tag+4, comm);
+	assert(ret == MPI_SUCCESS);
+
+	ret = MPI_Send(conn->pSidMapRev, conn->sNum, MPI_INT, dest, tag+5, comm);
 	assert(ret == MPI_SUCCESS);
 	
 	return ret;
@@ -157,33 +157,35 @@ int sendConnection(Connection *conn, int dest, int tag, MPI_Comm comm)
 
 Connection *recvConnection(int src, int tag, MPI_Comm comm)
 {
-	Connection *ret = (Connection *)malloc(sizeof(Connection));
+	Connection *conn = (Connection *)malloc(sizeof(Connection));
+	int ret = 0;
 	MPI_Status status;
-	MPI_Recv(ret, sizeof(Connection), MPI_UNSIGNED_CHAR, src, tag, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
 
-	int length = (ret->maxDelay - ret->minDelay + 1) * (ret->nNum);
+	ret = MPI_Recv(conn, sizeof(Connection), MPI_UNSIGNED_CHAR, src, tag, comm, &status);
+	assert(ret==MPI_SUCCESS);
 
-	ret->pDelayStart = (int *)malloc(sizeof(int) * length);
-	ret->pDelayNum = (int *)malloc(sizeof(int) * length);
+	int length = (conn->maxDelay - conn->minDelay + 1) * (conn->nNum);
 
-	MPI_Recv(ret->pDelayStart, length, MPI_INT, src, tag+1, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	MPI_Recv(ret->pDelayNum, length, MPI_INT, src, tag+2, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
+	conn->pDelayStart = (int *)malloc(sizeof(int) * length);
+	conn->pDelayNum = (int *)malloc(sizeof(int) * length);
 
-	ret->pDelayStartRev = (int *)malloc(sizeof(int) * length);
-	ret->pDelayNumRev = (int *)malloc(sizeof(int) * length);
+	ret = MPI_Recv(conn->pDelayStart, length, MPI_INT, src, tag+1, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	ret = MPI_Recv(conn->pDelayNum, length, MPI_INT, src, tag+2, comm, &status);
+	assert(ret==MPI_SUCCESS);
 
-	MPI_Recv(ret->pDelayStartRev, length, MPI_INT, src, tag+3, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	MPI_Recv(ret->pDelayNumRev, length, MPI_INT, src, tag+4, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
+	conn->pDelayStartRev = (int *)malloc(sizeof(int) * length);
+	conn->pDelayNumRev = (int *)malloc(sizeof(int) * length);
 
-	ret->pSidMapRev = (int *)malloc(sizeof(int) * (ret->sNum));
+	ret = MPI_Recv(conn->pDelayStartRev, length, MPI_INT, src, tag+3, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	ret = MPI_Recv(conn->pDelayNumRev, length, MPI_INT, src, tag+4, comm, &status);
+	assert(ret==MPI_SUCCESS);
 
-	MPI_Recv(ret->pSidMapRev, ret->sNum, MPI_INT, src, tag+5, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
+	conn->pSidMapRev = (int *)malloc(sizeof(int) * (conn->sNum));
 
-	return ret;
+	ret = MPI_Recv(conn->pSidMapRev, conn->sNum, MPI_INT, src, tag+5, comm, &status);
+	assert(ret==MPI_SUCCESS);
+
+	return conn;
 }

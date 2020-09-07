@@ -58,15 +58,16 @@ int sendDistriNet(DistriNetwork *network, int dest, int tag, MPI_Comm comm)
 
 DistriNetwork *recvDistriNet(int src, int tag, MPI_Comm comm) 
 {
-	DistriNetwork *ret = (DistriNetwork*)malloc(sizeof(DistriNetwork));
+	DistriNetwork *net = (DistriNetwork*)malloc(sizeof(DistriNetwork));
+	int ret = 0;
 	MPI_Status status;
-	MPI_Recv(ret, sizeof(DistriNetwork), MPI_UNSIGNED_CHAR, src, tag, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	ret->_network = recvGNetwork(src, tag+1, comm);
-	assert(ret->_network != NULL);
-	ret->_crossnodeMap = recvMap(src, tag+NET_TAG, comm);
-	assert(ret->_crossnodeMap != NULL);
+	ret = MPI_Recv(net, sizeof(DistriNetwork), MPI_UNSIGNED_CHAR, src, tag, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	net->_network = recvGNetwork(src, tag+1, comm);
+	assert(net->_network != NULL);
+	net->_crossnodeMap = recvMap(src, tag+NET_TAG, comm);
+	assert(net->_crossnodeMap != NULL);
 
-	return ret;
+	return net;
 }
 

@@ -188,11 +188,11 @@ int sendGNetwork(GNetwork *network, int dest, int tag, MPI_Comm comm)
 
 	int tag_t = tag+5;
 	for(int i=0; i<network->nTypeNum; i++) {
-		sendType[network->pNTypes[i]](network->ppNeurons, dest, tag_t, comm);
+		sendType[network->pNTypes[i]](network->ppNeurons[i], dest, tag_t, comm);
 		tag_t += TYPE_TAG;
 	}
 	for(int i=0; i<network->sTypeNum; i++) {
-		sendType[network->pSTypes[i]](network->ppSynapses, dest, tag_t, comm);
+		sendType[network->pSTypes[i]](network->ppSynapses[i], dest, tag_t, comm);
 		tag_t += TYPE_TAG;
 	}
 
@@ -204,42 +204,43 @@ int sendGNetwork(GNetwork *network, int dest, int tag, MPI_Comm comm)
 
 GNetwork * recvGNetwork(int src, int tag, MPI_Comm comm) 
 {
-	GNetwork *ret = (GNetwork*)malloc(sizeof(GNetwork));
+	GNetwork *net = (GNetwork*)malloc(sizeof(GNetwork));
+	int ret = 0;
 	MPI_Status status;
-	MPI_Recv(ret, sizeof(GNetwork), MPI_UNSIGNED_CHAR, src, tag, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
+	ret = MPI_Recv(net, sizeof(GNetwork), MPI_UNSIGNED_CHAR, src, tag, comm, &status);
+	assert(ret==MPI_SUCCESS);
 
-	ret->pNTypes = (Type *)malloc(sizeof(Type) * (ret->nTypeNum));
-	ret->pSTypes = (Type *)malloc(sizeof(Type) * (ret->sTypeNum));
+	net->pNTypes = (Type *)malloc(sizeof(Type) * (net->nTypeNum));
+	net->pSTypes = (Type *)malloc(sizeof(Type) * (net->sTypeNum));
 
-	MPI_Recv(ret->pNTypes, sizeof(Type)*(ret->nTypeNum), MPI_UNSIGNED_CHAR, src, tag+1, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	MPI_Recv(ret->pSTypes, sizeof(Type)*(ret->sTypeNum), MPI_UNSIGNED_CHAR, src, tag+2, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
+	ret = MPI_Recv(net->pNTypes, sizeof(Type)*(net->nTypeNum), MPI_UNSIGNED_CHAR, src, tag+1, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	ret = MPI_Recv(net->pSTypes, sizeof(Type)*(net->sTypeNum), MPI_UNSIGNED_CHAR, src, tag+2, comm, &status);
+	assert(ret==MPI_SUCCESS);
 
-	ret->pNeuronNums = (int *)malloc(sizeof(int) * (ret->nTypeNum + 1));
-	ret->pSynapseNums = (int *)malloc(sizeof(int) * (ret->sTypeNum + 1));
+	net->pNeuronNums = (int *)malloc(sizeof(int) * (net->nTypeNum + 1));
+	net->pSynapseNums = (int *)malloc(sizeof(int) * (net->sTypeNum + 1));
 
-	MPI_Recv(ret->pNeuronNums, ret->nTypeNum+1, MPI_INT, src, tag+3, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	MPI_Recv(ret->pSynapseNums, ret->sTypeNum+1, MPI_INT, src, tag+4, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
+	ret = MPI_Recv(net->pNeuronNums, net->nTypeNum+1, MPI_INT, src, tag+3, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	ret = MPI_Recv(net->pSynapseNums, net->sTypeNum+1, MPI_INT, src, tag+4, comm, &status);
+	assert(ret==MPI_SUCCESS);
 
-	ret->ppNeurons = (void **)malloc(sizeof(void *) * (ret->nTypeNum));
-	ret->ppSynapses = (void **)malloc(sizeof(void *) * (ret->sTypeNum));
+	net->ppNeurons = (void **)malloc(sizeof(void *) * (net->nTypeNum));
+	net->ppSynapses = (void **)malloc(sizeof(void *) * (net->sTypeNum));
 
 	int tag_t = tag+5;
-	for(int i=0; i<ret->nTypeNum; i++) {
-		ret->ppNeurons[i] = recvType[ret->pNTypes[i]](src, tag_t, comm);
+	for(int i=0; i<net->nTypeNum; i++) {
+		net->ppNeurons[i] = recvType[net->pNTypes[i]](src, tag_t, comm);
 		tag_t += TYPE_TAG;
 	}
-	for(int i=0; i<ret->sTypeNum; i++) {
-		ret->ppSynapses[i] = recvType[ret->pSTypes[i]](src, tag_t, comm);
+	for(int i=0; i<net->sTypeNum; i++) {
+		net->ppSynapses[i] = recvType[net->pSTypes[i]](src, tag_t, comm);
 		tag_t += TYPE_TAG;
 	}
 
-	ret->pConnection = recvConnection(src, tag_t+1, comm);
-	return ret;
+	net->pConnection = recvConnection(src, tag_t+1, comm);
+	return net;
 }
 
 bool isEqualGNetwork(GNetwork *n1, GNetwork *n2)

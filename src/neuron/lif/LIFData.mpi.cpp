@@ -49,43 +49,44 @@ int sendLIF(void *data_, int dest, int tag, MPI_Comm comm)
 
 void * recvLIF(int src, int tag, MPI_Comm comm)
 {
-	LIFData *ret = (LIFData *)mallocLIF();
+	LIFData *net = (LIFData *)mallocLIF();
+	int ret = 0;
 	MPI_Status status;
-	MPI_Recv(&(ret->num), 1, MPI_INT, src, tag, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
+	ret = MPI_Recv(&(net->num), 1, MPI_INT, src, tag, comm, &status);
+	assert(ret==MPI_SUCCESS);
 
-	allocLIFPara(ret, ret->num);
+	allocLIFPara(net, net->num);
 
-	MPI_Recv(ret->pRefracTime, ret->num, MPI_INT, src, tag+1, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	MPI_Recv(ret->pRefracStep, ret->num, MPI_INT, src, tag+2, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
+	ret = MPI_Recv(net->pRefracTime, net->num, MPI_INT, src, tag+1, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	ret = MPI_Recv(net->pRefracStep, net->num, MPI_INT, src, tag+2, comm, &status);
+	assert(ret==MPI_SUCCESS);
 
-	MPI_Recv(ret->pI_e, ret->num, MPI_U_REAL, src, tag+3, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	MPI_Recv(ret->pV_i, ret->num, MPI_U_REAL, src, tag+4, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	MPI_Recv(ret->pCe, ret->num, MPI_U_REAL, src, tag+5, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	MPI_Recv(ret->pV_reset, ret->num, MPI_U_REAL, src, tag+6, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	MPI_Recv(ret->pV_e, ret->num, MPI_U_REAL, src, tag+7, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	MPI_Recv(ret->pV_tmp, ret->num, MPI_U_REAL, src, tag+8, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	MPI_Recv(ret->pI_i, ret->num, MPI_U_REAL, src, tag+9, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	MPI_Recv(ret->pV_thresh, ret->num, MPI_U_REAL, src, tag+10, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	MPI_Recv(ret->pCi, ret->num, MPI_U_REAL, src, tag+11, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	MPI_Recv(ret->pV_m, ret->num, MPI_U_REAL, src, tag+12, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	MPI_Recv(ret->pC_e, ret->num, MPI_U_REAL, src, tag+13, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	MPI_Recv(ret->pC_m, ret->num, MPI_U_REAL, src, tag+14, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	MPI_Recv(ret->pC_i, ret->num, MPI_U_REAL, src, tag+15, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	return ret;
+	ret = MPI_Recv(net->pI_e, net->num, MPI_U_REAL, src, tag+3, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	ret = MPI_Recv(net->pV_i, net->num, MPI_U_REAL, src, tag+4, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	ret = MPI_Recv(net->pCe, net->num, MPI_U_REAL, src, tag+5, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	ret = MPI_Recv(net->pV_reset, net->num, MPI_U_REAL, src, tag+6, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	ret = MPI_Recv(net->pV_e, net->num, MPI_U_REAL, src, tag+7, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	ret = MPI_Recv(net->pV_tmp, net->num, MPI_U_REAL, src, tag+8, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	ret = MPI_Recv(net->pI_i, net->num, MPI_U_REAL, src, tag+9, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	ret = MPI_Recv(net->pV_thresh, net->num, MPI_U_REAL, src, tag+10, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	ret = MPI_Recv(net->pCi, net->num, MPI_U_REAL, src, tag+11, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	ret = MPI_Recv(net->pV_m, net->num, MPI_U_REAL, src, tag+12, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	ret = MPI_Recv(net->pC_e, net->num, MPI_U_REAL, src, tag+13, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	ret = MPI_Recv(net->pC_m, net->num, MPI_U_REAL, src, tag+14, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	ret = MPI_Recv(net->pC_i, net->num, MPI_U_REAL, src, tag+15, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	return net;
 }

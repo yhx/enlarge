@@ -39,7 +39,7 @@ int allocTraubMilesPara(void *pCPU, int num);
 int freeTraubMiles(void *pCPU);
 int freeTraubMilesPara(void *pCPU);
 int saveTraubMiles(void *pCPU, int num, FILE *f);
-void updateTraubMiles(Connection *conn, void *data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int num, int start_id, int t);
+void updateTraubMiles(Connection *conn, void *data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int firedTableCap, int num, int start_id, int t);
 void *loadTraubMiles(int num, FILE *f);
 bool isEqualTraubMiles(void *p1, void *p2, int num);
 

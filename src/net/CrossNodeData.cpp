@@ -68,22 +68,43 @@ int sendCND(CrossNodeData *data, int dst, int tag, MPI_Comm comm)
 
 CrossNodeData * recvCND(int src, int tag, MPI_Comm comm)
 {
-	CrossNodeData *ret = (CrossNodeData *)malloc(sizeof(CrossNodeData));
+	CrossNodeData *net = (CrossNodeData *)malloc(sizeof(CrossNodeData));
+	int ret = 0;
 	MPI_Status status;
-	MPI_Recv(&(ret->_node_num), 1, MPI_INT, src, tag, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	ret->_recv_offset = (int *)malloc(sizeof(int)*(ret->_node_num+1));
-	MPI_Recv(ret->_recv_offset, ret->_node_num+1, MPI_INT, src, tag+1, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	ret->_send_offset = (int *)malloc(sizeof(int)*(ret->_node_num+1));
-	MPI_Recv(ret->_send_offset, ret->_node_num+1, MPI_INT, src, tag+2, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
+	ret = MPI_Recv(&(net->_node_num), 1, MPI_INT, src, tag, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	net->_recv_offset = (int *)malloc(sizeof(int)*(net->_node_num+1));
+	ret = MPI_Recv(net->_recv_offset, net->_node_num+1, MPI_INT, src, tag+1, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	net->_send_offset = (int *)malloc(sizeof(int)*(net->_node_num+1));
+	ret = MPI_Recv(net->_send_offset, net->_node_num+1, MPI_INT, src, tag+2, comm, &status);
+	assert(ret==MPI_SUCCESS);
 
-	ret->_recv_num = (int *)malloc(sizeof(int)*(ret->_node_num));
-	ret->_send_num = (int *)malloc(sizeof(int)*(ret->_node_num));
-	resetCND(ret);
+	net->_recv_num = (int *)malloc(sizeof(int)*(net->_node_num));
+	net->_send_num = (int *)malloc(sizeof(int)*(net->_node_num));
+	resetCND(net);
 
-	allocDataCND(ret);
+	allocDataCND(net);
 
-	return ret;
+	return net;
+}
+
+int generateCND(Connection *conn, int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, int *send_data, int *send_offset, int *send_num, int node_num, int time, int gFiredTableCap)
+{
+	int delay_idx = time % (conn->maxDelay+1);
+	int fired_size = firedTableSizes[delay_idx];
+	for (int node=0; node<node_num; node++) {
+		for (int idx=0; idx<fired_size; idx++) {
+			int nid = firedTable[gFiredTableCap * delay_idx + idx];
+			int tmp = idx2index[nid];
+			if (tmp >= 0) {
+				int map_nid = crossnode_index2idx[tmp*node_num+node];
+				if (map_nid >= 0) {
+					send_data[send_offset[node] + send_num[node]]= map_nid;
+					send_num[node]++;
+				}
+			}
+		}
+	}
+	return 0;
 }

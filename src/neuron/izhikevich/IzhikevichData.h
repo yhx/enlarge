@@ -29,7 +29,7 @@ int allocIzhikevichPara(void *pCPU, int num);
 int freeIzhikevich(void *pCPU);
 int freeIzhikevichPara(void *pCPU);
 int saveIzhikevich(void *pCPU, int num, FILE *f);
-void updateIzhikevich(Connection *conn, void *data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int num, int start_id, int t);
+void updateIzhikevich(Connection *conn, void *data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int firedTableCap, int num, int start_id, int t);
 void *loadIzhikevich(int num, FILE *f);
 bool isEqualIzhikevich(void *p1, void *p2, int num);
 

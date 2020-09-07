@@ -2,8 +2,8 @@
  * usually just for fun
  * Sun December 13 2015
  */
-#ifndef MULTIGPUSIMULATOR_H
-#define MULTIGPUSIMULATOR_H
+#ifndef MULTINODESIMULATOR_H
+#define MULTINODESIMULATOR_H
 
 #include "../interface/Simulator.h"
 
@@ -14,11 +14,11 @@ public:
 
 	using Simulator::run;
 	virtual int run(real time, FireInfo &log);
-	int init(int argc, char**argv);
+	int init(int *argc, char ***argv);
 protected:
 	int node_id;
 	int node_num;
 };
 
-#endif /* MULTIGPUSIMULATOR_H */
+#endif /* MULTINODESIMULATOR_H */
 

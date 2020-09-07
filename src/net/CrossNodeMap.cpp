@@ -18,15 +18,16 @@ int sendMap(CrossNodeMap *map_, int dest, int tag, MPI_Comm comm)
 
 CrossNodeMap * recvMap(int src, int tag, MPI_Comm comm)
 {
-	CrossNodeMap *ret = (CrossNodeMap *)malloc(sizeof(CrossNodeMap));
+	CrossNodeMap *net = (CrossNodeMap *)malloc(sizeof(CrossNodeMap));
+	int ret = 0;
 	MPI_Status status;
-	MPI_Recv(ret, sizeof(CrossNodeMap), MPI_UNSIGNED_CHAR, src, tag, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	ret->_idx2index = (int *)malloc(sizeof(int)*ret->_num);
-	MPI_Recv(ret->_idx2index, ret->_num, MPI_INT, src, tag+1, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	ret->_crossnodeIndex2idx = (int *)malloc(sizeof(int)*(ret->_crossSize));
-	MPI_Recv(ret->_crossnodeIndex2idx, ret->_crossSize, MPI_INT, src, tag+2, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
-	return ret;
+	ret = MPI_Recv(net, sizeof(CrossNodeMap), MPI_UNSIGNED_CHAR, src, tag, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	net->_idx2index = (int *)malloc(sizeof(int)*net->_num);
+	ret = MPI_Recv(net->_idx2index, net->_num, MPI_INT, src, tag+1, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	net->_crossnodeIndex2idx = (int *)malloc(sizeof(int)*(net->_crossSize));
+	ret = MPI_Recv(net->_crossnodeIndex2idx, net->_crossSize, MPI_INT, src, tag+2, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	return net;
 }

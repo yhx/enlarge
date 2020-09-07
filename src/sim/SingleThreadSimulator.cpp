@@ -15,8 +15,6 @@
 
 #include "SingleThreadSimulator.h"
 
-int cFiredTableCap = 0;
-
 SingleThreadSimulator::SingleThreadSimulator(Network *network, real dt)
 	: Simulator(network, dt)
 {
@@ -57,12 +55,9 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 	// int deltaDelay = pNetCPU->pConnection->maxDelay - pNetCPU->pConnection->minDelay + 1;
 	printf("maxDelay: %d minDelay: %d\n", pNetCPU->pConnection->maxDelay, pNetCPU->pConnection->minDelay);
 
-	cFiredTableCap = totalNeuronNum;
+	int cFiredTableCap = totalNeuronNum;
 
 
-	printf("Start runing for %d cycles\n", sim_cycle);
-	struct timeval ts, te;
-	gettimeofday(&ts, NULL);
 
 	real *c_gNeuronInput = (real*)malloc(sizeof(real)*totalNeuronNum);
 	memset(c_gNeuronInput, 0, sizeof(real)*totalNeuronNum);
@@ -72,6 +67,10 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 	memset(c_gFiredTable, 0, sizeof(int)*totalNeuronNum*(maxDelay+1));
    	int *c_gFiredTableSizes = (int*)malloc(sizeof(int)*(maxDelay+1));
    	memset(c_gFiredTableSizes, 0, sizeof(int)*(maxDelay+1));
+
+	printf("Start runing for %d cycles\n", sim_cycle);
+	struct timeval ts, te;
+	gettimeofday(&ts, NULL);
 
 	for (int time=0; time<sim_cycle; time++) {
 		//printf("\rCycle: %d", cycle);
@@ -98,11 +97,11 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 		c_gFiredTableSizes[currentIdx] = 0;
 
 		for (int i=0; i<nTypeNum; i++) {
-			updateType[pNetCPU->pNTypes[i]](pNetCPU->pConnection, pNetCPU->ppNeurons[i], c_gNeuronInput, c_gNeuronInput_I, c_gFiredTable, c_gFiredTableSizes, pNetCPU->pNeuronNums[i+1]-pNetCPU->pNeuronNums[i], pNetCPU->pNeuronNums[i], time);
+			updateType[pNetCPU->pNTypes[i]](pNetCPU->pConnection, pNetCPU->ppNeurons[i], c_gNeuronInput, c_gNeuronInput_I, c_gFiredTable, c_gFiredTableSizes, cFiredTableCap, pNetCPU->pNeuronNums[i+1]-pNetCPU->pNeuronNums[i], pNetCPU->pNeuronNums[i], time);
 		}
 
 		for (int i=0; i<sTypeNum; i++) {
-			updateType[pNetCPU->pSTypes[i]](pNetCPU->pConnection, pNetCPU->ppSynapses[i], c_gNeuronInput, c_gNeuronInput_I, c_gFiredTable, c_gFiredTableSizes, pNetCPU->pSynapseNums[i+1]-pNetCPU->pSynapseNums[i], pNetCPU->pSynapseNums[i], time);
+			updateType[pNetCPU->pSTypes[i]](pNetCPU->pConnection, pNetCPU->ppSynapses[i], c_gNeuronInput, c_gNeuronInput_I, c_gFiredTable, c_gFiredTableSizes, cFiredTableCap, pNetCPU->pSynapseNums[i+1]-pNetCPU->pSynapseNums[i], pNetCPU->pSynapseNums[i], time);
 		}
 
 #ifdef LOG_DATA

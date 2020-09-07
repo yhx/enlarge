@@ -78,18 +78,13 @@ Json::Value testValue(Json::Value value, unsigned int idx)
 real *loadArray(const char *filename, int size)
 {
 	real *res = (real*)malloc(sizeof(real) * size);
-	FILE *logFile = fopen(filename, "r+");
+	FILE *logFile = fopen(filename, "rb+");
 	if (logFile == NULL) {
 		printf("ERROR: Open file %s failed\n", filename);
 		return res;
 	}
-	for (int i =0; i<size; i++) {
-#ifndef USE_DOUBLE
-		fscanf(logFile, "%f \t", &(res[i]));
-#else
-		fscanf(logFile, "%lf \t", &(res[i]));
-#endif
-	}
+	fread(res, sizeof(real), size, logFile);
+
 	fflush(logFile);
 	fclose(logFile);
 
@@ -98,14 +93,12 @@ real *loadArray(const char *filename, int size)
 
 int saveArray(const char *filename, real *array, int size)
 {
-	FILE *logFile = fopen(filename, "w+");
+	FILE *logFile = fopen(filename, "wb+");
 	if (logFile == NULL) {
 		printf("ERROR: Open file %s failed\n", filename);
 		return -1;
 	}
-	for (int i =0; i<size; i++) {
-		fprintf(logFile, "%f \t", array[i]);
-	}
+	fwrite(array, sizeof(real), size, logFile);
 	fflush(logFile);
 	fclose(logFile);
 

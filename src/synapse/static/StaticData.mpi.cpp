@@ -22,18 +22,19 @@ int sendStatic(void *data_, int dest, int tag, MPI_Comm comm)
 
 void * recvStatic(int src, int tag, MPI_Comm comm)
 {
-	StaticData *ret = (StaticData *)mallocStatic();
+	StaticData *net = (StaticData *)mallocStatic();
+	int ret = 0;
 	MPI_Status status;
-	MPI_Recv(&(ret->num), 1, MPI_INT, src, tag, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
+	ret = MPI_Recv(&(net->num), 1, MPI_INT, src, tag, comm, &status);
+	assert(ret==MPI_SUCCESS);
 
-	allocStaticPara(ret, ret->num);
+	allocStaticPara(net, net->num);
 
-	MPI_Recv(ret->pDst, ret->num, MPI_INT, src, tag+1, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
+	ret = MPI_Recv(net->pDst, net->num, MPI_INT, src, tag+1, comm, &status);
+	assert(ret==MPI_SUCCESS);
 
-	MPI_Recv(ret->pWeight, ret->num, MPI_U_REAL, src, tag+2, comm, &status);
-	assert(status.MPI_ERROR==MPI_SUCCESS);
+	ret = MPI_Recv(net->pWeight, net->num, MPI_U_REAL, src, tag+2, comm, &status);
+	assert(ret==MPI_SUCCESS);
 
-	return ret;
+	return net;
 }
