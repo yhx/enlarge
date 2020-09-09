@@ -11,6 +11,7 @@
 #include <mpi.h>
 
 #include "../utils/utils.h"
+#include "../utils/FileOp.h"
 #include "../utils/TypeFunc.h"
 #include "../gpu_utils/mem_op.h"
 // #include "../gpu_utils/gpu_utils.h"
@@ -24,11 +25,8 @@
 using std::cout;
 using std::endl;
 
-int MultiNodeSimulator::init(int *argc, char ***argv)
-{
-	// MPI_Init(argc, argv);
-	return 0;
-}
+int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd);
+int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd);
 
 MultiNodeSimulator::MultiNodeSimulator(Network *network, real dt) : Simulator(network, dt)
 {
@@ -38,14 +36,126 @@ MultiNodeSimulator::~MultiNodeSimulator()
 {
 }
 
+int MultiNodeSimulator::mpi_init(int *argc, char ***argv)
+{
+	MPI_Init(argc, argv);
+	return 0;
+}
+
+int MultiNodeSimulator::run(real time, bool gpu)
+{
+	FireInfo log;
+	run(time, log, gpu);
+	return 0;
+}
+
+int MultiNodeSimulator::run(real time, FireInfo &log)
+{
+	run(time, log, true);
+	return 0;
+}
+
+int MultiNodeSimulator::run(real time, FireInfo &log, bool gpu)
+{
+	MPI_Comm_rank(MPI_COMM_WORLD, &node_id);
+	MPI_Comm_size(MPI_COMM_WORLD, &node_num);
+	char processor_name[MPI_MAX_PROCESSOR_NAME];
+	int name_len;
+	MPI_Get_processor_name(processor_name, &name_len);
+	printf("Processor %s, rank %d out of %d processors\n", processor_name, node_id, node_num);
+
+	int sim_cycle = round(time/_dt);
+	reset();
+
+	SimInfo info(_dt);
+
+	DistriNetwork *network = NULL;
+	CrossNodeData *data = NULL;
+
+	if (node_id == 0) {
+#if 1
+		_network->setNodeNum(node_num);
+		DistriNetwork *node_nets = _network->buildNetworks(info);
+		CrossNodeData *node_datas = _network->arrangeCrossNodeData(node_num);
+
+		for (int i=0; i<node_num; i++) {
+			node_nets[i]._simCycle = sim_cycle;
+			node_nets[i]._nodeIdx = i;
+			node_nets[i]._nodeNum = node_num;
+			node_nets[i]._dt = _dt;
+		}
+
+		network = &(node_nets[0]);
+		data = &(node_datas[0]);
+		allocDataCND(data);
+
+		for (int i=1; i<node_num; i++) {
+#ifdef DEBUG
+			printf("Send to %d, tag: %d\n", i, DATA_TAG);
+#endif
+			sendDistriNet(&(node_nets[i]), i, DATA_TAG, MPI_COMM_WORLD);
+#ifdef DEBUG
+			printf("Send DistriNet to %d, tag: %d\n", i, DATA_TAG);
+#endif
+			sendCND(&(node_datas[i]), i, DATA_TAG + DNET_TAG, MPI_COMM_WORLD);
+#ifdef DEBUG
+			printf("Send CND to %d, tag: %d\n", i, DATA_TAG);
+#endif
+		}
+#else
+		network = initDistriNet(1, _dt);
+		network->_network = _network->buildNetwork(info);
+		network->_simCycle = sim_cycle;
+		network->_nodeIdx = 0;
+		network->_nodeNum = node_num;
+		network->_dt = _dt;
+		data = NULL;
+#endif
+	} else {
+#if 1
+#ifdef DEBUG
+			printf("%d recv from %d, tag: %d\n", node_id, 0, DATA_TAG);
+#endif
+		network = recvDistriNet(0, DATA_TAG, MPI_COMM_WORLD);
+#ifdef DEBUG
+			printf("%d recv DistriNet from %d, tag: %d\n", node_id, 0, DATA_TAG);
+#endif
+		data = recvCND(0, DATA_TAG + DNET_TAG, MPI_COMM_WORLD);
+#ifdef DEBUG
+			printf("%d recv CND from %d, tag: %d\n", node_id, 0, DATA_TAG);
+#endif
+#endif
+	}
+#ifdef LOG_DATA
+	char filename[512];
+	sprintf(filename, "net_%d.save", network->_nodeIdx); 
+	FILE *net_file = openFile(filename, "w+");
+	saveDistriNet(network, net_file);
+#endif
+
+	MPI_Barrier(MPI_COMM_WORLD);
+
+
+	if (gpu) {
+		run_node_gpu(network, data);
+	} else {
+		run_node_cpu(network, data);
+	}
+	MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Finalize();
+
+	return 0;
+}
+
+
 int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 	char log_filename[512];
-	sprintf(log_filename, "sim_%d.mpi.log", network->_nodeIdx); 
+	sprintf(log_filename, "sim.mpi_%d.log", network->_nodeIdx); 
 	FILE *log_file = fopen(log_filename, "w+");
 	assert(log_file != NULL);
 
 	char v_filename[512];
-	sprintf(v_filename, "v_%d.mpi.data", network->_nodeIdx); 
+	sprintf(v_filename, "v.mpi_%d.log", network->_nodeIdx); 
 	FILE *v_file = fopen(v_filename, "w+");
 	assert(v_file != NULL);
 
@@ -103,10 +213,12 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 			cnd->_recv_offset[i+1] = cnd->_recv_offset[i] + cnd->_recv_num[i];
 		}
 
-		MPI_Request request_t;
-		MPI_Status status_t;
-		MPI_Ialltoallv(cnd->_send_data, cnd->_send_num, cnd->_send_offset , MPI_INT, 
-				cnd->_recv_data, cnd->_recv_num, cnd->_recv_offset, MPI_INT, MPI_COMM_WORLD, &request_t);
+		MPI_Alltoallv(cnd->_send_data, cnd->_send_num, cnd->_send_offset, MPI_INT, 
+				cnd->_recv_data, cnd->_recv_num, cnd->_recv_offset, MPI_INT, MPI_COMM_WORLD);
+		// MPI_Request request_t;
+		// MPI_Status status_t;
+		// MPI_Ialltoallv(cnd->_send_data, cnd->_send_num, cnd->_send_offset , MPI_INT, 
+		// 		cnd->_recv_data, cnd->_recv_num, cnd->_recv_offset, MPI_INT, MPI_COMM_WORLD, &request_t);
 #endif
 
 
@@ -116,7 +228,7 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 		}
 
 #if 1
-		MPI_Wait(&request_t, &status_t);
+		// MPI_Wait(&request_t, &status_t);
 
 		int delay_idx = time % (maxDelay + 1);
 
@@ -166,12 +278,12 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 	char log_filename[512];
-	sprintf(log_filename, "sim_%d.gpu.log", network->_nodeIdx); 
+	sprintf(log_filename, "sim.gpu.mpi_%d.log", network->_nodeIdx); 
 	FILE *log_file = fopen(log_filename, "w+");
 	assert(log_file != NULL);
 
 	char v_filename[512];
-	sprintf(v_filename, "v_%d.gpu.data", network->_nodeIdx); 
+	sprintf(v_filename, "v.gpu.mpi_%d.log", network->_nodeIdx); 
 	FILE *v_file = fopen(v_filename, "w+");
 	assert(v_file != NULL);
 
@@ -249,7 +361,8 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 			}
 		}
 
-		MPI_Alltoall(cnd->_send_num, 1, MPI_INT, cnd->_recv_num, 1,MPI_INT,MPI_COMM_WORLD);
+		int ret = MPI_Alltoall(cnd->_send_num, 1, MPI_INT, cnd->_recv_num, 1,MPI_INT,MPI_COMM_WORLD);
+		assert(ret == MPI_SUCCESS);
 
 		for (int i=0; i<cnd->_node_num; i++) {
 			cnd->_recv_offset[i+1] = cnd->_recv_offset[i] + cnd->_recv_num[i];
@@ -257,8 +370,9 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 		MPI_Request request_t;
 		MPI_Status status_t;
-		MPI_Ialltoallv(cnd->_send_data, cnd->_send_num, cnd->_send_offset , MPI_INT, 
+		ret = MPI_Ialltoallv(cnd->_send_data, cnd->_send_num, cnd->_send_offset , MPI_INT, 
 				cnd->_recv_data, cnd->_recv_num, cnd->_recv_offset, MPI_INT, MPI_COMM_WORLD, &request_t);
+		assert(ret == MPI_SUCCESS);
 
 #ifdef LOG_DATA
 		int currentIdx = time%(maxDelay+1);
@@ -279,7 +393,8 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 			cudaUpdateType[c_pNetGPU->pSTypes[i]](c_pNetGPU->pConnection, c_pNetGPU->ppSynapses[i], buffers->c_gNeuronInput, buffers->c_gNeuronInput_I, buffers->c_gFiredTable, buffers->c_gFiredTableSizes, c_pNetGPU->pSynapseNums[i+1]-c_pNetGPU->pSynapseNums[i], c_pNetGPU->pSynapseNums[i], time, &updateSize[c_pNetGPU->pSTypes[i]]);
 		}
 
-		MPI_Wait(&request_t, &status_t);
+		ret = MPI_Wait(&request_t, &status_t);
+		assert(ret == MPI_SUCCESS);
 
 		int delay_idx = time % (maxDelay + 1);
 
@@ -344,90 +459,6 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 	free_buffers(buffers);
 	freeGNetworkGPU(c_pNetGPU);
-
-	return 0;
-}
-
-int MultiNodeSimulator::run(real time, FireInfo &log)
-{
-	MPI_Comm_rank(MPI_COMM_WORLD, &node_id);
-	MPI_Comm_size(MPI_COMM_WORLD, &node_num);
-	char processor_name[MPI_MAX_PROCESSOR_NAME];
-	int name_len;
-	MPI_Get_processor_name(processor_name, &name_len);
-	printf("Processor %s, rank %d out of %d processors\n", processor_name, node_id, node_num);
-
-	int sim_cycle = round(time/_dt);
-	reset();
-
-	SimInfo info(_dt);
-
-	DistriNetwork *network = NULL;
-	CrossNodeData *data = NULL;
-
-	if (node_id == 0) {
-#if 1
-		_network->setNodeNum(node_num);
-		DistriNetwork *node_nets = _network->buildNetworks(info);
-		CrossNodeData *node_datas = _network->arrangeCrossNodeData(node_num);
-
-		for (int i=0; i<node_num; i++) {
-			node_nets[i]._simCycle = sim_cycle;
-			node_nets[i]._nodeIdx = i;
-			node_nets[i]._nodeNum = node_num;
-			node_nets[i]._dt = _dt;
-		}
-
-		network = &(node_nets[0]);
-		data = &(node_datas[0]);
-		allocDataCND(data);
-
-		for (int i=1; i<node_num; i++) {
-#ifdef DEBUG
-			printf("Send to %d, tag: %d\n", i, DATA_TAG);
-#endif
-			sendDistriNet(&(node_nets[i]), i, DATA_TAG, MPI_COMM_WORLD);
-#ifdef DEBUG
-			printf("Send DistriNet to %d, tag: %d\n", i, DATA_TAG);
-#endif
-			sendCND(&(node_datas[i]), i, DATA_TAG + DNET_TAG, MPI_COMM_WORLD);
-#ifdef DEBUG
-			printf("Send CND to %d, tag: %d\n", i, DATA_TAG);
-#endif
-		}
-#else
-		network = initDistriNet(1, _dt);
-		network->_network = _network->buildNetwork(info);
-		network->_simCycle = sim_cycle;
-		network->_nodeIdx = 0;
-		network->_nodeNum = node_num;
-		network->_dt = _dt;
-		data = NULL;
-#endif
-	} else {
-#if 1
-#ifdef DEBUG
-			printf("%d recv from %d, tag: %d\n", node_id, 0, DATA_TAG);
-#endif
-		network = recvDistriNet(0, DATA_TAG, MPI_COMM_WORLD);
-#ifdef DEBUG
-			printf("%d recv DistriNet from %d, tag: %d\n", node_id, 0, DATA_TAG);
-#endif
-		data = recvCND(0, DATA_TAG + DNET_TAG, MPI_COMM_WORLD);
-#ifdef DEBUG
-			printf("%d recv CND from %d, tag: %d\n", node_id, 0, DATA_TAG);
-#endif
-#endif
-	}
-
-	MPI_Barrier(MPI_COMM_WORLD);
-	if (gpu) {
-		run_node_gpu(network, data);
-	} else {
-		run_node_cpu(network, data);
-	}
-	MPI_Barrier(MPI_COMM_WORLD);
-	MPI_Finalize();
 
 	return 0;
 }

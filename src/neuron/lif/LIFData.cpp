@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #include "../../utils/utils.h"
+#include "../../utils/FileOp.h"
 
 
 #include "LIFData.h"
@@ -153,26 +154,26 @@ void *loadLIF(int num, FILE *f)
 {
 	LIFData *p = (LIFData*)allocLIF(num);
 
-	fread(&(p->num), sizeof(int), 1, f);
+	fread_c(&(p->num), sizeof(int), 1, f);
 
 	assert(num == p->num);
 
-	fread(p->pRefracTime, sizeof(int), num, f);
-	fread(p->pRefracStep, sizeof(int), num, f);
+	fread_c(p->pRefracTime, sizeof(int), num, f);
+	fread_c(p->pRefracStep, sizeof(int), num, f);
 
-	fread(p->pI_e, sizeof(real), num, f);
-	fread(p->pV_i, sizeof(real), num, f);
-	fread(p->pCe, sizeof(real), num, f);
-	fread(p->pV_reset, sizeof(real), num, f);
-	fread(p->pV_e, sizeof(real), num, f);
-	fread(p->pV_tmp, sizeof(real), num, f);
-	fread(p->pI_i, sizeof(real), num, f);
-	fread(p->pV_thresh, sizeof(real), num, f);
-	fread(p->pCi, sizeof(real), num, f);
-	fread(p->pV_m, sizeof(real), num, f);
-	fread(p->pC_e, sizeof(real), num, f);
-	fread(p->pC_m, sizeof(real), num, f);
-	fread(p->pC_i, sizeof(real), num, f);
+	fread_c(p->pI_e, sizeof(real), num, f);
+	fread_c(p->pV_i, sizeof(real), num, f);
+	fread_c(p->pCe, sizeof(real), num, f);
+	fread_c(p->pV_reset, sizeof(real), num, f);
+	fread_c(p->pV_e, sizeof(real), num, f);
+	fread_c(p->pV_tmp, sizeof(real), num, f);
+	fread_c(p->pI_i, sizeof(real), num, f);
+	fread_c(p->pV_thresh, sizeof(real), num, f);
+	fread_c(p->pCi, sizeof(real), num, f);
+	fread_c(p->pV_m, sizeof(real), num, f);
+	fread_c(p->pC_e, sizeof(real), num, f);
+	fread_c(p->pC_m, sizeof(real), num, f);
+	fread_c(p->pC_i, sizeof(real), num, f);
 
 	return p;
 }

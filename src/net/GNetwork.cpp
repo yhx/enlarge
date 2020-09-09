@@ -91,10 +91,8 @@ void freeGNetwork(GNetwork * network)
 	free(network->pSTypes);
 }
 
-int saveGNetwork(GNetwork *net, const char *filename)
+int saveGNetwork(GNetwork *net, FILE *f)
 {
-	FILE * f = openFile(filename, "w+");
-
 	fwrite(&(net->nTypeNum), sizeof(int), 1, f);
 	fwrite(&(net->sTypeNum), sizeof(int), 1, f);
 	// fwrite(&(net->maxDelay), sizeof(int), 1, f);
@@ -113,15 +111,12 @@ int saveGNetwork(GNetwork *net, const char *filename)
 	}
 
 	saveConnection(net->pConnection, f);
-
-	closeFile(f);
 	return 0;
 }
 
-GNetwork *loadGNetwork(const char *filename)
+GNetwork *loadGNetwork(FILE *f)
 {
 	int nTypeNum = 0, sTypeNum = 0;
-	FILE * f = openFile(filename, "r");
 
 	fread(&nTypeNum, sizeof(int), 1, f);
 	fread(&sTypeNum, sizeof(int), 1, f);
@@ -145,8 +140,35 @@ GNetwork *loadGNetwork(const char *filename)
 
 	net->pConnection = loadConnection(f);
 
-	closeFile(f);
 	return net;
+}
+
+bool compareGNetwork(GNetwork *n1, GNetwork *n2)
+{
+	bool equal = true;
+	equal = (n1->nTypeNum == n2->nTypeNum) && equal;
+	equal = (n1->sTypeNum == n2->sTypeNum) && equal;
+	for (int i=0; i<n1->nTypeNum; i++) {
+		equal = (n1->pNTypes[i] == n2->pNTypes[i]) && equal;
+	}
+	for (int i=0; i<n1->sTypeNum; i++) {
+		equal = (n1->pSTypes[i] == n2->pSTypes[i]) && equal;
+	}
+
+	for (int i=0; i<=n1->nTypeNum; i++) {
+		equal = (n1->pNeuronNums[i] == n2->pNeuronNums[i]) && equal;
+	}
+	for (int i=0; i<=n1->sTypeNum; i++) {
+		equal = (n1->pSynapseNums[i] == n2->pSynapseNums[i]) && equal;
+	}
+
+	for (int i=0; i<n1->nTypeNum; i++) {
+		equal = isEqualType[n1->pNTypes[i]](n1->ppNeurons[i], n2->ppNeurons[i], n1->pNeuronNums[i+1]-n1->pNeuronNums[i]) && equal;
+	}
+	for (int i=0; i<n1->sTypeNum; i++) {
+		equal = isEqualType[n1->pSTypes[i]](n1->ppSynapses[i], n2->ppSynapses[i], n1->pSynapseNums[i+1]-n1->pSynapseNums[i]) && equal;
+	}
+	return equal;
 }
 
 int copyGNetwork(GNetwork *dNet, GNetwork *sNet, int rank, int rankSize)

@@ -42,11 +42,11 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 	SimInfo info(_dt);
 	GNetwork *pNetCPU = _network->buildNetwork(info);
 
-	FILE *v_file = openFile("v.gpu.data", "w+");
-	FILE *input_e_file = openFile("input_e.gpu.data", "w+");
-	FILE *input_i_file = openFile("input_i.gpu.data", "w+");
-	FILE *ie_file = openFile("ie.gpu.data", "w+");
-	FILE *ii_file = openFile("ii.gpu.data", "w+");
+	FILE *v_file = openFile("v.gpu.log", "w+");
+	FILE *input_e_file = openFile("input_e.gpu.log", "w+");
+	FILE *input_i_file = openFile("input_i.gpu.log", "w+");
+	FILE *ie_file = openFile("ie.gpu.log", "w+");
+	FILE *ii_file = openFile("ii.gpu.log", "w+");
 	FILE *fire_file = openFile("fire.gpu.log", "w+");
 	FILE *log_file = openFile("sim.gpu.log", "w+");
 

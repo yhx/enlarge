@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "../utils/utils.h"
+#include "../utils/FileOp.h"
 
 #include "Connection.h"
 
@@ -53,19 +54,19 @@ int freeConnection(Connection *pCPU)
 
 int saveConnection(Connection *conn, FILE *f)
 {
-	fwrite(&(conn->nNum), sizeof(int), 1, f);
-	fwrite(&(conn->sNum), sizeof(int), 1, f);
-	fwrite(&(conn->maxDelay), sizeof(int), 1, f);
-	fwrite(&(conn->minDelay), sizeof(int), 1, f);
+	fwrite_c(&(conn->nNum), sizeof(int), 1, f);
+	fwrite_c(&(conn->sNum), sizeof(int), 1, f);
+	fwrite_c(&(conn->maxDelay), sizeof(int), 1, f);
+	fwrite_c(&(conn->minDelay), sizeof(int), 1, f);
 
 	int length = (conn->maxDelay - conn->minDelay + 1) * conn->nNum;
 
-	fwrite(conn->pDelayStart, sizeof(int), length, f);
-	fwrite(conn->pDelayNum, sizeof(int), length, f);
+	fwrite_c(conn->pDelayStart, sizeof(int), length, f);
+	fwrite_c(conn->pDelayNum, sizeof(int), length, f);
 
-	fwrite(conn->pDelayStartRev, sizeof(int), length, f);
-	fwrite(conn->pDelayNumRev, sizeof(int), length, f);
-	fwrite(conn->pSidMapRev, sizeof(int), conn->sNum, f);
+	fwrite_c(conn->pDelayStartRev, sizeof(int), length, f);
+	fwrite_c(conn->pDelayNumRev, sizeof(int), length, f);
+	fwrite_c(conn->pSidMapRev, sizeof(int), conn->sNum, f);
 
 	return 0;
 }
@@ -75,14 +76,10 @@ Connection * loadConnection(FILE *f)
 	Connection *conn = (Connection *)malloc(sizeof(Connection));
 
 	int ret = 0;
-	ret = fread(&(conn->nNum), sizeof(int), 1, f);
-	assert(ret == 1);
-	ret = fread(&(conn->sNum), sizeof(int), 1, f);
-	assert(ret == 1);
-	ret = fread(&(conn->maxDelay), sizeof(int), 1, f);
-	assert(ret == 1);
-	ret = fread(&(conn->minDelay), sizeof(int), 1, f);
-	assert(ret == 1);
+	fread_c(&(conn->nNum), sizeof(int), 1, f);
+	fread_c(&(conn->sNum), sizeof(int), 1, f);
+	fread_c(&(conn->maxDelay), sizeof(int), 1, f);
+	fread_c(&(conn->minDelay), sizeof(int), 1, f);
 
 	int length = (conn->maxDelay - conn->minDelay + 1) * conn->nNum;
 
@@ -93,17 +90,12 @@ Connection * loadConnection(FILE *f)
 	conn->pDelayNumRev = (int*)malloc(sizeof(int)*length);
 	conn->pSidMapRev = (int*)malloc(sizeof(int)*conn->sNum);
 
-	ret = fread(conn->pDelayStart, sizeof(int), length, f);
-	assert(ret == length);
-	ret = fread(conn->pDelayNum, sizeof(int), length, f);
-	assert(ret == length);
+	fread_c(conn->pDelayStart, sizeof(int), length, f);
+	fread_c(conn->pDelayNum, sizeof(int), length, f);
 
-	ret = fread(conn->pDelayStartRev, sizeof(int), length, f);
-	assert(ret == length);
-	ret = fread(conn->pDelayNumRev, sizeof(int), length, f);
-	assert(ret == length);
-	ret = fread(conn->pSidMapRev, sizeof(int), conn->sNum, f);
-	assert(ret == conn->sNum);
+	fread_c(conn->pDelayStartRev, sizeof(int), length, f);
+	fread_c(conn->pDelayNumRev, sizeof(int), length, f);
+	fread_c(conn->pSidMapRev, sizeof(int), conn->sNum, f);
 
 	return conn;
 }

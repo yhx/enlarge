@@ -13,8 +13,10 @@ public:
 	~MultiNodeSimulator();
 
 	using Simulator::run;
+	int mpi_init(int *argc, char ***argv);
+	virtual int run(real time, bool gpu);
 	virtual int run(real time, FireInfo &log);
-	int init(int *argc, char ***argv);
+	virtual int run(real time, FireInfo &log, bool gpu);
 protected:
 	int node_id;
 	int node_num;

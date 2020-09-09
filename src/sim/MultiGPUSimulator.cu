@@ -101,7 +101,7 @@ void * run_thread_gpu(void *para) {
 	assert(log_file != NULL);
 
 	char v_filename[512];
-	sprintf(v_filename, "v_%d.gpu.data", network->_nodeIdx); 
+	sprintf(v_filename, "v_%d.gpu.log", network->_nodeIdx); 
 	FILE *v_file = fopen(v_filename, "w+");
 	assert(v_file != NULL);
 

@@ -25,4 +25,8 @@ DistriNetwork* freeDistriNet(int num);
 int sendDistriNet(DistriNetwork *network, int dest, int tag, MPI_Comm comm);
 DistriNetwork * recvDistriNet(int src, int tag, MPI_Comm comm);
 
+int saveDistriNet(DistriNetwork *net, FILE *f);
+DistriNetwork * loadDistriNet(FILE *f);
+bool compareDistriNet(DistriNetwork *n1, DistriNetwork *n2);
+
 #endif // DISTRINETWORK_H

@@ -45,8 +45,9 @@ GNetwork * deepcopyGNetwork(GNetwork *net);
 void freeGNetwork(GNetwork * network);
 
 // Save and Load
-int saveGNetwork(GNetwork *, const char *filename);
-GNetwork *loadGNetwork(const char *filename);
+int saveGNetwork(GNetwork *net, FILE *f);
+GNetwork *loadGNetwork(FILE *f);
+bool compareGNetwork(GNetwork *n1, GNetwork *n2);
 
 // Transfer GNetwork between CPU and GPU
 // Only copy inside data arrays to GPU, the info data is left on CPU
@@ -61,7 +62,6 @@ GNetwork * recvGNetwork(int src, int tag, MPI_Comm comm);
 
 
 // Other utils
-bool isEqualGNetwork(GNetwork *n1, GNetwork *n2);
 int printGNetwork(GNetwork *net, int rank = 0);
 
 #endif /* GNETWORK_H */

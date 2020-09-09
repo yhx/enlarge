@@ -67,6 +67,7 @@ def main(argv):
 
     if not os.path.exists(file2):
         inputfile, outputfile = column_merge.find_series_files(file2)
+        print('Column Merge: ' + ' '.join(str(e) for e in inputfile) + " to " + str(outputfile))
         column_merge.column_merge(inputfile, outputfile)
         file2 = outputfile
 

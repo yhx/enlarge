@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include "../utils/FileOp.h"
+#include "GNetwork.h"
 #include "DistriNetwork.h"
 
 DistriNetwork* initDistriNet(int num, real dt)
@@ -71,3 +73,38 @@ DistriNetwork *recvDistriNet(int src, int tag, MPI_Comm comm)
 	return net;
 }
 
+int saveDistriNet(DistriNetwork *net, FILE * f)
+{
+	fwrite_c(&(net->_simCycle), sizeof(int), 1, f);
+	fwrite_c(&(net->_nodeIdx), sizeof(int), 1, f);
+	fwrite_c(&(net->_nodeNum), sizeof(int), 1, f);
+	fwrite_c(&(net->_dt), sizeof(real), 1, f);
+	saveGNetwork(net->_network, f);
+	saveCNM(net->_crossnodeMap, f);
+
+	return 0;
+}
+
+DistriNetwork * loadDistriNet(FILE *f) {
+	DistriNetwork *net = (DistriNetwork*)malloc(sizeof(DistriNetwork));
+	fread_c(&(net->_simCycle), sizeof(int), 1, f);
+	fread_c(&(net->_nodeIdx), sizeof(int), 1, f);
+	fread_c(&(net->_nodeNum), sizeof(int), 1, f);
+	fread_c(&(net->_dt), sizeof(real), 1, f);
+	net->_network = loadGNetwork(f);
+	net->_crossnodeMap = loadCNM(f);
+	return net;
+}
+
+bool compareDistriNet(DistriNetwork *n1, DistriNetwork *n2)
+{
+	bool equal = true;
+	equal = equal && (n1->_simCycle == n2->_simCycle);
+	equal = equal && (n1->_nodeIdx == n2->_nodeIdx);
+	equal = equal && (n1->_nodeNum == n2->_nodeNum);
+	equal = equal && (n1->_dt == n2->_dt);
+	equal = compareGNetwork(n1->_network, n2->_network) && equal;
+	equal = compareCNM(n1->_crossnodeMap, n2->_crossnodeMap) && equal;
+
+	return equal;
+}

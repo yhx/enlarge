@@ -119,6 +119,7 @@ FILE(GLOB CPU_TEST "test/cpu/*.cpp" "test/cpu/*.c")
 FILE(GLOB GPU_TEST "test/gpu/*.cpp" "test/gpu/*.c" "test/gpu/*.cu")
 FILE(GLOB MPI_TEST "test/mpi/*.cpp" "test/mpi/*.c" "test/mpi/*.cu")
 FILE(GLOB UNIT_TEST "test/unit/*.cpp" "test/unit/*.c" "test/unit/*.cu")
+FILE(GLOB TOOLS "test/tool/*.cpp" "test/tool/*.c")
 
 FILE(COPY ${PROJECT_SOURCE_DIR}/CLEAN_ALL.cmake DESTINATION ${CMAKE_BINARY_DIR})
 
@@ -153,6 +154,12 @@ FOREACH(exec_path ${CPU_TEST})
 	TARGET_LINK_LIBRARIES(${exec_file} ${CPU_LIB} ${MPI_LIBRARIES} ${BLAS_LIBRARIES})
 ENDFOREACH()
 
+FOREACH(exec_path ${TOOL})
+	GET_FILENAME_COMPONENT(exec_file ${exec_path} NAME_WE)
+	ADD_EXECUTABLE(${exec_file} ${exec_path})
+	TARGET_LINK_LIBRARIES(${exec_file} ${CPU_LIB}  blas ${BLAS_LIBRARIES} ${PYTHON_LIBRARIES})
+ENDFOREACH()
+
 CUDA_ADD_LIBRARY(${GPU_LIB} STATIC ${GPU_SRC} ${AUTO_GPU_SRC} ${AUTO_TIMESTAMP})
 ADD_DEPENDENCIES(${GPU_LIB} GEN_TYPE_FUNC_GPU)
 
@@ -181,6 +188,7 @@ FOREACH(exec_path ${UNIT_TEST})
 	TARGET_LINK_LIBRARIES(${exec_file} ${GPU_LIB} ${CUDA_CUFFT_LIBRARIES} ${CPU_LIB} ${MPI_LIBRARIES} blas ${BLAS_LIBRARIES} ${PYTHON_LIBRARIES} gmock_main)
 	ADD_TEST(NAME ${exec_file}_test COMMAND ${exec_file}) 
 ENDFOREACH()
+
 
 #ADD_CUSTOM_COMMAND(TARGET multi-gpusim_test
 #	POST_BUILD

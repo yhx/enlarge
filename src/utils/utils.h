@@ -24,6 +24,16 @@ Json::Value testValue(Json::Value value, unsigned int idx);
 real *loadArray(const char *filename, int size);
 int saveArray(const char *filename, real *array, int size);
 
+template<typename T>
+bool compareArray(T *a, T *b, int size) 
+{
+	bool equal = true;
+	for (int i=0; i<size; i++) {
+		equal = equal && (a[i] == b[i]);
+	}
+	return equal;
+}
+
 inline int upzero_else_set_one(int value) {
 	if (value > 0) {
 		return value;

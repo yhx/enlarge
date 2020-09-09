@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 
 #include "../../include/BSim.h"
+#include "../../src/utils/FileOp.h"
 #include "../../src/net/GNetwork.h"
 
 using std::vector;
@@ -136,7 +137,7 @@ TEST(NetworkTest, BuildTest1) {
 	SimInfo info(1e-4);
 	DistriNetwork* n1 = network->buildNetworks(info);
 	GNetwork * n2 = network->buildNetwork(info);
-	ASSERT_TRUE(isEqualGNetwork(n1->_network, n2));
+	ASSERT_TRUE(compareGNetwork(n1->_network, n2));
 }
 
 TEST(NetworkTest, BuildTest2) {
@@ -391,9 +392,13 @@ TEST(NetworkTest, BuildTest2) {
 }
 
 TEST(NetworkTest, SaveLoadTest) {
-	saveGNetwork(net, "tmp.net");
-	GNetwork *t = loadGNetwork("tmp.net");
-	ASSERT_TRUE(isEqualGNetwork(net, t));
+	FILE *f = openFile("tmp.net", "w+");
+	saveGNetwork(net, f);
+	fflush(f);
+	rewind(f);
+	GNetwork *t = loadGNetwork(f);
+	ASSERT_TRUE(compareGNetwork(net, t));
+	closeFile(f);
 }
 
 TEST(NetworkTest, RunTest) {

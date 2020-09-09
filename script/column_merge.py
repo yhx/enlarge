@@ -29,16 +29,25 @@ def column_merge(inputs=[], output=""):
 def find_series_files(name):
     series_files = []
     fname, fext = os.path.splitext(name)
-    fname, fext2 = os.path.splitext(fname)
+    pattern1 = fname + '[_\s]*\d+[_\s]*'+ fext + '$'
+
     curr_dir = os.getcwd()
-    pattern = fname + '[_\s]*\d+[_\s]*'+ fext2 + fext
     for _, _, files in os.walk(curr_dir):
         for f in files:
-            if (re.match(pattern, f)):
+            if (re.match(pattern1, f)):
                 series_files.append(f)
 
+    while len(series_files) == 0:
+        fname, fext2 = os.path.splitext(fname)
+        fext = fext2 + fext
+        pattern2 = fname + '[_\s]*\d+[_\s]*'+ fext + '$'
+        for _, _, files in os.walk(curr_dir):
+            for f in files:
+                if (re.match(pattern2, f)):
+                    series_files.append(f)
+
     series_files.sort()
-    out_file = fname + "_merge" + fext2 + fext
+    out_file = fname + "_merge" + fext
 
     return (series_files, out_file)
 
