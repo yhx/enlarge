@@ -39,6 +39,9 @@ def find_series_files(name):
 
     while len(series_files) == 0:
         fname, fext2 = os.path.splitext(fname)
+        if not fext2:
+            print("Wrong file name to merge")
+            exit(0)
         fext = fext2 + fext
         pattern2 = fname + '[_\s]*\d+[_\s]*'+ fext + '$'
         for _, _, files in os.walk(curr_dir):

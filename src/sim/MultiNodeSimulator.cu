@@ -22,6 +22,8 @@
 #include "MultiNodeSimulator.h"
 // #include "../gpu_utils/gpu_func.h"
 
+#define ASYNC
+
 using std::cout;
 using std::endl;
 
@@ -213,12 +215,17 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 			cnd->_recv_offset[i+1] = cnd->_recv_offset[i] + cnd->_recv_num[i];
 		}
 
-		MPI_Alltoallv(cnd->_send_data, cnd->_send_num, cnd->_send_offset, MPI_INT, 
+#ifdef ASYNC
+		MPI_Request request_t;
+		MPI_Status status_t;
+		int ret = MPI_Ialltoallv(cnd->_send_data, cnd->_send_num, cnd->_send_offset , MPI_INT, 
+				cnd->_recv_data, cnd->_recv_num, cnd->_recv_offset, MPI_INT, MPI_COMM_WORLD, &request_t);
+		assert(ret == MPI_SUCCESS);
+#else
+		int ret = MPI_Alltoallv(cnd->_send_data, cnd->_send_num, cnd->_send_offset, MPI_INT, 
 				cnd->_recv_data, cnd->_recv_num, cnd->_recv_offset, MPI_INT, MPI_COMM_WORLD);
-		// MPI_Request request_t;
-		// MPI_Status status_t;
-		// MPI_Ialltoallv(cnd->_send_data, cnd->_send_num, cnd->_send_offset , MPI_INT, 
-		// 		cnd->_recv_data, cnd->_recv_num, cnd->_recv_offset, MPI_INT, MPI_COMM_WORLD, &request_t);
+		assert(ret == MPI_SUCCESS);
+#endif
 #endif
 
 
@@ -228,7 +235,10 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 		}
 
 #if 1
-		// MPI_Wait(&request_t, &status_t);
+#ifdef ASYNC
+		ret = MPI_Wait(&request_t, &status_t);
+		assert(ret == MPI_SUCCESS);
+#endif
 
 		int delay_idx = time % (maxDelay + 1);
 
@@ -398,7 +408,10 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 		int delay_idx = time % (maxDelay + 1);
 
-		checkCudaErrors(cudaMemcpy(buffers->c_gFiredTable + allNeuronNum * delay_idx + buffers->c_gFiredTableSizes[delay_idx] , cnd->_recv_data, sizeof(int)*(cnd->_recv_offset[cnd->_node_num]), cudaMemcpyHostToDevice));
+		int firedSize = 0;
+		checkCudaErrors(cudaMemcpy(&firedSize, buffers->c_gFiredTableSizes+delay_idx, sizeof(int), cudaMemcpyDeviceToHost));
+
+		checkCudaErrors(cudaMemcpy(buffers->c_gFiredTable + allNeuronNum * delay_idx + firedSize , cnd->_recv_data, sizeof(int)*(cnd->_recv_offset[cnd->_node_num]), cudaMemcpyHostToDevice));
 		cudaUpdateFTS<<<1, 1>>>(buffers->c_gFiredTableSizes, cnd->_recv_offset[cnd->_node_num], delay_idx);
 
 		// for (int i=0; i< network->_nodeNum; i++) {

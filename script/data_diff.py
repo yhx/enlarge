@@ -5,6 +5,22 @@ import sys, getopt
 import re
 import ast
 import column_merge
+import numpy as np
+
+def np_array_sub(file1, file2):
+    data1 = np.loadtxt(file1)
+    data2 = np.loadtxt(file2)
+
+    diff = data1 - data2
+
+    np.savetxt("diff.res", diff)
+
+    delta = np.max(np.abs(diff))
+
+    if delta>1e-7:
+        print ("Diff")
+    else:
+        print ("Same")
 
 def column_sub(file1="", file2=""):
     infile1 = open(file1, "r+")
@@ -72,7 +88,7 @@ def main(argv):
         file2 = outputfile
 
     
-    column_sub(file1, file2);
+    np_array_sub(file1, file2);
 
 
 if __name__ == "__main__":
