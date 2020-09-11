@@ -3,6 +3,8 @@ const int N = 3;
 
 const char *W1_NAME = "weight1.data";
 const char *W2_NAME = "weight2.data";
+const char *W3_NAME = "weight3.data";
+const char *W4_NAME = "weight4.data";
 
 const char *D_NAME = "delay.data";
 
