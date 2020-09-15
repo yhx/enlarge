@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 	Network c;
 
 	int node_id = 0;
-	// MPI_Comm_rank(MPI_COMM_WORLD, &node_id);
+	MPI_Comm_rank(MPI_COMM_WORLD, &node_id);
 	char v_filename[512]; 
 
 	if (node_id == 0) {

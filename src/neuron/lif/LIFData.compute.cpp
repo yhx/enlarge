@@ -20,6 +20,7 @@ void updateLIF(Connection *connection, void *_data, real *currentE, real *curren
 			data->pI_i[nid] *= data->pCi[nid];
 
 			bool fired = data->pV_m[nid] >= data->pV_thresh[nid];
+			c_gFiredCount[gnid] += fired;
 
 			if (fired) {
 				firedTable[firedTableSizes[currentIdx] + firedTableCap * currentIdx] = gnid;

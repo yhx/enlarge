@@ -200,9 +200,15 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 	printf("Simulation finesed in %ld:%ld:%ld.%06lds\n", hours, minutes, seconds, uSeconds);
 
 	//CALC Firing Rate
+	int *rate = (int*)malloc(sizeof(int)*totalNeuronNum);
+	copyFromGPU<int>(rate, buffers->c_gFireCount, totalNeuronNum);
+
+	for (int i=0; i<totalNeuronNum; i++) {
+		fprintf(fire_file, "%d \t", rate[i]);
+	}
+	fflush(fire_file);
+
 	if (log.find("count") != log.end()) {
-		int *rate = (int*)malloc(sizeof(int)*totalNeuronNum);
-		copyFromGPU<int>(rate, buffers->c_gFireCount, totalNeuronNum);
 
 		log["count"].size = totalNeuronNum;
 		log["count"].data = rate;

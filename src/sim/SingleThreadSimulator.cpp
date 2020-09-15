@@ -15,6 +15,8 @@
 
 #include "SingleThreadSimulator.h"
 
+int *c_gFiredCount = NULL;
+
 SingleThreadSimulator::SingleThreadSimulator(Network *network, real dt)
 	: Simulator(network, dt)
 {
@@ -36,12 +38,12 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 
 	FILE *v_file = openFile("v.cpu.log", "w+");
 	FILE *log_file = openFile("sim.cpu.log", "w+");
+	FILE *fire_file = openFile("fire.cpu.log", "w+");
 #ifdef MY_DEBUG
 	FILE *input_e_file = openFile("input_e.cpu.log", "w+");
 	FILE *input_i_file = openFile("input_i.cpu.log", "w+");
 	FILE *ie_file = openFile("ie.cpu.log", "w+");
 	FILE *ii_file = openFile("ii.cpu.log", "w+");
-	FILE *fire_file = openFile("fire.cpu.log", "w+");
 #endif
 
 	int nTypeNum = pNetCPU->nTypeNum;
@@ -67,6 +69,9 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 	memset(c_gFiredTable, 0, sizeof(int)*totalNeuronNum*(maxDelay+1));
    	int *c_gFiredTableSizes = (int*)malloc(sizeof(int)*(maxDelay+1));
    	memset(c_gFiredTableSizes, 0, sizeof(int)*(maxDelay+1));
+
+   	c_gFiredCount = (int*)malloc(sizeof(int)*(totalNeuronNum));
+   	memset(c_gFiredCount, 0, sizeof(int)*(totalNeuronNum));
 
 	printf("Start runing for %d cycles\n", sim_cycle);
 	struct timeval ts, te;
@@ -136,6 +141,10 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 
 	printf("\nSimulation finished in %ld:%ld:%ld.%06lds\n", hours, minutes, seconds, uSeconds);
 
+	for (int i=0; i<totalNeuronNum; i++) {
+		fprintf(fire_file, "%d \t", c_gFiredCount[i]); 
+	}
+
 
 
 	fclose(v_file);
@@ -143,6 +152,7 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 	// fclose(input_i_file);
 	// fclose(ie_file);
 	// fclose(ii_file);
+	fclose(fire_file);
 	fclose(log_file);
 
 	return 0;

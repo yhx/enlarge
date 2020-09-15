@@ -453,7 +453,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 	copyFromGPU<int>(rate, buffers->c_gFireCount, nodeNeuronNum);
 
 	char fire_filename[512];
-	sprintf(fire_filename, "fire_%d.gpu.count", network->_nodeIdx); 
+	sprintf(fire_filename, "fire.gpu.mpi_%d.count", network->_nodeIdx); 
 	FILE *rate_file = fopen(fire_filename, "w+");
 	if (rate_file == NULL) {
 		printf("Open file Sim.log failed\n");
