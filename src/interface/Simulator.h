@@ -6,6 +6,7 @@
 #define SIMULATOR_H
 
 #include "../utils/SimInfo.h"
+#include "../utils/runtime.h"
 #include "../net/Network.h"
 
 class Simulator {
