@@ -9,6 +9,8 @@
 #include "../utils/TypeFunc.h"
 #include "Network.h"
 
+#define SPLIT 0
+
 using namespace std::chrono;
 
 Network::Network(int nodeNum)
@@ -867,6 +869,29 @@ void Network::splitNetwork()
 	}
 	
 
+#if SPLIT==0
+	int nodeIdx = 0;
+	int synapseCount = 0;
+	int synapsePerNode = _totalSynapseNum/_nodeNum;
+	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
+		Population * p = *pIter;
+		p->setNode(nodeIdx);
+		for (int i=0; i<p->getNum(); i++) {
+			p->locate(i)->setNode(nodeIdx);
+			auto n2sIter = n2sInput.find(p->locate(i));
+			if (n2sIter != n2sInput.end()) {
+				synapseCount += n2sIter->second.size();
+				for (auto vIter = n2sIter->second.begin(); vIter != n2sIter->second.end(); vIter++) {
+					(*vIter)->setNode(nodeIdx);
+				}
+			}
+			if (synapseCount >= (nodeIdx+1) * synapsePerNode && nodeIdx < _nodeNum - 1) {
+				nodeIdx++;	
+			}
+		}
+	}
+#elif SPLIT==1
+#else
 	int nodeIdx = 0;
 	int synapseCount = 0;
 	int synapsePerNode = _totalSynapseNum/_nodeNum;
@@ -888,6 +913,7 @@ void Network::splitNetwork()
 			nodeIdx++;	
 		}
 	}
+#endif
 
 	n2sInput.clear();
 

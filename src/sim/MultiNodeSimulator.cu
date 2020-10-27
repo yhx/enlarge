@@ -387,11 +387,11 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 	int * c_g_fired_n_num = gpuMalloc<int>(network->_nodeNum);
 
 	vector<int> firedInfo;
-	struct timeval ts, te;
-	gettimeofday(&ts, NULL);
+	double ts, te;
+	ts = MPI_Wtime();
 
 #ifdef PROF
-	struct timeval t1, t2, t3, t4, t5, t6;
+	double t1, t2, t3, t4, t5, t6;
 	double comp_time = 0, comm_time = 0, sync_time = 0;
 	int *send_count = (int *)malloc(network->_nodeNum * sizeof(int));
 	int *recv_count = (int *)malloc(network->_nodeNum * sizeof(int));
@@ -401,7 +401,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 	for (int time=0; time<network->_simCycle; time++) {
 #ifdef PROF
-		gettimeofday(&t1, NULL);
+		t1 = MPI_Wtime();
 #endif
 		update_time<<<1, 1>>>(c_pNetGPU->pConnection, time, buffers->c_gFiredTableSizes);
 
@@ -412,8 +412,8 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 		cudaMemset(cnd_gpu->_send_num, 0, sizeof(int)*(cnd_gpu->_node_num));
 #ifdef PROF
-		gettimeofday(&t2, NULL);
-		comp_time += 1000000 * (t2.tv_sec - t1.tv_sec) + (t2.tv_usec - t1.tv_usec);
+		t2 = MPI_Wtime();
+		comp_time += t2-t1;
 #endif
 		cudaGenerateCND<<<(allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(c_pNetGPU->pConnection, buffers->c_gFiredTable, buffers->c_gFiredTableSizes, c_g_idx2index, c_g_cross_index2idx, cnd_gpu->_send_data, cnd_gpu->_send_offset, cnd_gpu->_send_num, network->_nodeNum, time);
 
@@ -439,15 +439,15 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 				cnd->_recv_data, cnd->_recv_num, cnd->_recv_offset, MPI_INT, MPI_COMM_WORLD, &request_t);
 		assert(ret == MPI_SUCCESS);
 #ifdef PROF
-		gettimeofday(&t3, NULL);
-		comm_time += 1000000 * (t3.tv_sec - t2.tv_sec) + (t3.tv_usec - t2.tv_usec);
+		t3 = MPI_Wtime();
+		comm_time += t3-t2;
 		MPI_Barrier(MPI_COMM_WORLD);
 		for (int i=0; i<network->_nodeNum; i++) {
 			send_count[i] += cnd->_send_num[i];
 			recv_count[i] += cnd->_recv_num[i];
 		}
-		gettimeofday(&t6, NULL);
-	        sync_time += 1000000 * (t6.tv_sec - t3.tv_sec) + (t6.tv_usec - t3.tv_usec);
+		t6 = MPI_Wtime();
+	        sync_time += t6- t3;
 #endif
 
 #ifdef LOG_DATA
@@ -471,8 +471,8 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 #ifdef PROF
 		cudaDeviceSynchronize();
-		gettimeofday(&t4, NULL);
-		comp_time += 1000000 * (t4.tv_sec - t6.tv_sec) + (t4.tv_usec - t6.tv_usec);
+		t4 = MPI_Wtime();
+		comp_time += t4 - t6;
 #endif
 		ret = MPI_Wait(&request_t, &status_t);
 		assert(ret == MPI_SUCCESS);
@@ -488,8 +488,8 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 #ifdef PROF
 		cudaDeviceSynchronize();
-		gettimeofday(&t5, NULL);
-		comm_time += 1000000 * (t5.tv_sec - t4.tv_sec) + (t5.tv_usec - t4.tv_usec);
+		t5 = MPI_Wtime();
+		comm_time += t5 - t4;
 #endif
 
 		// for (int i=0; i< network->_nodeNum; i++) {
@@ -513,21 +513,10 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 		fprintf(v_file, "\n");
 #endif
 	}
-	gettimeofday(&te, NULL);
-	long seconds = te.tv_sec - ts.tv_sec;
-	long hours = seconds/3600;
-	seconds = seconds%3600;
-	long minutes = seconds/60;
-	seconds = seconds%60;
-	long uSeconds = te.tv_usec - ts.tv_usec;
-	if (uSeconds < 0) {
-		uSeconds += 1000000;
-		seconds = seconds - 1;
-	}
-
-	printf("Thread %d Simulation finesed in %ld:%ld:%ld.%06lds\n", network->_nodeIdx, hours, minutes, seconds, uSeconds);
+	te = MPI_Wtime();
+	printf("Thread %d Simulation finesed in %lfs\n", network->_nodeIdx, te-ts);
 #ifdef PROF
-	printf("Thread %d Simulation perf %lf:%lf:%lf\n", network->_nodeIdx, comp_time/1000000, comm_time/1000000, sync_time/1000000);
+	printf("Thread %d Simulation perf %lf:%lf:%lf\n", network->_nodeIdx, comp_time, comm_time, sync_time);
 
 	string send;
 	string recv;
