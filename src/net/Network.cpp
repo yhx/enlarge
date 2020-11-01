@@ -9,7 +9,13 @@
 #include "../utils/TypeFunc.h"
 #include "Network.h"
 
-#define SPLIT 0
+#define SYN_BASE 0
+#define NEU_BASE 1
+#define ROUND_ROBIN 1
+#define BALANCED 2
+#define SYN_POP 100
+
+#define SPLIT SYN_BASE
 
 using namespace std::chrono;
 
@@ -869,13 +875,13 @@ void Network::splitNetwork()
 	}
 	
 
-#if SPLIT==0
+#if SPLIT==SYN_BASE
 	int nodeIdx = 0;
 	int synapseCount = 0;
 	int synapsePerNode = _totalSynapseNum/_nodeNum;
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 		Population * p = *pIter;
-		p->setNode(nodeIdx);
+		// p->setNode(nodeIdx);
 		for (int i=0; i<p->getNum(); i++) {
 			p->locate(i)->setNode(nodeIdx);
 			auto n2sIter = n2sInput.find(p->locate(i));
@@ -890,14 +896,53 @@ void Network::splitNetwork()
 			}
 		}
 	}
-#elif SPLIT==1
+#elif SPLIT==NEU_BASE
+	int nodeIdx = 0;
+	int neuronCount = 0;
+	int neuronPerNode = _totalNeuronNum/_nodeNum;
+	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
+		Population * p = *pIter;
+		// p->setNode(nodeIdx);
+		for (int i=0; i<p->getNum(); i++) {
+			p->locate(i)->setNode(nodeIdx);
+			auto n2sIter = n2sInput.find(p->locate(i));
+			if (n2sIter != n2sInput.end()) {
+				synapseCount += n2sIter->second.size();
+				for (auto vIter = n2sIter->second.begin(); vIter != n2sIter->second.end(); vIter++) {
+					(*vIter)->setNode(nodeIdx);
+				}
+			}
+			if (neuronCount >= (nodeIdx+1) * neuronPerNode && nodeIdx < _nodeNum - 1) {
+				nodeIdx++;
+			}
+		}
+	}
+#elif SPLIT==ROUND_ROBIN
+	int neuronCount = 0;
+	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
+		Population * p = *pIter;
+		// p->setNode(nodeIdx);
+		for (int i=0; i<p->getNum(); i++) {
+			int nodeIdx = neuronCount % _nodeNum;
+			neuronCount++;
+			p->locate(i)->setNode(nodeIdx);
+			auto n2sIter = n2sInput.find(p->locate(i));
+			if (n2sIter != n2sInput.end()) {
+				synapseCount += n2sIter->second.size();
+				for (auto vIter = n2sIter->second.begin(); vIter != n2sIter->second.end(); vIter++) {
+					(*vIter)->setNode(nodeIdx);
+				}
+			}
+		}
+	}
+#elif SPLIT==BALANCED
 #else
 	int nodeIdx = 0;
 	int synapseCount = 0;
 	int synapsePerNode = _totalSynapseNum/_nodeNum;
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 		Population * p = *pIter;
-		p->setNode(nodeIdx);
+		// p->setNode(nodeIdx);
 		for (int i=0; i<p->getNum(); i++) {
 			p->locate(i)->setNode(nodeIdx);
 			auto n2sIter = n2sInput.find(p->locate(i));
