@@ -31,7 +31,8 @@ public:
 	int getNum();
 	// virtual size_t getSize();
 
-	// virtual void setNode(int node) final;
+	virtual int getNode() final;
+	virtual void setNode(int node) final;
 	// virtual int reset(SimInfo &info);
 	// virtual int update(SimInfo &info);
 	// virtual void monitor(SimInfo &info);
@@ -45,7 +46,7 @@ public:
 	Item* find(ID id);
 	Item* locate(int idx);
 	
-protected:
+// protected:
 	size_t _N;
 	Type _type;
 	vector<Item*> _items;
@@ -132,16 +133,23 @@ Item* ModelArray<Item>::find(ID id)
 	return NULL;
 }
 
+template<class Item>
+int ModelArray<Item>::getNode()
+{
+	printf("getnode for population departured, dont use it!\n");
+	return _node;
+}
 
-//template<class Item>
-//void ModelArray<Item>::setNode(int node)
-//{
-//	Base::setNode(node);
-//	typename vector<Item>::iterator iter;
-//	for (iter = items.begin(); iter != items.end(); iter++) {
-//		setNode(node);
-//	}
-//}
+template<class Item>
+void ModelArray<Item>::setNode(int node)
+{
+	Model::setNode(node);
+	typename vector<Item>::iterator iter;
+	for (auto iter = _items.begin(); iter != _items.end(); iter++) {
+		(*iter)->setNode(node);
+	}
+	printf("setnode for population departured, dont use it!\n");
+}
 
 // template<class Item>
 // void ModelArray<Item>::monitor(SimInfo &info)

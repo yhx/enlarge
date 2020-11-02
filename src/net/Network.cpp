@@ -9,7 +9,7 @@
 #include "../utils/TypeFunc.h"
 #include "Network.h"
 
-#define SPLIT 0
+#define SPLIT 2
 
 using namespace std::chrono;
 
@@ -640,14 +640,27 @@ void Network::countTypeNum()
 {
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end();  pIter++) {
 		Population * p = *pIter;
+
+#if 1
+		for (auto nIter = p->_items.begin(); nIter != p->_items.end(); nIter++) {
+			Neuron *n = *nIter;
+			Type type = n->getType();
+			int node = n->getNode();
+			if (_globalNTypeNum[node].find(type) == _globalNTypeNum[node].end()) {
+				_globalNTypeNum[node][type] = 1;
+			} else {
+				_globalNTypeNum[node][type] += 1;
+			}
+		}
+#else
 		Type type = p->getType();
 		int node = p->getNode();
-
 		if (_globalNTypeNum[node].find(type) == _globalNTypeNum[node].end()) {
 			_globalNTypeNum[node][type] = p->getNum();
 		} else {
 			_globalNTypeNum[node][type] += p->getNum();
 		}
+#endif
 	}
 
 	for (auto siter = _pSynapses.begin(); siter != _pSynapses.end();  siter++) {
@@ -683,12 +696,22 @@ GNetwork* Network::arrangeData(int nodeIdx, const SimInfo &info) {
 		int idx = 0;
 		for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end();  pIter++) {
 			Population * p = *pIter;
+#if 1
+			for (auto nIter = p->_items.begin(); nIter != p->_items.end(); nIter++) {
+				Neuron *n = *nIter;
+				if (n->getNode() == nodeIdx && n->getType() == type) {
+					size_t copied = n->hardCopy(net->ppNeurons[index], idx, net->pNeuronNums[index], info);
+					idx += copied;
+				}
+			}
+#else
 			int node = p->getNode();
 
 			if (node == nodeIdx && p->getType() == type) {
 				size_t copied = p->hardCopy(net->ppNeurons[index], idx, net->pNeuronNums[index], info);
 				idx += copied;
 			}
+#endif
 		}
 
 		assert(idx == tIter->second);
@@ -707,10 +730,17 @@ GNetwork* Network::arrangeData(int nodeIdx, const SimInfo &info) {
 		int idx = 0;
 		for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 			Population *pop = *pIter;
+#if 0
 			if (pop->getNode() != nodeIdx)
 				continue;
+#endif
 
 			for (int nidx=0; nidx<pop->getNum(); nidx++) {
+#if 1
+				Neuron *n = pop->locate(nidx);
+				if (n->getNode() != nodeIdx)
+					continue;
+#endif
 				const vector<Synapse *> &s_vec = pop->locate(nidx)->getSynapses();
 				for (int delay_t=0; delay_t<delayLength; delay_t++) {
 					for (auto siter = s_vec.begin(); siter != s_vec.end(); siter++) {
@@ -766,10 +796,18 @@ Connection* Network::arrangeConnect(int nNum, int sNum, int node_idx, const SimI
 	int synapseIdx = 0;
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 		Population * p = *pIter;
+#if 0
 		if (p->getNode() != node_idx) 
 			continue;
+#endif
 
 		for (int i=0; i<p->getNum(); i++) {
+#if 1
+			Neuron *n = p->locate(i);
+			if (n->getNode() != node_idx) {
+				continue;
+			}
+#endif
 			ID nid = p->locate(i)->getID();
 			const vector<Synapse *> &s_vec = p->locate(i)->getSynapses();
 			for (int delay_t=0; delay_t<delayLength; delay_t++) {
@@ -875,7 +913,7 @@ void Network::splitNetwork()
 	int synapsePerNode = _totalSynapseNum/_nodeNum;
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 		Population * p = *pIter;
-		p->setNode(nodeIdx);
+		// p->setNode(nodeIdx);
 		for (int i=0; i<p->getNum(); i++) {
 			p->locate(i)->setNode(nodeIdx);
 			auto n2sIter = n2sInput.find(p->locate(i));
@@ -897,7 +935,7 @@ void Network::splitNetwork()
 	int synapsePerNode = _totalSynapseNum/_nodeNum;
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 		Population * p = *pIter;
-		p->setNode(nodeIdx);
+		// p->setNode(nodeIdx);
 		for (int i=0; i<p->getNum(); i++) {
 			p->locate(i)->setNode(nodeIdx);
 			auto n2sIter = n2sInput.find(p->locate(i));

@@ -64,11 +64,12 @@ def column_sub(file1="", file2=""):
 def main(argv):
     file1 = ''
     file2 = ''
+    files = ''
 
-    usuage_msg = sys.argv[0] + ' -1 <file1> -2 <file2>'
+    usuage_msg = sys.argv[0] + ' -1 <file1> -2 <file2> or ' + sys.argv[0] + ' -s <series filename without series num>'
 
     try:
-        opts, args = getopt.getopt(argv,"h1:2:",["file1=","file2="])
+        opts, args = getopt.getopt(argv,"h1:2:s:",["file1=","file2=", "files="])
     except getopt.GetoptError:
         print(usuage_msg)
         sys.exit(2)
@@ -80,15 +81,21 @@ def main(argv):
             file1 = arg
         elif opt in ("-2", "--file2"):
             file2 = arg
+        elif opt in ("-s", "--files"):
+            files = arg
+    if file1 == '' or file2 == '':
+        inputfile, outputfile = column_merge.find_series_files(files)
+        print('Column Merge: ' + ' '.join(str(e) for e in inputfile) + " to " + str(outputfile))
+        column_merge.column_merge(inputfile, outputfile)
+        np_array_sub(files, outputfile)
 
-    if not os.path.exists(file2):
+    elif not os.path.exists(file2):
         inputfile, outputfile = column_merge.find_series_files(file2)
         print('Column Merge: ' + ' '.join(str(e) for e in inputfile) + " to " + str(outputfile))
         column_merge.column_merge(inputfile, outputfile)
-        file2 = outputfile
-
-    
-    np_array_sub(file1, file2);
+        np_array_sub(file1, outputfile);
+    else:
+        np_array_sub(file1, file2);
 
 
 if __name__ == "__main__":
