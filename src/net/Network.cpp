@@ -3,8 +3,9 @@
  * Sat October 24 2015
  */
 
-#include <chrono>
 #include <math.h>
+#include <limits.h>
+#include <chrono>
 
 #include "../utils/TypeFunc.h"
 #include "Network.h"
@@ -642,6 +643,21 @@ CrossNodeData* Network::arrangeCrossNodeData(int node_num)
 	return cross_data;
 }
 
+void printTypeNum(vector<map<Type, unsigned long long>> typeNum, const char *name) {
+	printf("The %s number: ", name);
+	for (size_t i=0; i<typeNum.size(); i++) {
+		unsigned long long  total = 0;
+		for (auto tIter = typeNum[i].begin(); tIter != typeNum[i].end(); tIter++) {
+			Type type = tIter->first;
+			unsigned long long num = tIter->second;
+			printf("%d_%llu@%lu\t", type, num, i);
+			total += num;
+		}
+		assert(total < INT_MAX);
+	}
+	printf("\n");
+}
+
 void Network::countTypeNum() 
 {
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end();  pIter++) {
@@ -669,6 +685,23 @@ void Network::countTypeNum()
 #endif
 	}
 
+// #ifdef PROF // Too costy // Too costy
+// 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end();  pIter++) {
+// 		Population *p = *pIter;
+// 		for (auto nIter = p->_items.begin(); nIter != p->_items.end(); nIter++) {
+// 			Neuron *n = *nIter;
+// 			const vector<Synapse *> &s_vec = n->getSynapses();
+// 			for (auto sIter = s_vec.begin(); sIter != s_vec.end(); sIter++) {
+// 				Synapse *s = *sIter;
+// 				if (find(_pSynapses.begin(), _pSynapses.end(), s) == _pSynapses.end()) {
+// 					printf("Synapse %d (src %d, dst %d) not in global array\n", s->getID(), n->getID(), s->getDst()->getID());
+// 				}
+// 			}
+// 		}
+// 
+// 	}
+// #endif
+
 	for (auto siter = _pSynapses.begin(); siter != _pSynapses.end();  siter++) {
 		Synapse * p = *siter;
 		Type type = p->getType();
@@ -680,6 +713,10 @@ void Network::countTypeNum()
 			_globalSTypeNum[node][type] += 1;
 		}
 	}
+
+	printTypeNum(_globalNTypeNum, "neuron");
+	printTypeNum(_globalSTypeNum, "synapse");
+
 }
 
 GNetwork* Network::arrangeData(int nodeIdx, const SimInfo &info) {
@@ -699,7 +736,7 @@ GNetwork* Network::arrangeData(int nodeIdx, const SimInfo &info) {
 		net->ppNeurons[index] = allocType[type](tIter->second);
 		assert(net->ppNeurons[index] != NULL);
 
-		int idx = 0;
+	        size_t idx = 0;
 		for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end();  pIter++) {
 			Population * p = *pIter;
 #if 1
@@ -720,6 +757,9 @@ GNetwork* Network::arrangeData(int nodeIdx, const SimInfo &info) {
 #endif
 		}
 
+		if (idx != tIter->second) {
+			printf("Not match: %lu/%llu \n", idx, tIter->second);
+		}
 		assert(idx == tIter->second);
 		net->pNeuronNums[index+1] = idx + net->pNeuronNums[index];
 		index++;
@@ -733,7 +773,7 @@ GNetwork* Network::arrangeData(int nodeIdx, const SimInfo &info) {
 		net->ppSynapses[index] = allocType[type](tIter->second);
 		assert(net->ppSynapses[index] != NULL);
 
-		int idx = 0;
+		size_t idx = 0;
 		for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 			Population *pop = *pIter;
 #if 0
@@ -741,7 +781,7 @@ GNetwork* Network::arrangeData(int nodeIdx, const SimInfo &info) {
 				continue;
 #endif
 
-			for (int nidx=0; nidx<pop->getNum(); nidx++) {
+			for (size_t nidx=0; nidx<pop->getNum(); nidx++) {
 #if 1
 				Neuron *n = pop->locate(nidx);
 				if (n->getNode() != nodeIdx)
@@ -752,6 +792,9 @@ GNetwork* Network::arrangeData(int nodeIdx, const SimInfo &info) {
 					for (auto siter = s_vec.begin(); siter != s_vec.end(); siter++) {
 						if ((*siter)->getDelaySteps(info.dt) == delay_t + minDelaySteps) {
 							if ((*siter)->getType() == type && (*siter)->getNode() == nodeIdx) {
+								if (idx >= tIter->second) {
+									printf("Overflow: %lu/%llu \n", idx, tIter->second);
+								}
 								assert(idx < tIter->second);
 								int copied = (*siter)->hardCopy(net->ppSynapses[index], idx, net->pSynapseNums[index], info);
 								idx += copied;
@@ -767,6 +810,9 @@ GNetwork* Network::arrangeData(int nodeIdx, const SimInfo &info) {
 			for (int delay_t=0; delay_t<delayLength; delay_t++) {
 				for (auto iter = s_vec.begin(); iter != s_vec.end(); iter++) {
 					if (((*iter)->getNode() == nodeIdx) && ((*iter)->getDelaySteps(info.dt) == delay_t + minDelaySteps) && ((*iter)->getType() == type)) {
+						if (idx >= tIter->second) {
+							printf("CrossNode overflow: %lu/%llu \n", idx, tIter->second);
+						}
 						assert(idx < tIter->second);
 						int copied = (*iter)->hardCopy(net->ppSynapses[index], idx, net->pSynapseNums[index], info);
 						idx += copied;
@@ -776,6 +822,9 @@ GNetwork* Network::arrangeData(int nodeIdx, const SimInfo &info) {
 		}
 
 		assert(idx == tIter->second); 
+		if (idx != tIter->second) {
+			printf("CrossNode not match: %lu/%llu \n", idx, tIter->second);
+		}
 		net->pSynapseNums[index+1] = idx + net->pSynapseNums[index];
 		index++;
 	}
@@ -915,8 +964,8 @@ void Network::splitNetwork()
 
 #if SPLIT==SYN_BASE
 	int nodeIdx = 0;
-	int synapseCount = 0;
-	int synapsePerNode = _totalSynapseNum/_nodeNum;
+	unsigned long long  synapseCount = 0;
+	unsigned long long synapsePerNode = _totalSynapseNum/_nodeNum;
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 		Population * p = *pIter;
 		// p->setNode(nodeIdx);
@@ -936,8 +985,8 @@ void Network::splitNetwork()
 	}
 #elif SPLIT==NEU_BASE
 	int nodeIdx = 0;
-	int neuronCount = 0;
-	int neuronPerNode = _totalNeuronNum/_nodeNum;
+	unsigned long long neuronCount = 0;
+	unsigned long long  neuronPerNode = _totalNeuronNum/_nodeNum;
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 		Population * p = *pIter;
 		// p->setNode(nodeIdx);
@@ -956,11 +1005,11 @@ void Network::splitNetwork()
 		}
 	}
 #elif SPLIT==ROUND_ROBIN
-	int neuronCount = 0;
+	unsigned long long neuronCount = 0;
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 		Population * p = *pIter;
 		// p->setNode(nodeIdx);
-		for (int i=0; i<p->getNum(); i++) {
+		for (size_t i=0; i<p->getNum(); i++) {
 			int nodeIdx = neuronCount % _nodeNum;
 			neuronCount++;
 			p->locate(i)->setNode(nodeIdx);
@@ -976,12 +1025,12 @@ void Network::splitNetwork()
 #elif SPLIT==BALANCED
 #else
 	int nodeIdx = 0;
-	int synapseCount = 0;
-	int synapsePerNode = _totalSynapseNum/_nodeNum;
+	unsigned long long synapseCount = 0;
+	unsigned long long synapsePerNode = _totalSynapseNum/_nodeNum;
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 		Population * p = *pIter;
 		// p->setNode(nodeIdx);
-		for (int i=0; i<p->getNum(); i++) {
+		for (size_t i=0; i<p->getNum(); i++) {
 			p->locate(i)->setNode(nodeIdx);
 			auto n2sIter = n2sInput.find(p->locate(i));
 			if (n2sIter != n2sInput.end()) {
@@ -1002,7 +1051,7 @@ void Network::splitNetwork()
 
 	for (auto pIter= _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 		Population * p = *pIter;
-		for (int i=0; i<p->getNum(); i++) {
+		for (size_t i=0; i<p->getNum(); i++) {
 			bool crossNoded = false;
 			Neuron *n = p->locate(i);
 			int n_node = p->locate(i)->getNode();

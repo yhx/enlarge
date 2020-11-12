@@ -130,14 +130,14 @@ public:
 	// vector<map<int, ID> > _global_idx2nID;
 	// vector<map<int, ID> > _global_idx2sID;
 	// Number of neurons for different types on different nodes accessed by _global_ntype_num[node][type]
-	vector<map<Type, int> >	_globalNTypeNum;
+	vector<map<Type, unsigned long long> >	_globalNTypeNum;
 	// Number of synapses for different types on different nodes accessed by _global_ntype_num[node][type]
-	vector<map<Type, int> > _globalSTypeNum;
+	vector<map<Type, unsigned long long> > _globalSTypeNum;
 
 	real _maxDelay;
 	real _minDelay;
-	int _totalNeuronNum;
-	int _totalSynapseNum;
+	unsigned long long _totalNeuronNum;
+	unsigned long long _totalSynapseNum;
 	int _nodeNum;
 private:
 	real _maxFireRate;

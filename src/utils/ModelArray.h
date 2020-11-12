@@ -28,7 +28,7 @@ public:
 
 	virtual Type getType() const override;
 
-	int getNum();
+	size_t getNum();
 	// virtual size_t getSize();
 
 	virtual int getNode() final;
@@ -97,7 +97,7 @@ ModelArray<Item>::~ModelArray()
 }
 
 template<class Item>
-int ModelArray<Item>::getNum()
+size_t ModelArray<Item>::getNum()
 {
 	return _N;
 }
