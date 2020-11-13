@@ -6,6 +6,7 @@
 #include <math.h>
 #include <limits.h>
 #include <chrono>
+#include <sys/sysinfo.h>
 
 #include "../utils/TypeFunc.h"
 #include "Network.h"
@@ -1076,15 +1077,22 @@ void Network::splitNetwork()
 
 DistriNetwork* Network::buildNetworks(const SimInfo &info, bool auto_splited)
 {
+	struct sysinfo sinfo;
+	sysinfo(&sinfo);
+	printf("Before build, MEM used: %lfGB\n", static_cast<double>((sinfo.totalram - sinfo.freeram)/1024.0/1024.0/1024.0));
+
 	assert(_nodeNum >= 1);
 	DistriNetwork * net = initDistriNet(_nodeNum, info.dt);
 
+	printf("=====================Split Network=============================\n");
 	if (auto_splited && _nodeNum > 1) {
 		splitNetwork();
 	}
 
+	printf("=====================Count Type================================\n");
 	countTypeNum();
 
+	printf("=====================Arrange Connect===========================\n");
 	for (int nodeIdx =0; nodeIdx <_nodeNum; nodeIdx++) {
 		net[nodeIdx]._network = arrangeData(nodeIdx, info);
 
@@ -1094,10 +1102,17 @@ DistriNetwork* Network::buildNetworks(const SimInfo &info, bool auto_splited)
 
 	}
 
+	sysinfo(&sinfo);
+	printf("After build, MEM used: %lfGB\n", static_cast<double>((sinfo.totalram - sinfo.freeram)/1024.0/1024.0/1024.0));
+
+	printf("=====================Arrange Map===============================\n");
 	for (int nodeIdx =0; nodeIdx <_nodeNum; nodeIdx++) {
 		int nNum = net[nodeIdx]._network->pNeuronNums[net[nodeIdx]._network->nTypeNum] + _crossnodeNeuron2idx[nodeIdx].size();
 		net[nodeIdx]._crossnodeMap = arrangeCrossNodeMap(nNum, nodeIdx, _nodeNum);
 	}
+
+	sysinfo(&sinfo);
+	printf("Finish build, MEM used: %lfGB\n", static_cast<double>((sinfo.totalram - sinfo.freeram)/1024.0/1024.0/1024.0));
 
 	return net;
 }

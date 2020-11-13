@@ -1,5 +1,6 @@
 
 #include <assert.h>
+#include <sys/sysinfo.h>
 
 #include "../utils/utils.h"
 #include "../utils/TypeFunc.h"
@@ -37,6 +38,10 @@
 
 GNetwork* Network::buildNetwork(const SimInfo &info)
 {
+	struct sysinfo sinfo;
+	sysinfo(&sinfo);
+	printf("Before build, MEM used: %lfGB\n", static_cast<double>((sinfo.totalram - sinfo.freeram)/1024.0/1024.0/1024.0));
+
 	vector<Population *>::iterator pIter;
 	vector<Neuron *>::iterator niter;
 	vector<Synapse *>::iterator siter;
@@ -129,7 +134,7 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 	int synapseIdx = 0;
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 		Population * p = *pIter;
-		for (int i=0; i<p->getNum(); i++) {
+		for (size_t i=0; i<p->getNum(); i++) {
 			ID nid = p->locate(i)->getID();
 			const vector<Synapse *> &s_vec = p->locate(i)->getSynapses();
 			for (int delay_t=0; delay_t < deltaDelay; delay_t++) {
@@ -148,6 +153,9 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 			}
 		}
 	}
+
+	sysinfo(&sinfo);
+	printf("Finish build, MEM used: %lfGB\n", static_cast<double>((sinfo.totalram - sinfo.freeram)/1024.0/1024.0/1024.0));
 
 	return ret;
 }

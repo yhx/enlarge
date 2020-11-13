@@ -1,4 +1,12 @@
 #!/bin/sh
+rm ./*.bak
+rm ./*.data
+rm ./*.head
+rm ./*.log
+rm ./*.csv
+rm ./*.count
+rm ./*.info
+rm ./*.res
 rm ./build/bin/*.bak
 rm ./build/bin/*.data
 rm ./build/bin/*.head

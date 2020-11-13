@@ -96,6 +96,10 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 	// 	cout << c_pNetGPU->pSTypes[i] << ": <<<" << updateSize[c_pNetGPU->pSTypes[i]].gridSize << ", " << updateSize[c_pNetGPU->pSTypes[i]].blockSize << ">>>" << endl;
 	// }
 
+	size_t fmem = 0, tmem = 0;
+	checkCudaErrors(cudaMemGetInfo(&fmem, &tmem));
+	printf("GPUMEM used: %lfGB\n", static_cast<double>((tmem - fmem)/1024.0/1024.0/1024.0));
+
 	vector<int> firedInfo;
 	printf("Start runing for %d cycles\n", sim_cycle);
 	struct timeval ts, te;
