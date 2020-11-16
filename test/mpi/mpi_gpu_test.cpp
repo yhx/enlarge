@@ -16,7 +16,7 @@ int main(int argc, char **argv)
 
 	int node_id = 0;
 	MPI_Comm_rank(MPI_COMM_WORLD, &node_id);
-	char v_filename[512]; 
+	// char v_filename[512]; 
 
 	if (node_id == 0) {
 		//LIFNeuron::LIFNeuron(ID id, real v_init, real v_rest, real v_reset, real cm, real tau_m, real tau_refrac, real tau_syn_E, real tau_syn_I, real v_thresh, real i_offset)

@@ -53,9 +53,9 @@ public:
 		return _weight;
 	}
 
-	virtual void monitorOn() {
-		monitored = true;
-	}
+	// virtual void monitorOn() {
+	// 	monitored = true;
+	// }
 
 protected:
 	Neuron *_p_src;
@@ -63,7 +63,7 @@ protected:
 	real _weight;
 	real _delay;
 	//int _idx_dst;
-	bool monitored;
+	//bool monitored;
 };
 
 class Greater {

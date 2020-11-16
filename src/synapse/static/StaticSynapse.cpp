@@ -12,7 +12,7 @@ const Type StaticSynapse::type = Static;
 StaticSynapse::StaticSynapse(real weight, real delay, real tau_syn)
 	: Synapse(0, weight, delay), _tau_syn(tau_syn)
 {
-	this->monitored = false;
+	// this->monitored = false;
 }
 
 StaticSynapse::StaticSynapse(const StaticSynapse &synapse) : Synapse()
@@ -20,7 +20,7 @@ StaticSynapse::StaticSynapse(const StaticSynapse &synapse) : Synapse()
 	this->_weight = synapse._weight;
 	this->_delay = synapse._delay;
 	this->_tau_syn = synapse._tau_syn;
-	this->monitored = false;
+	// this->monitored = false;
 }
 
 StaticSynapse::~StaticSynapse()

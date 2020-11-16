@@ -144,8 +144,8 @@ int Network::connect(Population *pSrc, Population *pDst, real weight, real delay
 	return count;
 }
 
-int Network::connect(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, int size) {
-	int dstNum = pDst->getNum();
+int Network::connect(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t size) {
+	size_t dstNum = pDst->getNum();
 	assert(size == (pSrc->getNum() * dstNum)); 
 
 	if (find(_pPopulations.begin(), _pPopulations.end(), pSrc) == _pPopulations.end()) {
@@ -162,9 +162,9 @@ int Network::connect(Population *pSrc, Population *pDst, real *weight, real *del
 	}
 
 	int count = 0;
-	for (int i=0; i<size; i++) {
-		int iSrc = i/dstNum;
-		int iDst = i%dstNum;
+	for (size_t i=0; i<size; i++) {
+		size_t iSrc = i/dstNum;
+		size_t iDst = i%dstNum;
 		        //connect(Neuron *pn1, Neuron *pn2, real weight, real delay, SpikeType type, real tau, bool store)
 		if (type == NULL) {
 			connect(pSrc->locate(iSrc), pDst->locate(iDst), weight[i], delay[i], Excitatory, 0.0, false);
@@ -177,7 +177,7 @@ int Network::connect(Population *pSrc, Population *pDst, real *weight, real *del
 	return count;
 }
 
-int Network::connectOne2One(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, int size) {
+int Network::connectOne2One(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t size) {
 	assert(size == pSrc->getNum());
 	assert(size == pDst->getNum()); 
 
@@ -195,7 +195,7 @@ int Network::connectOne2One(Population *pSrc, Population *pDst, real *weight, re
 	}
 
 	int count = 0;
-	for (int i=0; i<size; i++) {
+	for (size_t i=0; i<size; i++) {
 		if (type == NULL) {
 			connect(pSrc->locate(i), pDst->locate(i), weight[i], delay[i], Excitatory, 0.0, false);
 		} else {
@@ -207,17 +207,17 @@ int Network::connectOne2One(Population *pSrc, Population *pDst, real *weight, re
 	return count;
 }
 
-int Network::connectConv(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, int height, int width, int k_height, int k_width) {
+int Network::connectConv(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t height, size_t width, size_t k_height, size_t k_width) {
 	assert(pSrc->getNum() == height * width); 
 	assert(pDst->getNum() == height * width); 
 
-	int count = 0;
-	for (int h = 0; h < height; h++) {
-		for (int w = 0; w < width; w++) {
-			for (int i = 0; i< k_height; i++) {
-				for (int j = 0; j < k_width; j++) {
-					int idx_h = h + i - (k_height - 1)/2;
-					int idx_w = w + j - (k_width - 1)/2;
+        size_t count = 0;
+	for (size_t h = 0; h < height; h++) {
+		for (size_t w = 0; w < width; w++) {
+			for (size_t i = 0; i< k_height; i++) {
+				for (size_t j = 0; j < k_width; j++) {
+					size_t idx_h = h + i - (k_height - 1)/2;
+					size_t idx_w = w + j - (k_width - 1)/2;
 
 					if (idx_h >= 0 && idx_h < height && idx_w >= 0 && idx_w < width) {
 						count++;
@@ -236,21 +236,21 @@ int Network::connectConv(Population *pSrc, Population *pDst, real *weight, real 
 	return count;
 }
 
-int Network::connectPooling(Population *pSrc, Population *pDst, real delay, int height, int width, int p_height, int p_width)
+int Network::connectPooling(Population *pSrc, Population *pDst, real delay, size_t height, size_t width, size_t p_height, size_t p_width)
 {
 	assert(pDst->getNum() == pSrc->getNum() / p_height / p_width); 
 
-	//int d_height = height/p_height;
-	int d_width = width/p_width;
+	//size_t d_height = height/p_height;
+	size_t d_width = width/p_width;
 
-	int count = 0;
-	for (int h = 0; h < height; h++) {
-		for (int w = 0; w < width; w++) {
-			int d_h = h/p_height;
-			int d_w = w/p_width;
-			int d_h_ = h % p_height;
-			int d_w_ = w % p_width;
-			int idx = d_h_ * p_width + d_w_;
+	size_t count = 0;
+	for (size_t h = 0; h < height; h++) {
+		for (size_t w = 0; w < width; w++) {
+			size_t d_h = h/p_height;
+			size_t d_w = w/p_width;
+			size_t d_h_ = h % p_height;
+			size_t d_w_ = w % p_width;
+			size_t idx = d_h_ * p_width + d_w_;
 
 			count++;
 			connect(pSrc->locate(h * width + w), pDst->locate(d_h*d_width + d_w), (real)(1 << idx), delay, Excitatory, 0.0, false);
@@ -261,7 +261,7 @@ int Network::connectPooling(Population *pSrc, Population *pDst, real delay, int 
 }
 
 
-int Network::addNeuronNum(Type type, int num)
+int Network::addNeuronNum(Type type, size_t num)
 {
 	vector<Type>::iterator iter = find(_nTypes.begin(), _nTypes.end(), type);
 	if (iter == _nTypes.end()) {
@@ -269,7 +269,7 @@ int Network::addNeuronNum(Type type, int num)
 		_neuronNums.push_back(num);
 		_connectNums.push_back(0);
 	} else {
-		int idx = std::distance(_nTypes.begin(), iter);
+		size_t idx = std::distance(_nTypes.begin(), iter);
 		_neuronNums[idx] += num;
 	}
 	_totalNeuronNum += num;
@@ -277,7 +277,7 @@ int Network::addNeuronNum(Type type, int num)
 	return num;
 }
 
-int Network::addConnectionNum(Type type, int num)
+int Network::addConnectionNum(Type type, size_t num)
 {
 	// To be updated
 	vector<Type>::iterator iter = find(_nTypes.begin(), _nTypes.end(), type);
@@ -287,21 +287,21 @@ int Network::addConnectionNum(Type type, int num)
 		//_connectNums.push_back(0);
 		printf("This should not happed, when a connect is added, a pre-neuron must exist!\n");
 	} else {
-		int idx = std::distance(_nTypes.begin(), iter);
+		size_t idx = std::distance(_nTypes.begin(), iter);
 		_connectNums[idx] += num;
 	}
 
 	return num;
 }
 
-int Network::addSynapseNum(Type type, int num)
+int Network::addSynapseNum(Type type, size_t num)
 {
 	vector<Type>::iterator iter = find(_sTypes.begin(), _sTypes.end(), type);
 	if (iter == _sTypes.end()) {
 		_sTypes.push_back(type);
 		_synapseNums.push_back(num);
 	} else {
-		int idx = std::distance(_sTypes.begin(), iter);
+		size_t idx = std::distance(_sTypes.begin(), iter);
 		_synapseNums[idx] += num;
 	}
 	_totalSynapseNum += num;
@@ -346,28 +346,28 @@ Synapse* Network::connect(Neuron *pn1, Neuron *pn2, real weight, real delay, Spi
 	return p;
 }
 
-Population * Network::findPopulation(int populationID)
+Population * Network::findPopulation(size_t populationID)
 {
-	if (populationID >= (int)_pPopulations.size()) {
+	if (populationID >= _pPopulations.size()) {
 		return NULL;
 	}
 
 	return _pPopulations[populationID];
 }
 
-Neuron * Network::findNeuron(int populationIDSrc, int neuronIDSrc)
+Neuron * Network::findNeuron(size_t populationIDSrc, size_t neuronIDSrc)
 {
 	Population *pP = findPopulation(populationIDSrc);
 
 	if (pP == NULL) {
-		printf("Cann't find population: %d\n", populationIDSrc);
+		printf("Cann't find population: %lu\n", populationIDSrc);
 		return NULL;
 	}
 
 	Neuron *pN = NULL;
 	pN = pP->locate(neuronIDSrc);
 	if (pN == NULL) {
-		printf("Cann't find neuron: %d:%d\n", populationIDSrc, neuronIDSrc);
+		printf("Cann't find neuron: %lu:%lu\n", populationIDSrc, neuronIDSrc);
 		return NULL;
 	}
 
@@ -428,7 +428,7 @@ Neuron * Network::findNeuron(int populationIDSrc, int neuronIDSrc)
 // 	return 0;
 // }
 
-int Network::connect(int populationIDSrc, int neuronIDSrc, int populationIDDst, int neuronIDDst, real weight, real delay, real tau)
+int Network::connect(size_t populationIDSrc, size_t neuronIDSrc, size_t populationIDDst, size_t neuronIDDst, real weight, real delay, real tau)
 {
 	//PopulationBase *ppSrc = NULL, *ppDst = NULL;
 	//vector<PopulationBase*>::iterator iter;
@@ -461,12 +461,12 @@ int Network::connect(int populationIDSrc, int neuronIDSrc, int populationIDDst, 
 	pnDst = findNeuron(populationIDDst, neuronIDDst);
 
 	if (pnSrc == NULL) {
-		printf("CONNECTION SRC Cann't find neuron: %d:%d\n", populationIDSrc, neuronIDSrc);
+		printf("CONNECTION SRC Cann't find neuron: %lu:%lu\n", populationIDSrc, neuronIDSrc);
 		return -1;
 	}
 
 	if (pnDst == NULL) {
-		printf("CONNECTION DST Cann't find neuron: %d:%d\n", populationIDDst, neuronIDDst);
+		printf("CONNECTION DST Cann't find neuron: %lu:%lu\n", populationIDDst, neuronIDDst);
 		return -2;
 	}
 	
@@ -506,8 +506,6 @@ int Network::reset(const SimInfo &info)
 	// 	p->reset(info);
 	// }
 	
-
-
 	return 0;
 }
 // 
@@ -841,7 +839,7 @@ GNetwork* Network::arrangeData(int nodeIdx, const SimInfo &info) {
 	return net;
 }
 
-Connection* Network::arrangeConnect(int nNum, int sNum, int node_idx, const SimInfo &info)
+Connection* Network::arrangeConnect(size_t nNum, size_t sNum, int node_idx, const SimInfo &info)
 {
 	int maxDelaySteps = static_cast<int>(round(_maxDelay/info.dt));
 	int minDelaySteps = static_cast<int>(round(_minDelay/info.dt));
@@ -849,7 +847,7 @@ Connection* Network::arrangeConnect(int nNum, int sNum, int node_idx, const SimI
 	assert(connection != NULL);
 
 	int delayLength = maxDelaySteps - minDelaySteps + 1;
-	int synapseIdx = 0;
+	size_t synapseIdx = 0;
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 		Population * p = *pIter;
 #if 0
@@ -857,7 +855,7 @@ Connection* Network::arrangeConnect(int nNum, int sNum, int node_idx, const SimI
 			continue;
 #endif
 
-		for (int i=0; i<p->getNum(); i++) {
+		for (size_t i=0; i<p->getNum(); i++) {
 #if 1
 			Neuron *n = p->locate(i);
 			if (n->getNode() != node_idx) {
@@ -902,7 +900,7 @@ Connection* Network::arrangeConnect(int nNum, int sNum, int node_idx, const SimI
 }
 
 // Should finish data arrange of all nodes first.
-CrossNodeMap* Network::arrangeCrossNodeMap(int n_num, int node_idx, int node_num)
+CrossNodeMap* Network::arrangeCrossNodeMap(size_t n_num, int node_idx, int node_num)
 {
 	CrossNodeMap* crossMap = (CrossNodeMap*)malloc(sizeof(CrossNodeMap));
 	assert(crossMap != NULL);
@@ -951,7 +949,7 @@ void Network::splitNetwork()
 	// Check n2s is right
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 		Population * p = *pIter;
-		for (int i=0; i<p->getNum(); i++) {
+		for (size_t i=0; i<p->getNum(); i++) {
 			Neuron * n = p->locate(i);
 			auto n2sIter = n2sInput.find(n);
 			if (n2sIter != n2sInput.end()) {
@@ -970,7 +968,7 @@ void Network::splitNetwork()
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 		Population * p = *pIter;
 		// p->setNode(nodeIdx);
-		for (int i=0; i<p->getNum(); i++) {
+		for (size_t i=0; i<p->getNum(); i++) {
 			p->locate(i)->setNode(nodeIdx);
 			auto n2sIter = n2sInput.find(p->locate(i));
 			if (n2sIter != n2sInput.end()) {
@@ -991,7 +989,7 @@ void Network::splitNetwork()
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 		Population * p = *pIter;
 		// p->setNode(nodeIdx);
-		for (int i=0; i<p->getNum(); i++) {
+		for (size_t i=0; i<p->getNum(); i++) {
 			p->locate(i)->setNode(nodeIdx);
 			auto n2sIter = n2sInput.find(p->locate(i));
 			if (n2sIter != n2sInput.end()) {

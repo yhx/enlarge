@@ -35,40 +35,40 @@ public:
 	// template<class N>
 	// Population<N>* createNeuron(N n1);
 	template<class N>
-	Population* createPopulation(int id, int num, N templ, bool empty = false);
+	Population* createPopulation(int id, size_t num, N templ, bool empty = false);
 
 	template<class N>
-	Population* createPopulation(int num, N templ, bool empty = false);
+	Population* createPopulation(size_t num, N templ, bool empty = false);
 
 	template<class S>
 	int connect(Population *pSrc, Population *pDst, S templ);
 
 	template<class S>
-	int connect(Population *pSrc, Population *pDst, S *pTempl, int size);
+	int connect(Population *pSrc, Population *pDst, S *pTempl, size_t size);
 
 	template<class S>
 	Synapse* connect(Neuron *pSrc, Neuron *pDst, S templ, bool store = true);
 
 	int connect(Population *pSrc, Population *pDst, real weight, real delay, SpikeType type);
-	int connect(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, int size);
-	int connectOne2One(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, int size);
-	int connectConv(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, int height, int width, int k_height, int k_width);
-	int connectPooling(Population *pSrc, Population *pDst, real weight, int height, int width, int p_height, int p_width);
+	int connect(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t size);
+	int connectOne2One(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t size);
+	int connectConv(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t height, size_t width, size_t k_height, size_t k_width);
+	int connectPooling(Population *pSrc, Population *pDst, real weight, size_t height, size_t width, size_t p_height, size_t p_width);
 	
-	int connect(int populationIDSrc, int neuronIDSrc, int populationIDDst, int neuronIDDst, real weight, real delay, real tau = 0);
+	int connect(size_t populationIDSrc, size_t neuronIDSrc, size_t populationIDDst, size_t neuronIDDst, real weight, real delay, real tau = 0);
 	Synapse* connect(Neuron *pSrc, Neuron *pDst, real weight, real delay, SpikeType type = Excitatory, real tau = 0, bool store = true);
 
 	GNetwork* buildNetwork(const SimInfo &info);
 
-	int addNeuronNum(Type type, int num);
-	int addConnectionNum(Type type, int num);
-	int addSynapseNum(Type type, int num);
+	int addNeuronNum(Type type, size_t num);
+	int addConnectionNum(Type type, size_t num);
+	int addSynapseNum(Type type, size_t num);
 
 	// int addMonitor(int populationIDSrc, int neuronIDSrc);
 	// int addOutput(int populationIDSrc, int neuronIDSrc);
 	// int addProbe(int populationIDSrc, int neuronIDSrc, double weight = 1);
-	Population* findPopulation(int populationID);
-	Neuron* findNeuron(int populationIDSrc, int neuronIDSrc);
+	Population* findPopulation(size_t populationID);
+	Neuron* findNeuron(size_t populationIDSrc, size_t neuronIDSrc);
 
 	int reset(const SimInfo &info);
 	// int update(const SimInfo &info);
@@ -92,8 +92,8 @@ private:
 	void splitNetwork();
 	void countTypeNum();
 	GNetwork* arrangeData(int node, const SimInfo &info);
-	Connection* arrangeConnect(int n_num, int s_num, int node_idx, const SimInfo &info);
-	CrossNodeMap* arrangeCrossNodeMap(int n_num, int node_idx, int node_num);
+	Connection* arrangeConnect(size_t n_num, size_t s_num, int node_idx, const SimInfo &info);
+	CrossNodeMap* arrangeCrossNodeMap(size_t n_num, int node_idx, int node_num);
 
 public:
 	// vector<Neuron*> pOutputs;
@@ -165,13 +165,13 @@ private:
 //}
 
 template<class N>
-Population * Network::createPopulation(int id, int num, N templ, bool empty)
+Population * Network::createPopulation(int id, size_t num, N templ, bool empty)
 {
 	return createPopulation(num, templ, empty);
 }
 
 template<class N>
-Population * Network::createPopulation(int num, N templ, bool empty)
+Population * Network::createPopulation(size_t num, N templ, bool empty)
 {
 	//ID id = totalNeuronNum;
 	Population * pp1 = NULL;
@@ -220,8 +220,8 @@ int Network::connect(Population *pSrc, Population *pDst, S templ) {
 }
 
 template<class S>
-int Network::connect(Population *pSrc, Population *pDst, S *pTempl, int size) {
-	int dstNum = pDst->getNum();
+int Network::connect(Population *pSrc, Population *pDst, S *pTempl, size_t size) {
+	size_t dstNum = pDst->getNum();
 	assert(size == (pSrc->getNum() * dstNum)); 
 
 	if (find(_pPopulations.begin(), _pPopulations.end(), pSrc) == _pPopulations.end()) {
@@ -238,9 +238,9 @@ int Network::connect(Population *pSrc, Population *pDst, S *pTempl, int size) {
 	}
 
 	int count = 0;
-	for (int i=0; i<size; i++) {
-		int iSrc = i/dstNum;
-		int iDst = i%dstNum;
+	for (size_t i=0; i<size; i++) {
+		size_t iSrc = i/dstNum;
+		size_t iDst = i%dstNum;
 		connect(pSrc->locate(iSrc), pDst->locate(iDst), pTempl[i], false);
 		count++;
 	}
