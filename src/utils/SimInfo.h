@@ -17,7 +17,7 @@ using std::string;
 using std::vector;
 
 struct SimInfo {
-	SimInfo(real _dt, int cycle = 0) : currCycle(cycle), dt(_dt) {}
+	SimInfo(real _dt, int cycle = 0) : currCycle(cycle), dt(_dt), save_mem(false) {}
 	~SimInfo() {
 		fired.clear();
 		input.clear();
@@ -25,6 +25,7 @@ struct SimInfo {
 
 	int currCycle;
 	real dt;
+	bool save_mem;
 	vector<ID> fired;
 	vector<real> input;
 };

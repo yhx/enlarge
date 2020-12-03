@@ -9,6 +9,8 @@
 #include <sys/sysinfo.h>
 
 #include "../utils/TypeFunc.h"
+#include "../utils/proc_info.h"
+#include "../utils/utils.h"
 #include "Network.h"
 
 #define SYN_BASE 0
@@ -45,10 +47,41 @@ Network::Network(int nodeNum)
 
 Network::~Network()
 {
+#if 0
+	if (!_pSynapses.empty()) {
+		for (auto iter = _pSynapses.begin(); iter != _pSynapses.end(); iter++) {
+			Synapse * t = *iter;
+			if (s) {
+				delete t;
+			}
+		}
+	}
+#else
+ 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end();  pIter++) {
+ 		Population *p = *pIter;
+		if (!p) {
+			continue;
+		}
+ 		for (auto nIter = p->_items.begin(); nIter != p->_items.end(); nIter++) {
+ 			Neuron *n = *nIter;
+ 			const vector<Synapse *> &s_vec = n->getSynapses();
+ 			for (auto sIter = s_vec.begin(); sIter != s_vec.end(); sIter++) {
+ 				Synapse *s = *sIter;
+				if (s) {
+					delete s;
+				}
+ 			}
+ 		}
+ 
+ 	}
+#endif
+
 	if (!_pPopulations.empty()) {
 		for (auto iter = _pPopulations.begin(); iter != _pPopulations.end(); iter++) {
 			Population* t = *iter;
-			delete t;
+			if (t) {
+				delete t;
+			}
 		}
 	}
 
@@ -56,19 +89,18 @@ Network::~Network()
 	//	vector<NeuronBase*>::iterator iter;
 	//	for (iter = pNeurons.begin(); iter != pNeurons.end(); iter++) {
 	//		NeuronBase * t = *iter;
-	//		delete t;
+	//		if (t) {
+	//			delete t;
+	//		}
 	//	}
 	//}
 
-	if (!_pSynapses.empty()) {
-		for (auto iter = _pSynapses.begin(); iter != _pSynapses.end(); iter++) {
-			Synapse * t = *iter;
-			delete t;
-		}
-	}
 
-	_pPopulations.clear();
+#if 0
 	_pSynapses.clear();
+#endif
+	print_mem("Free Network 1");
+	_pPopulations.clear();
 	// _pOutputs.clear();
 	// n2sNetwork.clear();
 	// n2sTargetNetwork.clear();
@@ -92,6 +124,8 @@ Network::~Network()
 
 	_globalNTypeNum.clear();
 	_globalSTypeNum.clear();
+
+	printf("Free Network 2");
 }
 
 int Network::setNodeNum(int nodeNum)
@@ -326,7 +360,9 @@ Synapse* Network::connect(Neuron *pn1, Neuron *pn2, real weight, real delay, Spi
 	p->setDst(pn2);
 	pn1->addSynapse(p);
 
+#if 0
 	_pSynapses.push_back(p);
+#endif
 	addConnectionNum(pn1->getType(), 1);
 	addSynapseNum(p->getType(), 1);
 
@@ -701,6 +737,7 @@ void Network::countTypeNum()
 // 	}
 // #endif
 
+#if 0
 	for (auto siter = _pSynapses.begin(); siter != _pSynapses.end();  siter++) {
 		Synapse * p = *siter;
 		Type type = p->getType();
@@ -712,6 +749,26 @@ void Network::countTypeNum()
 			_globalSTypeNum[node][type] += 1;
 		}
 	}
+#else
+	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end();  pIter++) {
+		Population *p = *pIter;
+		for (auto nIter = p->_items.begin(); nIter != p->_items.end(); nIter++) {
+			Neuron *n = *nIter;
+			const vector<Synapse *> &s_vec = n->getSynapses();
+			for (auto sIter = s_vec.begin(); sIter != s_vec.end(); sIter++) {
+				Synapse *s = *sIter;
+				Type type = s->getType();
+				int node = s->getNode();
+				if (_globalSTypeNum[node].find(type) == _globalSTypeNum[node].end()) {
+					_globalSTypeNum[node][type] = 1;
+				} else {
+					_globalSTypeNum[node][type] += 1;
+				}
+			}
+		}
+
+	}
+#endif
 
 	printTypeNum(_globalNTypeNum, "neuron");
 	printTypeNum(_globalSTypeNum, "synapse");
@@ -745,6 +802,10 @@ GNetwork* Network::arrangeData(int nodeIdx, const SimInfo &info) {
 					size_t copied = n->hardCopy(net->ppNeurons[index], idx, net->pNeuronNums[index], info);
 					idx += copied;
 				}
+				// if (info.save_mem) {
+				// 	delete n;
+				// 	*nIter = NULL;
+				// }
 			}
 #else
 			int node = p->getNode();
@@ -778,15 +839,20 @@ GNetwork* Network::arrangeData(int nodeIdx, const SimInfo &info) {
 #if 0
 			if (pop->getNode() != nodeIdx)
 				continue;
-#endif
 
 			for (size_t nidx=0; nidx<pop->getNum(); nidx++) {
-#if 1
 				Neuron *n = pop->locate(nidx);
+
+				vector<Synapse *> &s_vec = pop->locate(nidx)->getSynapses();
+#endif
+#if 1
+			for (auto nIter = pop->_items.begin(); nIter != pop->_items.end(); nIter++) {
+				Neuron *n = *nIter;
 				if (n->getNode() != nodeIdx)
 					continue;
+
+				vector<Synapse *> &s_vec = n->getSynapses();
 #endif
-				const vector<Synapse *> &s_vec = pop->locate(nidx)->getSynapses();
 				for (int delay_t=0; delay_t<delayLength; delay_t++) {
 					for (auto siter = s_vec.begin(); siter != s_vec.end(); siter++) {
 						if ((*siter)->getDelaySteps(info.dt) == delay_t + minDelaySteps) {
@@ -797,6 +863,11 @@ GNetwork* Network::arrangeData(int nodeIdx, const SimInfo &info) {
 								assert(idx < tIter->second);
 								int copied = (*siter)->hardCopy(net->ppSynapses[index], idx, net->pSynapseNums[index], info);
 								idx += copied;
+								// if (info.save_mem) {
+								// 	Synapse *s_t = *siter;
+								// 	delete s_t;
+								// 	*siter = NULL;
+								// }
 							}
 						}
 					}
@@ -941,10 +1012,25 @@ CrossNodeMap* Network::arrangeCrossNodeMap(size_t n_num, int node_idx, int node_
 void Network::splitNetwork()
 {
 	map<Neuron *, vector<Synapse *>> n2sInput;
+
+#if 0
 	for (auto sIter = _pSynapses.begin(); sIter != _pSynapses.end(); sIter++) {
 		Synapse * p = *sIter;
 		n2sInput[p->getDst()].push_back(p);
 	}
+#else
+	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end();  pIter++) {
+		Population *p = *pIter;
+		for (auto nIter = p->_items.begin(); nIter != p->_items.end(); nIter++) {
+			Neuron *n = *nIter;
+			const vector<Synapse *> &s_vec = n->getSynapses();
+			for (auto sIter = s_vec.begin(); sIter != s_vec.end(); sIter++) {
+				Synapse *s = *sIter;
+				n2sInput[s->getDst()].push_back(s);
+			}
+		}
+	}
+#endif
 
 	// Check n2s is right
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
@@ -1075,9 +1161,7 @@ void Network::splitNetwork()
 
 DistriNetwork* Network::buildNetworks(const SimInfo &info, bool auto_splited)
 {
-	struct sysinfo sinfo;
-	sysinfo(&sinfo);
-	printf("Before build, MEM used: %lfGB\n", static_cast<double>((sinfo.totalram - sinfo.freeram)/1024.0/1024.0/1024.0));
+	print_mem("Before build");
 
 	assert(_nodeNum >= 1);
 	DistriNetwork * net = initDistriNet(_nodeNum, info.dt);
@@ -1100,8 +1184,7 @@ DistriNetwork* Network::buildNetworks(const SimInfo &info, bool auto_splited)
 
 	}
 
-	sysinfo(&sinfo);
-	printf("After build, MEM used: %lfGB\n", static_cast<double>((sinfo.totalram - sinfo.freeram)/1024.0/1024.0/1024.0));
+	print_mem("After build");
 
 	printf("=====================Arrange Map===============================\n");
 	for (int nodeIdx =0; nodeIdx <_nodeNum; nodeIdx++) {
@@ -1109,8 +1192,28 @@ DistriNetwork* Network::buildNetworks(const SimInfo &info, bool auto_splited)
 		net[nodeIdx]._crossnodeMap = arrangeCrossNodeMap(nNum, nodeIdx, _nodeNum);
 	}
 
-	sysinfo(&sinfo);
-	printf("Finish build, MEM used: %lfGB\n", static_cast<double>((sinfo.totalram - sinfo.freeram)/1024.0/1024.0/1024.0));
+	print_mem("Finish build");
+
+	if (info.save_mem) {
+		for (auto piter = _pPopulations.begin(); piter != _pPopulations.end(); piter++) {
+			Population * p = *piter;
+			for (auto niter = p->_items.begin(); niter != p->_items.end(); niter++) {
+				Neuron *n = *niter;
+				vector<Synapse *> &s_vec = n->getSynapses();
+				for (auto siter = s_vec.begin(); siter != s_vec.end(); siter++) {
+					Synapse *s = *siter;
+					delete s;
+					*siter = NULL;
+				}
+				delete n;
+				*niter = NULL;
+			}
+			delete p;
+			*piter = NULL;
+		}
+
+		print_mem("Save MEM");
+	}
 
 	return net;
 }

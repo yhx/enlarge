@@ -70,6 +70,7 @@ int MultiNodeSimulator::run(real time, FireInfo &log, bool gpu)
 	reset();
 
 	SimInfo info(_dt);
+	info.save_mem = true;
 
 	DistriNetwork *network = NULL;
 	CrossNodeData *data = NULL;
@@ -78,7 +79,9 @@ int MultiNodeSimulator::run(real time, FireInfo &log, bool gpu)
 #if 1
 		_network->setNodeNum(node_num);
 		DistriNetwork *node_nets = _network->buildNetworks(info);
+		print_mem("Finish Network");
 		CrossNodeData *node_datas = _network->arrangeCrossNodeData(node_num);
+		print_mem("Finish CND");
 
 		for (int i=0; i<node_num; i++) {
 			node_nets[i]._simCycle = sim_cycle;
@@ -90,6 +93,7 @@ int MultiNodeSimulator::run(real time, FireInfo &log, bool gpu)
 		network = &(node_nets[0]);
 		data = &(node_datas[0]);
 		allocDataCND(data);
+		print_mem("AllocData CND");
 
 		for (int i=1; i<node_num; i++) {
 #ifdef DEBUG
@@ -325,6 +329,7 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 }
 
 int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
+	print_mem("Inside Run");
 	char log_filename[512];
 	sprintf(log_filename, "sim.gpu.mpi_%d.log", network->_nodeIdx); 
 	FILE *log_file = fopen(log_filename, "w+");
@@ -335,12 +340,16 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 	FILE *v_file = fopen(v_filename, "w+");
 	assert(v_file != NULL);
 
+	print_mem("Before SetDevice");
 	checkCudaErrors(cudaSetDevice(0));
+	print_mem("Before Network");
 
 	GNetwork *pNetCPU = network->_network;
 	GNetwork *c_pNetGPU = copyGNetworkToGPU(pNetCPU);
+	print_mem("Copied Network");
 
 	CrossNodeData * cnd_gpu = copyCNDtoGPU(cnd);
+	print_mem("Copied CND");
 
 	int nTypeNum = c_pNetGPU->nTypeNum;
 	int sTypeNum = c_pNetGPU->sTypeNum;
@@ -355,10 +364,13 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 	printf("Thread %d MaxDelay: %d MinDelay: %d\n", network->_nodeIdx, maxDelay,  minDelay);
 
+	print_mem("Before Buffers");
 
 	GBuffers *buffers = alloc_buffers(allNeuronNum, nodeSynapseNum, pNetCPU->pConnection->maxDelay, network->_dt);
 
 	BlockSize *updateSize = getBlockSize(allNeuronNum, nodeSynapseNum);
+
+	print_mem("Alloced Buffers");
 
 #ifdef LOG_DATA
 	real *c_vm = hostMalloc<real>(nodeNeuronNum);
@@ -550,6 +562,8 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 		fprintf(rate_file, "%d \t", rate[i]);
 	}
 
+	print_mem("Before Free");
+
 	free(rate);
 	fclose(rate_file);
 
@@ -558,6 +572,8 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 	free_buffers(buffers);
 	freeGNetworkGPU(c_pNetGPU);
+
+	print_mem("After Free");
 
 	return 0;
 }

@@ -91,6 +91,14 @@ const real fv=-74e-3;
 		
 	}
 	//Network.connect(population1, population2, weight_array, delay_array, Exec or Inhi array, num)
+	
+	delArray(weight6);
+	delArray(weight6_30);
+	delArray(weight5);
+	delArray(weight3);
+	delArray(delay);
+	delArray(ii);
+
 
 	#if 0
 		STSim st(&c, dt);	// cpu

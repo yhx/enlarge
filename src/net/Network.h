@@ -98,7 +98,9 @@ private:
 public:
 	// vector<Neuron*> pOutputs;
 	vector<Population*> _pPopulations;
+#if 0
 	vector<Synapse*> _pSynapses;
+#endif
 	// map<ID, vector<ID> > n2sNetwork;
 	// map<ID, vector<ID> > n2sTargetNetwork;
 	// map<ID, ID> s2nNetwork;
@@ -256,7 +258,9 @@ Synapse * Network::connect(Neuron *pSrc, Neuron *pDst, S templ, bool store)
 	p->setDst(pDst);
 	pSrc->addSynapse(p);
 
+#if 0
 	_pSynapses.push_back(p);
+#endif
 	addConnectionNum(pSrc->getType(), 1);
 	addSynapseNum(p->getType(), 1);
 

@@ -24,6 +24,8 @@ Json::Value testValue(Json::Value value, unsigned int idx);
 real *loadArray(const char *filename, int size);
 int saveArray(const char *filename, real *array, int size);
 
+void print_mem(const char *info);
+
 template<typename T>
 bool compareArray(T *a, T *b, int size) 
 {
@@ -66,6 +68,12 @@ T *getConstArray(T value, int size)
 	}
 
 	return res;
+}
+
+template<typename T>
+void delArray(T *value)
+{
+	delete[] value;
 }
 
 template<typename T>

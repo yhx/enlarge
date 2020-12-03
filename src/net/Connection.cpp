@@ -75,7 +75,6 @@ Connection * loadConnection(FILE *f)
 {
 	Connection *conn = (Connection *)malloc(sizeof(Connection));
 
-	int ret = 0;
 	fread_c(&(conn->nNum), sizeof(int), 1, f);
 	fread_c(&(conn->sNum), sizeof(int), 1, f);
 	fread_c(&(conn->maxDelay), sizeof(int), 1, f);

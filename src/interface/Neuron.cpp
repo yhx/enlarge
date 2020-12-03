@@ -12,7 +12,7 @@ Synapse * Neuron::addSynapse(Synapse * synapse)
 	return synapse;
 }
 
-const vector<Synapse*> & Neuron::getSynapses() const 
+vector<Synapse*> & Neuron::getSynapses() 
 {
 	return pSynapses;
 }

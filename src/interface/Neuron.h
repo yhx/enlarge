@@ -35,7 +35,7 @@ public:
 	
 	virtual Synapse *createSynapse(real weight, real delay, SpikeType type, real tau) = 0;
 
-	const vector<Synapse*> & getSynapses() const;
+	vector<Synapse*> & getSynapses();
 protected:
 	vector<Synapse*> pSynapses;
 	// bool fired;

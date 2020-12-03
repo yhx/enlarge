@@ -161,7 +161,7 @@ TEST(NetworkTest, BuildTest2) {
 			);
 	ASSERT_THAT(
 			vector<int>(n0->pNeuronNums, n0->pNeuronNums + n0->nTypeNum + 1), 
-			ElementsAreArray({0, 5})
+			ElementsAreArray({0, 4})
 			);
 	ASSERT_EQ(n0->sTypeNum, 1);
 	ASSERT_THAT(
@@ -170,7 +170,7 @@ TEST(NetworkTest, BuildTest2) {
 			);
 	ASSERT_THAT(
 			vector<int>(n0->pSynapseNums, n0->pSynapseNums + n0->sTypeNum + 1), 
-			ElementsAreArray({0, 6})
+			ElementsAreArray({0, 4})
 			);
 
 
@@ -182,7 +182,7 @@ TEST(NetworkTest, BuildTest2) {
 			);
 	ASSERT_THAT(
 			vector<int>(n1->pNeuronNums, n1->pNeuronNums + n1->nTypeNum + 1), 
-			ElementsAreArray({0, 1})
+			ElementsAreArray({0, 2})
 			);
 	ASSERT_EQ(n1->sTypeNum, 1);
 	ASSERT_THAT(
@@ -191,7 +191,7 @@ TEST(NetworkTest, BuildTest2) {
 			);
 	ASSERT_THAT(
 			vector<int>(n1->pSynapseNums, n1->pSynapseNums + n1->sTypeNum + 1), 
-			ElementsAreArray({0, 3})
+			ElementsAreArray({0, 5})
 			);
 
 
