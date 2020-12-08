@@ -10,21 +10,53 @@ int main(int argc, char **argv)
 
 	time_t start,end;
 	start=clock(); //time(NULL);
-	if(argc !=8)
+	if(argc !=4)
 	{
-		printf("Need 7 paras. For example\n FR 1%%: %s depth num_neuron 0.7 0.5 0.6 0.3 6\n FR 5%%: %s depth num_neuron 0.7 0.9 0.6 0.2 6\n FR 20%%: %s depth num_neuron 1.3 1 2 1 50\n FR 50%%: %s depth num_neuron 2.7 3 2 1 20\n FR 65%%: %s depth num_neuron 4 2 5 3 20\n", argv[0], argv[0], argv[0], argv[0], argv[0]);
+		printf("Need 3 paras. For example\n FR 1%%: %s depth num_neuron fire_rate\n", argv[0]);
+		// printf("Need 7 paras. For example\n FR 1%%: %s depth num_neuron 0.7 0.5 0.6 0.3 6\n FR 5%%: %s depth num_neuron 0.7 0.9 0.6 0.2 6\n FR 20%%: %s depth num_neuron 1.3 1 2 1 50\n FR 50%%: %s depth num_neuron 2.7 3 2 1 20\n FR 65%%: %s depth num_neuron 4 2 5 3 20\n", argv[0], argv[0], argv[0], argv[0], argv[0]);
 		return 0;
 	}
 	const int depth=atoi(argv[1]);
 	const int N=atoi(argv[2]);
 
-	const real w1=atof(argv[3]);
-	const real w2=atof(argv[4]);
-	const real w3=atof(argv[5]);
-	const real w4=atof(argv[6]);
-	const int who=atoi(argv[7]);
+	const int fr = atoi(argv[3]);
+	real w1=0.0;
+	real w2=0.0;
+	real w3=0.0;
+	real w4=0.0;
+	int who=0;
+
+	switch(fr) {
+		case 5:
+			w1 = 0.7;
+			w2 = 0.9;
+			w3 = 0.6;
+			w4 = 0.2;
+			who = 6;
+			break;
+		case 20:
+			w1 = 1.3;
+			w2 = 1;
+			w3 = 2;
+			w4 = 1;
+			who = 50;
+			break;
+		default:
+			w1 = 0.7;
+			w2 = 0.5;
+			w3 = 0.6;
+			w4 = 0.3;
+			who = 6;
+	};
+
+	// const real w1=atof(argv[3]);
+	// const real w2=atof(argv[4]);
+	// const real w3=atof(argv[5]);
+	// const real w4=atof(argv[6]);
+	// const int who=atoi(argv[7]);
 
 	printf("depth=%d N=%d\n",depth,N);
+	printf("w1=%f w2=%f w3=%f w4=%f who=%d\n", w1, w2, w3, w4, who);
 	const real fthreshold=-54e-3;
 	const real freset=-60e-3;
 	const real c_m=0.2e-9; //*nF

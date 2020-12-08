@@ -61,7 +61,7 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 	printf("NeuronTypeNum: %d, SynapseTypeNum: %d\n", nTypeNum, sTypeNum);
 	printf("NeuronNum: %d, SynapseNum: %d\n", totalNeuronNum, totalSynapseNum);
 
-	int maxDelay = pNetCPU->pConnection->maxDelay;
+	// int maxDelay = pNetCPU->pConnection->maxDelay;
 	// int deltaDelay = pNetCPU->pConnection->maxDelay - pNetCPU->pConnection->minDelay + 1;
 	printf("maxDelay: %d minDelay: %d\n", pNetCPU->pConnection->maxDelay, pNetCPU->pConnection->minDelay);
 

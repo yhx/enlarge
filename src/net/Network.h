@@ -15,7 +15,7 @@
 #include "../utils/SimInfo.h"
 #include "../interface/Neuron.h"
 #include "../interface/Synapse.h"
-#include "../utils/ModelArray.h"
+#include "../interface/ModelArray.h"
 #include "DistriNetwork.h"
 
 using std::pair;
