@@ -3,9 +3,9 @@
 #define DISTRINETWORK_H
 
 #include "GNetwork.h"
-#include "CrossNodeMap.h"
-#include "CrossNodeData.h"
-#include "CrossThreadData.h"
+#include "../msg_utils/CrossNodeMap.h"
+#include "../msg_utils/CrossNodeData.h"
+#include "../msg_utils/CrossThreadData.h"
 
 struct DistriNetwork {
 	int _simCycle;

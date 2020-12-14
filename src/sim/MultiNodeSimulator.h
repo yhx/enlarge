@@ -22,5 +22,10 @@ protected:
 	int node_num;
 };
 
+int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd);
+int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd);
+
+#define ASYNC
+
 #endif /* MULTINODESIMULATOR_H */
 

@@ -22,14 +22,6 @@
 #include "MultiNodeSimulator.h"
 // #include "../gpu_utils/gpu_func.h"
 
-#define ASYNC
-
-using std::cout;
-using std::endl;
-
-int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd);
-int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd);
-
 MultiNodeSimulator::MultiNodeSimulator(Network *network, real dt) : Simulator(network, dt)
 {
 }
@@ -80,7 +72,7 @@ int MultiNodeSimulator::run(real time, FireInfo &log, bool gpu)
 		_network->setNodeNum(node_num);
 		DistriNetwork *node_nets = _network->buildNetworks(info);
 		print_mem("Finish Network");
-		CrossNodeData *node_datas = _network->arrangeCrossNodeData(node_num);
+		CrossNodeData *node_datas = _network->arrangeCrossNodeData(node_num, info);
 		print_mem("Finish CND");
 
 		for (int i=0; i<node_num; i++) {
@@ -153,7 +145,6 @@ int MultiNodeSimulator::run(real time, FireInfo &log, bool gpu)
 	return 0;
 }
 
-
 int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 	char log_filename[512];
 	sprintf(log_filename, "sim.mpi_%d.log", network->_nodeIdx); 
@@ -182,6 +173,10 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 	int cFiredTableCap = allNeuronNum;
 
+	int node_num = cnd->_node_num;
+
+	int *c_send_num = (int *)malloc(sizeof(int)*node_num);
+	int *c_recv_num = (int *)malloc(sizeof(int)*node_num);
 
 	real *c_gNeuronInput = (real*)malloc(sizeof(real)*allNeuronNum);
 	memset(c_gNeuronInput, 0, sizeof(real)*allNeuronNum);
@@ -208,11 +203,18 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 	struct timeval t1, t2, t3, t4, t5, t6;
 	double comp_time = 0, comm_time = 0, sync_time = 0;
 #endif
+#ifdef DEBUG
+	printf("Cycles: ");
+#endif 
 
 	for (int time=0; time<network->_simCycle; time++) {
 #ifdef PROF
 		gettimeofday(&t1, NULL);
 #endif
+#ifdef DEBUG
+		printf("%d ", time);
+		fflush(stdout);
+#endif 
 		int currentIdx = time % (maxDelay+1);
 		c_gFiredTableSizes[currentIdx] = 0;
 
@@ -221,31 +223,25 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 		}
 
 #if 1
-		memset(cnd->_send_num, 0, sizeof(int)*(cnd->_node_num));
+		// memset(cnd->_send_num, 0, sizeof(int)*(node_num));
 #ifdef PROF
 		gettimeofday(&t2, NULL);
 		comp_time += 1000000 * (t2.tv_sec - t1.tv_sec) + (t2.tv_usec - t1.tv_usec);
 #endif
-		generateCND(pNetCPU->pConnection, c_gFiredTable, c_gFiredTableSizes, network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, cnd->_send_data, cnd->_send_offset, cnd->_send_num, network->_nodeNum, time, cFiredTableCap);
+		int curr_delay = time % cnd->_delay;
+		generateCND(pNetCPU->pConnection, c_gFiredTable, c_gFiredTableSizes, network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, cnd->_send_data, cnd->_send_offset, cnd->_send_num, network->_nodeNum, time, cFiredTableCap, cnd->_delay, curr_delay);
 
 
-		MPI_Alltoall(cnd->_send_num, 1, MPI_INT, cnd->_recv_num, 1,MPI_INT,MPI_COMM_WORLD);
-
-		for (int i=0; i<cnd->_node_num; i++) {
-			cnd->_recv_offset[i+1] = cnd->_recv_offset[i] + cnd->_recv_num[i];
-		}
-
-#ifdef ASYNC
 		MPI_Request request_t;
-		MPI_Status status_t;
-		int ret = MPI_Ialltoallv(cnd->_send_data, cnd->_send_num, cnd->_send_offset , MPI_INT, 
-				cnd->_recv_data, cnd->_recv_num, cnd->_recv_offset, MPI_INT, MPI_COMM_WORLD, &request_t);
-		assert(ret == MPI_SUCCESS);
-#else
-		int ret = MPI_Alltoallv(cnd->_send_data, cnd->_send_num, cnd->_send_offset, MPI_INT, 
-				cnd->_recv_data, cnd->_recv_num, cnd->_recv_offset, MPI_INT, MPI_COMM_WORLD);
-		assert(ret == MPI_SUCCESS);
-#endif
+		if (curr_delay >= minDelay - 1) {
+			msg_cnd(cnd, c_send_num, c_recv_num, &request_t);
+			resetCND(cnd);
+
+		} else {
+			for (int i=0; i<node_num; i++) {
+				cnd->_send_num[i*minDelay+curr_delay+1] = cnd->_send_num[i*minDelay+curr_delay];
+			}
+		}
 #endif
 #ifdef PROF
 		gettimeofday(&t3, NULL);
@@ -271,16 +267,17 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 #if 1
 #ifdef ASYNC
-		ret = MPI_Wait(&request_t, &status_t);
+		MPI_Status status_t;
+		int ret = MPI_Wait(&request_t, &status_t);
 		assert(ret == MPI_SUCCESS);
 #endif
 
 		int delay_idx = time % (maxDelay + 1);
 
-		for (int i=0; i<cnd->_recv_offset[cnd->_node_num]; i++) {
+		for (int i=0; i<cnd->_recv_offset[node_num]; i++) {
 			c_gFiredTable[allNeuronNum*delay_idx + c_gFiredTableSizes[delay_idx] + i] = cnd->_recv_data[i];
 		}
-		c_gFiredTableSizes[delay_idx] += cnd->_recv_offset[cnd->_node_num];
+		c_gFiredTableSizes[delay_idx] += cnd->_recv_offset[node_num];
 #endif
 #ifdef PROF
 		gettimeofday(&t5, NULL);
@@ -305,6 +302,9 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 #endif
 	}
+#ifdef DEBUG
+		printf("\n");
+#endif 
 	gettimeofday(&te, NULL);
 	long seconds = te.tv_sec - ts.tv_sec;
 	long hours = seconds/3600;
@@ -387,16 +387,18 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 #endif
 
 	for (int i=0; i<nTypeNum; i++) {
-		cout << "Thread " << network->_nodeIdx << " " << c_pNetGPU->pNTypes[i] << ": <<<" << updateSize[c_pNetGPU->pNTypes[i]].gridSize << ", " << updateSize[c_pNetGPU->pNTypes[i]].blockSize << ">>>" << endl;
+		printf( "Thread %d ntype %d: <<<%d, %d>>>\n", network->_nodeIdx, c_pNetGPU->pNTypes[i], updateSize[c_pNetGPU->pNTypes[i]].gridSize , updateSize[c_pNetGPU->pNTypes[i]].blockSize);
 	}
 	for (int i=0; i<sTypeNum; i++) {
-		cout << "Thread " << network->_nodeIdx << " " << c_pNetGPU->pSTypes[i] << ": <<<" << updateSize[c_pNetGPU->pSTypes[i]].gridSize << ", " << updateSize[c_pNetGPU->pSTypes[i]].blockSize << ">>>" << endl;
+		printf("Thread %d stype %d: <<<%d. %d>>>\n", network->_nodeIdx, c_pNetGPU->pSTypes[i], updateSize[c_pNetGPU->pSTypes[i]].gridSize, updateSize[c_pNetGPU->pSTypes[i]].blockSize);
 	}
+
+	int node_num = network->_nodeNum;
 
 	int * c_g_idx2index = copyToGPU<int>(network->_crossnodeMap->_idx2index, allNeuronNum);
 	int * c_g_cross_index2idx = copyToGPU<int>(network->_crossnodeMap->_crossnodeIndex2idx, network->_crossnodeMap->_crossSize);
-	int * c_g_global_cross_data = gpuMalloc<int>(allNeuronNum * network->_nodeNum);
-	int * c_g_fired_n_num = gpuMalloc<int>(network->_nodeNum);
+	int * c_g_global_cross_data = gpuMalloc<int>(allNeuronNum * node_num);
+	int * c_g_fired_n_num = gpuMalloc<int>(node_num);
 
 	vector<int> firedInfo;
 	double ts, te;
@@ -405,10 +407,10 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 #ifdef PROF
 	double t1, t2, t3, t4, t5, t6;
 	double comp_time = 0, comm_time = 0, sync_time = 0;
-	int *send_count = (int *)malloc(network->_nodeNum * sizeof(int));
-	int *recv_count = (int *)malloc(network->_nodeNum * sizeof(int));
-	memset(send_count, 0, network->_nodeNum * sizeof(int));
-	memset(recv_count, 0, network->_nodeNum * sizeof(int));
+	int *send_count = (int *)malloc(node_num * sizeof(int));
+	int *recv_count = (int *)malloc(node_num * sizeof(int));
+	memset(send_count, 0, node_num * sizeof(int));
+	memset(recv_count, 0, node_num * sizeof(int));
 #endif
 
 	size_t fmem = 0, tmem = 0;
@@ -431,12 +433,12 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 		t2 = MPI_Wtime();
 		comp_time += t2-t1;
 #endif
-		cudaGenerateCND<<<(allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(c_pNetGPU->pConnection, buffers->c_gFiredTable, buffers->c_gFiredTableSizes, c_g_idx2index, c_g_cross_index2idx, cnd_gpu->_send_data, cnd_gpu->_send_offset, cnd_gpu->_send_num, network->_nodeNum, time);
+		cudaGenerateCND<<<(allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(c_pNetGPU->pConnection, buffers->c_gFiredTable, buffers->c_gFiredTableSizes, c_g_idx2index, c_g_cross_index2idx, cnd_gpu->_send_data, cnd_gpu->_send_offset, cnd_gpu->_send_num, node_num, time);
 
-		// checkCudaErrors(cudaMemcpy(gCrossDataGPU->_firedNum + network->_nodeIdx * network->_nodeNum, c_g_fired_n_num, sizeof(int)*network->_nodeNum, cudaMemcpyDeviceToHost));
+		// checkCudaErrors(cudaMemcpy(gCrossDataGPU->_firedNum + network->_nodeIdx * node_num, c_g_fired_n_num, sizeof(int)*node_num, cudaMemcpyDeviceToHost));
 
-		checkCudaErrors(cudaMemcpy(cnd->_send_num, cnd_gpu->_send_num, sizeof(int)*(cnd->_node_num), cudaMemcpyDeviceToHost));
-		for (int i=0; i< network->_nodeNum; i++) {
+		checkCudaErrors(cudaMemcpy(cnd->_send_num, cnd_gpu->_send_num, sizeof(int)*(node_num), cudaMemcpyDeviceToHost));
+		for (int i=0; i< node_num; i++) {
 			if (cnd->_send_num[i] > 0) {
 				checkCudaErrors(cudaMemcpy((&cnd->_send_data[cnd->_send_offset[i]]), cnd_gpu->_send_data + cnd->_send_offset[i], sizeof(int)*(cnd->_send_num[i]), cudaMemcpyDeviceToHost));
 			}
@@ -445,7 +447,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 		int ret = MPI_Alltoall(cnd->_send_num, 1, MPI_INT, cnd->_recv_num, 1,MPI_INT,MPI_COMM_WORLD);
 		assert(ret == MPI_SUCCESS);
 
-		for (int i=0; i<cnd->_node_num; i++) {
+		for (int i=0; i<node_num; i++) {
 			cnd->_recv_offset[i+1] = cnd->_recv_offset[i] + cnd->_recv_num[i];
 		}
 
@@ -458,7 +460,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 		t3 = MPI_Wtime();
 		comm_time += t3-t2;
 		MPI_Barrier(MPI_COMM_WORLD);
-		for (int i=0; i<network->_nodeNum; i++) {
+		for (int i=0; i<node_num; i++) {
 			send_count[i] += cnd->_send_num[i];
 			recv_count[i] += cnd->_recv_num[i];
 		}
@@ -498,8 +500,8 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 		int firedSize = 0;
 		checkCudaErrors(cudaMemcpy(&firedSize, buffers->c_gFiredTableSizes+delay_idx, sizeof(int), cudaMemcpyDeviceToHost));
 
-		checkCudaErrors(cudaMemcpy(buffers->c_gFiredTable + allNeuronNum * delay_idx + firedSize , cnd->_recv_data, sizeof(int)*(cnd->_recv_offset[cnd->_node_num]), cudaMemcpyHostToDevice));
-		cudaUpdateFTS<<<1, 1>>>(buffers->c_gFiredTableSizes, cnd->_recv_offset[cnd->_node_num], delay_idx);
+		checkCudaErrors(cudaMemcpy(buffers->c_gFiredTable + allNeuronNum * delay_idx + firedSize , cnd->_recv_data, sizeof(int)*(cnd->_recv_offset[node_num]), cudaMemcpyHostToDevice));
+		cudaUpdateFTS<<<1, 1>>>(buffers->c_gFiredTableSizes, cnd->_recv_offset[node_num], delay_idx);
 
 
 #ifdef PROF
@@ -508,8 +510,8 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 		comm_time += t5 - t4;
 #endif
 
-		// for (int i=0; i< network->_nodeNum; i++) {
-			// int i2idx = network->_nodeIdx + network->_nodeNum * i;
+		// for (int i=0; i< node_num; i++) {
+			// int i2idx = network->_nodeIdx + node_num * i;
 			// if (gCrossDataGPU->_firedNum[i2idx] > 0) {
 			// 	int num = gCrossDataGPU->_firedNum[i2idx];
 			// 	cudaAddCrossNeurons<<<(num+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(c_pNetGPU->pConnection, buffers->c_gFiredTable, buffers->c_gFiredTableSizes, gCrossDataGPU->_firedArrays[i2idx], gCrossDataGPU->_firedNum[i2idx], time);
@@ -536,7 +538,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 	string send;
 	string recv;
-	for (int i=0; i<network->_nodeNum; i++) {
+	for (int i=0; i<node_num; i++) {
 		send += std::to_string(send_count[i]);
 		send += ' ';
 		recv += std::to_string(recv_count[i]);

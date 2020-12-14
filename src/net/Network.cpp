@@ -639,12 +639,14 @@ CrossThreadData* Network::arrangeCrossThreadData(int node_num)
 	return cross_data;
 }
 
-CrossNodeData* Network::arrangeCrossNodeData(int node_num)
+CrossNodeData* Network::arrangeCrossNodeData(int node_num, const SimInfo &info)
 {
 	CrossNodeData * cross_data = (CrossNodeData*)malloc(sizeof(CrossNodeData) * node_num);
 	assert(cross_data != NULL);
+
+	int minDelaySteps = static_cast<int>(round(_minDelay/info.dt));
 	for (int i=0; i<node_num; i++) {
-		allocParaCND(&(cross_data[i]), node_num);
+		allocParaCND(&(cross_data[i]), node_num, minDelaySteps);
 	}
 
 	for (int i=0; i<node_num; i++) {

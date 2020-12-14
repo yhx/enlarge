@@ -81,7 +81,7 @@ public:
 	CrossThreadData* arrangeCrossThreadData(int node_num);
 	CrossThreadDataGPU* arrangeCrossThreadDataGPU(int node_num);
 
-	CrossNodeData * arrangeCrossNodeData(int node_num);
+	CrossNodeData * arrangeCrossNodeData(int node_num, const SimInfo &info);
 
 
 
