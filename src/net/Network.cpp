@@ -644,9 +644,9 @@ CrossNodeData* Network::arrangeCrossNodeData(int node_num, const SimInfo &info)
 	CrossNodeData * cross_data = (CrossNodeData*)malloc(sizeof(CrossNodeData) * node_num);
 	assert(cross_data != NULL);
 
-	int minDelaySteps = static_cast<int>(round(_minDelay/info.dt));
+	int delay_t = static_cast<int>(round(_minDelay/info.dt));
 	for (int i=0; i<node_num; i++) {
-		allocParaCND(&(cross_data[i]), node_num, minDelaySteps);
+		allocParaCND(&(cross_data[i]), node_num, delay_t);
 	}
 
 	for (int i=0; i<node_num; i++) {
@@ -659,7 +659,7 @@ CrossNodeData* Network::arrangeCrossNodeData(int node_num, const SimInfo &info)
 					count++;
 				}
 			}
-			cross_data[i]._send_offset[j+1] = cross_data[i]._send_offset[j] + count;
+			cross_data[i]._send_offset[j+1] = cross_data[i]._send_offset[j] + count * delay_t;
 		}
 		// cross_data[i]._send_data = (int*)malloc(sizeof(int)*(cross_data[i]._send_offset[node_num]));
 		// assert(cross_data[i]._send_data != NULL || cross_data[i]._send_offset[node_num] == 0);
