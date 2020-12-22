@@ -125,7 +125,7 @@ Network::~Network()
 	_globalNTypeNum.clear();
 	_globalSTypeNum.clear();
 
-	printf("Free Network 2");
+	print_mem("Free Network 2");
 }
 
 int Network::setNodeNum(int nodeNum)

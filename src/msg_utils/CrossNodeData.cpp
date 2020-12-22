@@ -144,8 +144,9 @@ int msg_cnd(CrossNodeData *cnd, int *send_num, int *recv_num, MPI_Request *reque
 	int num_size = delay * node_num;
 
 	print_mpi_x32(cnd->_send_num, num_size, "Send Num");
+	print_mpi_x32(cnd->_recv_num, num_size, "To Recv Num");
 
-	MPI_Alltoall(cnd->_send_num, num_size, MPI_INT, cnd->_recv_num, num_size, MPI_INT, MPI_COMM_WORLD);
+	MPI_Alltoall(cnd->_send_num, delay, MPI_INT, cnd->_recv_num, delay, MPI_INT, MPI_COMM_WORLD);
 
 	print_mpi_x32(cnd->_recv_num, num_size, "Recv Num");
 
