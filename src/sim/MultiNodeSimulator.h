@@ -14,12 +14,13 @@ public:
 
 	using Simulator::run;
 	int mpi_init(int *argc, char ***argv);
+	int distribute(DistriNetwork **, CrossNodeData **, SimInfo &, int);
 	virtual int run(real time, bool gpu);
 	virtual int run(real time, FireInfo &log);
 	virtual int run(real time, FireInfo &log, bool gpu);
 protected:
-	int node_id;
-	int node_num;
+	int _node_id;
+	int _node_num;
 };
 
 int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd);

@@ -75,6 +75,7 @@ public:
 	// void monitor(const SimInfo &info);
 	
 	void logMap();
+	void status();
 
 	DistriNetwork * buildNetworks(const SimInfo &info, bool auto_splited = true);
 

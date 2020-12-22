@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <string.h>
 
+#include "msg_utils.h"
 #include "CrossNodeData.h"
 
 void allocParaCND(CrossNodeData *data, int node_num, int delay) 
@@ -34,14 +35,14 @@ void resetCND(CrossNodeData *data)
 
 void allocDataCND(CrossNodeData *data)
 {
-	int num_p_1 = data->_node_num + 1;
-	int data_size = data->_recv_offset[num_p_1];
+	int num = data->_node_num;
+	int data_size = data->_recv_offset[num];
 	if (data_size > 0) {
 		data->_recv_data = (int*)malloc(sizeof(int)*(data_size));
 		memset(data->_recv_data, 0, sizeof(int) * (data_size));
 	}
 
-	data_size = data->_send_offset[num_p_1];
+	data_size = data->_send_offset[num];
 	if (data_size > 0) {
 		data->_send_data = (int*)malloc(sizeof(int)*(data_size));
 		memset(data->_send_data, 0, sizeof(int) * (data_size));
@@ -133,13 +134,20 @@ int generateCND(Connection *conn, int *firedTable, int *firedTableSizes, int *id
 
 int msg_cnd(CrossNodeData *cnd, int *send_num, int *recv_num, MPI_Request *request)
 {
+
 	int node_num = cnd->_node_num;
 	int delay = cnd->_delay;
 	for (int i=0; i<node_num; i++) {
 		send_num[i] = cnd->_send_num[i*delay+delay-1];
 	}
+
 	int num_size = delay * node_num;
+
+	print_mpi_x32(cnd->_send_num, num_size, "Send Num");
+
 	MPI_Alltoall(cnd->_send_num, num_size, MPI_INT, cnd->_recv_num, num_size, MPI_INT, MPI_COMM_WORLD);
+
+	print_mpi_x32(cnd->_recv_num, num_size, "Recv Num");
 
 	for (int i=0; i<node_num; i++) {
 		recv_num[i] = cnd->_recv_num[i*delay+delay-1];

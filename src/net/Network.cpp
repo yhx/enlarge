@@ -1011,6 +1011,18 @@ CrossNodeMap* Network::arrangeCrossNodeMap(size_t n_num, int node_idx, int node_
 	return crossMap;
 }
 
+void Network::status()
+{
+	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end();  pIter++) {
+		Population *p = *pIter;
+		for (auto nIter = p->_items.begin(); nIter != p->_items.end(); nIter++) {
+			Neuron *n = *nIter;
+			printf("%d ", n->getNode());
+		}
+		printf("; ");
+	}
+}
+
 void Network::splitNetwork()
 {
 	map<Neuron *, vector<Synapse *>> n2sInput;
