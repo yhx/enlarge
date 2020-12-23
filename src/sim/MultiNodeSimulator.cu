@@ -278,13 +278,17 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 		int ret = MPI_Wait(&request_t, &status_t);
 		assert(ret == MPI_SUCCESS);
 #endif
-
-		int delay_idx = time % (maxDelay + 1);
-
-		for (int i=0; i<cnd->_recv_offset[node_num]; i++) {
-			c_gFiredTable[allNeuronNum*delay_idx + c_gFiredTableSizes[delay_idx] + i] = cnd->_recv_data[i];
+		if (curr_delay >= minDelay - 1) {
+			for (int n_ = 0; n_ < node_num; n_++) {
+				for (int d_ =0; d_ < minDelay; d_++) {
+					int delay_idx = (time-minDelay+2+d_+maxDelay)%(maxDelay+1);
+					for (int i=cnd->_recv_start[n_]; i<cnd->_recv_start[n_+1]; i++) {
+						c_gFiredTable[allNeuronNum*delay_idx + c_gFiredTableSizes[delay_idx] + i] = cnd->_recv_data[cnd->_recv_offset[n_]+i];
+					}
+					c_gFiredTableSizes[delay_idx] += cnd->_recv_start[n_+1] - cnd->_recv_start[n_];
+				}
+			}
 		}
-		c_gFiredTableSizes[delay_idx] += cnd->_recv_offset[node_num];
 #endif
 #ifdef PROF
 		gettimeofday(&t5, NULL);

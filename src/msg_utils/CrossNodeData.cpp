@@ -134,21 +134,19 @@ int generateCND(Connection *conn, int *firedTable, int *firedTableSizes, int *id
 
 int msg_cnd(CrossNodeData *cnd, int *send_num, int *recv_num, MPI_Request *request)
 {
-
 	int node_num = cnd->_node_num;
 	int delay = cnd->_delay;
 	for (int i=0; i<node_num; i++) {
 		send_num[i] = cnd->_send_num[i*delay+delay-1];
 	}
 
-	int num_size = delay * node_num;
-
-	print_mpi_x32(cnd->_send_num, num_size, "Send Num");
-	print_mpi_x32(cnd->_recv_num, num_size, "To Recv Num");
+	// int num_size = delay * node_num;
+	// print_mpi_x32(cnd->_send_num, num_size, "Send Num");
+	// print_mpi_x32(cnd->_recv_num, num_size, "To Recv Num");
 
 	MPI_Alltoall(cnd->_send_num, delay, MPI_INT, cnd->_recv_num, delay, MPI_INT, MPI_COMM_WORLD);
 
-	print_mpi_x32(cnd->_recv_num, num_size, "Recv Num");
+	// print_mpi_x32(cnd->_recv_num, num_size, "Recv Num");
 
 	for (int i=0; i<node_num; i++) {
 		recv_num[i] = cnd->_recv_num[i*delay+delay-1];
