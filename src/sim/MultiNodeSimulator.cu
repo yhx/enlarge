@@ -182,9 +182,6 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 	int node_num = cnd->_node_num;
 
-	int *c_send_num = (int *)malloc(sizeof(int)*node_num);
-	int *c_recv_num = (int *)malloc(sizeof(int)*node_num);
-
 	real *c_gNeuronInput = (real*)malloc(sizeof(real)*allNeuronNum);
 	memset(c_gNeuronInput, 0, sizeof(real)*allNeuronNum);
 	real *c_gNeuronInput_I = (real*)malloc(sizeof(real)*allNeuronNum); 
@@ -236,17 +233,15 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 		comp_time += 1000000 * (t2.tv_sec - t1.tv_sec) + (t2.tv_usec - t1.tv_usec);
 #endif
 		int curr_delay = time % cnd->_delay;
-		generateCND(pNetCPU->pConnection, c_gFiredTable, c_gFiredTableSizes, network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, cnd->_send_data, cnd->_send_offset, cnd->_send_num, network->_nodeNum, time, cFiredTableCap, cnd->_delay, curr_delay);
+		generateCND(pNetCPU->pConnection, c_gFiredTable, c_gFiredTableSizes, network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, cnd->_send_data, cnd->_send_offset, cnd->_send_start, network->_nodeNum, time, cFiredTableCap, cnd->_delay, curr_delay);
 
 
 		MPI_Request request_t;
 		if (curr_delay >= minDelay - 1) {
-			msg_cnd(cnd, c_send_num, c_recv_num, &request_t);
-			resetCND(cnd);
-
+			msg_cnd(cnd, &request_t);
 		} else {
 			for (int i=0; i<node_num; i++) {
-				cnd->_send_num[i*minDelay+curr_delay+1] = cnd->_send_num[i*minDelay+curr_delay];
+				cnd->_send_start[i*(minDelay+1)+curr_delay+2] = cnd->_send_num[i*(minDelay+1)+curr_delay+1];
 			}
 		}
 #endif
@@ -282,12 +277,13 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 			for (int n_ = 0; n_ < node_num; n_++) {
 				for (int d_ =0; d_ < minDelay; d_++) {
 					int delay_idx = (time-minDelay+2+d_+maxDelay)%(maxDelay+1);
-					for (int i=cnd->_recv_start[n_]; i<cnd->_recv_start[n_+1]; i++) {
+					for (int i=cnd->_recv_start[n_*(minDelay+1)+d_]; i<cnd->_recv_start[n_*(minDelay+1)+d_+1]; i++) {
 						c_gFiredTable[allNeuronNum*delay_idx + c_gFiredTableSizes[delay_idx] + i] = cnd->_recv_data[cnd->_recv_offset[n_]+i];
 					}
-					c_gFiredTableSizes[delay_idx] += cnd->_recv_start[n_+1] - cnd->_recv_start[n_];
+					c_gFiredTableSizes[delay_idx] += cnd->_recv_start[n_*(minDelay+1)+d_+1] - cnd->_recv_start[n_*(minDelay+1)+d_];
 				}
 			}
+			resetCND(cnd);
 		}
 #endif
 #ifdef PROF

@@ -14,13 +14,17 @@ struct CrossNodeData {
 	// int _recv_size; _recv_offset[_node_num];
 	// cap _node_num + 1
 	int *_recv_offset;
-	// cap _node_num * delay
+	// cap _node_num * (delay+1)
+	int *_recv_start;
+	// cap _node_num
 	int *_recv_num;
 	int *_recv_data;
 
 	// int send_size;
 	// cap _node_num + 1
 	int *_send_offset;
+	// cap _node_num * (delay+1)
+	int *_send_start;
 	// cap _node_num * delay
 	int *_send_num;
 	int *_send_data;
@@ -38,8 +42,8 @@ CrossNodeData * recvCND(int src, int tag, MPI_Comm comm);
 CrossNodeData * copyCNDtoGPU(CrossNodeData * data);
 int freeCNDGPU(CrossNodeData *data);
 
-int generateCND(Connection *conn, int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, int *send_data, int *send_offset, int *send_num, int node_num, int time, int gFiredTableCap, int min_delay, int delay);
+int generateCND(Connection *conn, int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, int *send_data, int *send_offset, int *send_start, int node_num, int time, int gFiredTableCap, int min_delay, int delay);
 
-int msg_cnd(CrossNodeData *cnd, int *send_num, int *recv_num, MPI_Request *request);
+int msg_cnd(CrossNodeData *cnd, MPI_Request *request);
 
 #endif // CROSSNODEDATA_H

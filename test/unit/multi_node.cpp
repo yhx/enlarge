@@ -16,7 +16,7 @@ using ::testing::ElementsAreArray;
 
 const int NODE_NUM = 2;
 const int N = 2;
-const int DELAY = 2;
+const int DELAY = 3;
 
 int node_id = -1;
 int node_num = -1;
@@ -71,25 +71,33 @@ TEST(MPITEST, CNDTest) {
 
 TEST(MPITEST, MSGTest) {
 	if (node_id == 0) {
-		ASSERT_THAT(vector<int>(data->_send_num, data->_send_num+NODE_NUM*DELAY),
-				ElementsAreArray({0, 0, 2, 4}));
+		ASSERT_THAT(vector<int>(data->_send_start, data->_send_start+NODE_NUM*(DELAY+1)),
+				ElementsAreArray({0, 0, 0, 0, 0, 2, 4, 5}));
+		ASSERT_THAT(vector<int>(data->_send_num, data->_send_num+NODE_NUM),
+				ElementsAreArray({0, 5}));
 		ASSERT_THAT(vector<int>(data->_send_data, data->_send_data+NODE_NUM*DELAY),
-				ElementsAreArray({4, 5, 4, 5}));
+				ElementsAreArray({4, 5, 4, 5, 5}));
 
-		ASSERT_THAT(vector<int>(data->_recv_num, data->_recv_num+NODE_NUM*DELAY),
-				ElementsAreArray({0, 0, 2, 4}));
+		ASSERT_THAT(vector<int>(data->_recv_start, data->_recv_start+NODE_NUM*(DELAY+1)),
+				ElementsAreArray({0, 0, 0, 0, 0, 2, 4, 5}));
+		ASSERT_THAT(vector<int>(data->_recv_num, data->_recv_num+NODE_NUM),
+				ElementsAreArray({0, 5}));
 		ASSERT_THAT(vector<int>(data->_recv_data, data->_recv_data+NODE_NUM*DELAY),
-				ElementsAreArray({4, 5, 4, 5}));
+				ElementsAreArray({4, 5, 4, 5, 4}));
 	} else {
-		ASSERT_THAT(vector<int>(data->_send_num, data->_send_num+NODE_NUM*DELAY),
-				ElementsAreArray({2, 4, 0, 0}));
+		ASSERT_THAT(vector<int>(data->_send_start, data->_send_start+NODE_NUM*(DELAY+1)),
+				ElementsAreArray({0, 2, 4, 5, 0, 0, 0, 0}));
+		ASSERT_THAT(vector<int>(data->_send_num, data->_send_num+NODE_NUM),
+				ElementsAreArray({5, 0}));
 		ASSERT_THAT(vector<int>(data->_send_data, data->_send_data+NODE_NUM*DELAY),
-				ElementsAreArray({4, 5, 4, 5}));
+				ElementsAreArray({4, 5, 4, 5, 4}));
 
+		ASSERT_THAT(vector<int>(data->_recv_start, data->_recv_start+NODE_NUM*(DELAY+1)),
+				ElementsAreArray({0, 2, 4, 5, 0, 0, 0, 0}));
 		ASSERT_THAT(vector<int>(data->_recv_num, data->_recv_num+NODE_NUM*DELAY),
-				ElementsAreArray({2, 4, 0, 0}));
+				ElementsAreArray({5, 0}));
 		ASSERT_THAT(vector<int>(data->_recv_data, data->_recv_data+NODE_NUM*DELAY),
-				ElementsAreArray({4, 5, 4, 5}));
+				ElementsAreArray({4, 5, 4, 5, 5}));
 	}
 }
 
@@ -142,16 +150,13 @@ int main(int argc, char **argv)
 
 	sg.distribute(&network, &data, info, sim_cycle);
 
-	int *c_send_num = (int *)malloc(sizeof(int)*NODE_NUM);
-	int *c_recv_num = (int *)malloc(sizeof(int)*NODE_NUM);
+	int fire_tbl[12] = {0, 1, 2, 3, 2, 3, 0, 0, 3, 1, 0, 0};
+	int fire_tbl_size[3] = {4, 2, 3};
 
-	int fire_tbl[8] = {0, 1, 2, 3, 2, 3, 0, 0};
-	int fire_tbl_size[2] = {4, 2};
+	int fire_tbl1[12] = {2, 3, 0, 0, 0, 1, 2, 3, 2, 0, 0, 0};
+	int fire_tbl_size1[3] = {2, 4, 1};
 
-	int fire_tbl1[8] = {2, 3, 0, 0, 0, 1, 2, 3};
-	int fire_tbl_size1[2] = {2, 4};
-
-	for (int time = 0; time<2; time++) {
+	for (int time = 0; time<DELAY; time++) {
 		int curr_delay = time % data->_delay;
 		if (node_id == 0) {
 			generateCND(network->_network->pConnection, fire_tbl, fire_tbl_size, network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, data->_send_data, data->_send_offset, data->_send_num, NODE_NUM, time, N*2, data->_delay, curr_delay);
@@ -162,7 +167,7 @@ int main(int argc, char **argv)
 
 		MPI_Request request_t;
 		if (curr_delay >= DELAY-1) {
-			msg_cnd(data, c_send_num, c_recv_num, &request_t);
+			msg_cnd(data, &request_t);
 		} else {
 			for (int i=0; i<NODE_NUM; i++) {
 				data->_send_num[i*DELAY+curr_delay+1] = data->_send_num[i*DELAY+curr_delay];
