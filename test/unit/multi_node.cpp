@@ -54,7 +54,7 @@ TEST(MPITEST, CNMTest) {
 
 TEST(MPITEST, CNDTest) {
 	ASSERT_EQ(data->_node_num, NODE_NUM);
-	ASSERT_EQ(data->_delay, DELAY);
+	ASSERT_EQ(data->_min_delay, DELAY);
 
 	if (node_id == 0) {
 		ASSERT_THAT(vector<int>(data->_recv_offset, data->_recv_offset+NODE_NUM+1),
@@ -157,22 +157,17 @@ int main(int argc, char **argv)
 	int fire_tbl_size1[3] = {2, 4, 1};
 
 	for (int time = 0; time<DELAY; time++) {
-		int curr_delay = time % data->_delay;
+		int curr_delay = time % data->_min_delay;
 		if (node_id == 0) {
-			generateCND(network->_network->pConnection, fire_tbl, fire_tbl_size, network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, data->_send_data, data->_send_offset, data->_send_num, NODE_NUM, time, N*2, data->_delay, curr_delay);
+			generateCND(network->_network->pConnection, fire_tbl, fire_tbl_size, network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, data, NODE_NUM, time, N*2, data->_min_delay, curr_delay);
 		} else {
-			generateCND(network->_network->pConnection, fire_tbl1, fire_tbl_size1, network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, data->_send_data, data->_send_offset, data->_send_num, NODE_NUM, time, N*2, data->_delay, curr_delay);
+			generateCND(network->_network->pConnection, fire_tbl1, fire_tbl_size1, network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, data, NODE_NUM, time, N*2, data->_min_delay, curr_delay);
 		}
 		MPI_Barrier(MPI_COMM_WORLD);
 
 		MPI_Request request_t;
-		if (curr_delay >= DELAY-1) {
-			msg_cnd(data, &request_t);
-		} else {
-			for (int i=0; i<NODE_NUM; i++) {
-				data->_send_num[i*DELAY+curr_delay+1] = data->_send_num[i*DELAY+curr_delay];
-			}
-		}
+		update_cnd(data, curr_delay, &request_t);
+
 		MPI_Barrier(MPI_COMM_WORLD);
 	}
 	MPI_Barrier(MPI_COMM_WORLD);

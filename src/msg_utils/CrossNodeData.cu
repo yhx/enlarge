@@ -12,10 +12,10 @@ CrossNodeData * copyCNDtoGPU(CrossNodeData *data)
 	assert(gpu != NULL);
 
 	gpu->_node_num = data->_node_num;
-	gpu->_delay = data->_delay;
+	gpu->_min_delay = data->_min_delay;
 
 	int num = data->_node_num;
-	int size = data->_node_num * data->_delay;
+	int size = data->_node_num * data->_min_delay;
 	int num_p_1 = data->_node_num + 1;
 
 	checkCudaErrors(cudaMalloc((void**)&(gpu->_recv_offset), sizeof(int)*num_p_1));
@@ -59,7 +59,7 @@ int freeCNDGPU(CrossNodeData *data)
 	cudaFree(data->_send_data);
 
 	data->_node_num = 0;
-	data->_delay = 0;
+	data->_min_delay = 0;
 	free(data);
 	data = NULL;
 	return 0;

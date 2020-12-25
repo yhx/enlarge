@@ -9,33 +9,41 @@
 void allocParaCND(CrossNodeData *data, int node_num, int delay) 
 {
 	assert(delay > 0);
+	assert(node_num > 0);
+	printf("Delay: %d\n", delay);
+	printf("Node: %d\n", node_num);
 	data->_node_num = node_num;
-	data->_delay = delay;
+	data->_min_delay = delay;
 
 	int size = delay * node_num;
 	int num_p_1 = node_num + 1;
 
-	data->_recv_offset = (int *)malloc(sizeof(int) * (num_p_1));
+	data->_recv_offset = (int *)malloc(sizeof(int) * num_p_1);
 	data->_recv_start = (int *)malloc(sizeof(int) * (size+node_num));
 	data->_recv_num = (int *)malloc(sizeof(int) * node_num);
 	data->_recv_data = NULL;
+	
+	memset(data->_recv_offset, 0, sizeof(int) * num_p_1);
 
-	data->_send_offset = (int *)malloc(sizeof(int) * (num_p_1));
+	data->_send_offset = (int *)malloc(sizeof(int) * num_p_1);
 	data->_send_start = (int *)malloc(sizeof(int) * (size+node_num));
 	data->_send_num = (int *)malloc(sizeof(int) * node_num);
 	data->_send_data = NULL;
+
+	memset(data->_send_offset, 0, sizeof(int) * num_p_1);
 
 	resetCND(data);
 }
 
 void resetCND(CrossNodeData *data)
 {
-	int size = data->_delay * data->_node_num;
-	memset(data->_recv_start, 0, sizeof(int) * (size + data->_node_num));
-	memset(data->_recv_num, 0, sizeof(int) * size);
+	int node_num = data->_node_num;
+	int size = data->_min_delay * data->_node_num;
+	memset(data->_recv_start, 0, sizeof(int) * (size + node_num));
+	memset(data->_recv_num, 0, sizeof(int) * node_num);
 
-	memset(data->_send_start, 0, sizeof(int) * size);
-	memset(data->_send_num, 0, sizeof(int) * (size + data->_node_num));
+	memset(data->_send_start, 0, sizeof(int) * (size + node_num));
+	memset(data->_send_num, 0, sizeof(int) * (node_num));
 }
 
 void allocDataCND(CrossNodeData *data)
@@ -71,7 +79,7 @@ void freeCND(CrossNodeData *data)
 	free(data->_send_data);
 
 	data->_node_num = 0;
-	data->_delay = 0;
+	data->_min_delay = 0;
 	free(data);
 	data = NULL;
 }
@@ -81,10 +89,10 @@ int sendCND(CrossNodeData *cnd, int dst, int tag, MPI_Comm comm)
 	int ret = 0;
 	ret = MPI_Send(&(cnd->_node_num), 1, MPI_INT, dst, tag, comm);
 	assert(ret == MPI_SUCCESS);
-	ret = MPI_Send(&(cnd->_delay), 1, MPI_INT, dst, tag+1, comm);
+	ret = MPI_Send(&(cnd->_min_delay), 1, MPI_INT, dst, tag+1, comm);
 	assert(ret == MPI_SUCCESS);
 
-	// int size = cnd->_delay * cnd->_node_num;
+	// int size = cnd->_min_delay * cnd->_node_num;
 	int num_p_1 = cnd->_node_num + 1;
 	ret = MPI_Send(cnd->_recv_offset, num_p_1, MPI_INT, dst, tag+2, comm);
 	assert(ret == MPI_SUCCESS);
@@ -100,10 +108,10 @@ CrossNodeData * recvCND(int src, int tag, MPI_Comm comm)
 	MPI_Status status;
 	ret = MPI_Recv(&(cnd->_node_num), 1, MPI_INT, src, tag, comm, &status);
 	assert(ret==MPI_SUCCESS);
-	ret = MPI_Recv(&(cnd->_delay), 1, MPI_INT, src, tag+1, comm, &status);
+	ret = MPI_Recv(&(cnd->_min_delay), 1, MPI_INT, src, tag+1, comm, &status);
 	assert(ret==MPI_SUCCESS);
 
-	int size = cnd->_delay * cnd->_node_num;
+	int size = cnd->_min_delay * cnd->_node_num;
 	int num_p_1 = cnd->_node_num + 1;
 	cnd->_recv_offset = (int *)malloc(sizeof(int)*num_p_1);
 	ret = MPI_Recv(cnd->_recv_offset, num_p_1, MPI_INT, src, tag+2, comm, &status);
@@ -125,7 +133,7 @@ CrossNodeData * recvCND(int src, int tag, MPI_Comm comm)
 	return cnd;
 }
 
-int generateCND(Connection *conn, int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, int *send_data, int *send_offset, int *send_start, int node_num, int time, int gFiredTableCap, int min_delay, int delay)
+int generateCND(Connection *conn, int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, CrossNodeData *cnd, int node_num, int time, int gFiredTableCap, int min_delay, int delay)
 {
 	int delay_idx = time % (conn->maxDelay+1);
 	int fired_size = firedTableSizes[delay_idx];
@@ -137,8 +145,8 @@ int generateCND(Connection *conn, int *firedTable, int *firedTableSizes, int *id
 				int map_nid = crossnode_index2idx[tmp*node_num+node];
 				if (map_nid >= 0) {
 					int idx_t = node * (min_delay+1) + delay + 1;
-					send_data[send_offset[node] + send_start[idx_t]]= map_nid;
-					send_start[idx_t]++;
+					cnd->_send_data[cnd->_send_offset[node] + cnd->_send_start[idx_t]]= map_nid;
+					cnd->_send_start[idx_t]++;
 				}
 			}
 		}
@@ -151,7 +159,7 @@ int generateCND(Connection *conn, int *firedTable, int *firedTableSizes, int *id
 int msg_cnd(CrossNodeData *cnd, MPI_Request *request)
 {
 	int node_num = cnd->_node_num;
-	int delay = cnd->_delay;
+	int delay = cnd->_min_delay;
 	for (int i=0; i<node_num; i++) {
 		cnd->_send_num[i] = cnd->_send_start[i*(delay+1)+delay];
 	}
@@ -177,4 +185,16 @@ int msg_cnd(CrossNodeData *cnd, MPI_Request *request)
 #endif
 
 	return ret;
+}
+
+int update_cnd(CrossNodeData *cnd, int curr_delay, MPI_Request *request) {
+	int min_delay = cnd->_min_delay;
+	if (curr_delay >= min_delay - 1) {
+		msg_cnd(cnd, request);
+	} else {
+		for (int i=0; i<cnd->_node_num; i++) {
+			cnd->_send_start[i*(min_delay+1)+curr_delay+2] = cnd->_send_start[i*(min_delay+1)+curr_delay+1];
+		}
+	}
+	return 0;
 }

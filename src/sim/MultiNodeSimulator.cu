@@ -232,18 +232,19 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 		gettimeofday(&t2, NULL);
 		comp_time += 1000000 * (t2.tv_sec - t1.tv_sec) + (t2.tv_usec - t1.tv_usec);
 #endif
-		int curr_delay = time % cnd->_delay;
-		generateCND(pNetCPU->pConnection, c_gFiredTable, c_gFiredTableSizes, network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, cnd->_send_data, cnd->_send_offset, cnd->_send_start, network->_nodeNum, time, cFiredTableCap, cnd->_delay, curr_delay);
+		int curr_delay = time % cnd->_min_delay;
+		generateCND(pNetCPU->pConnection, c_gFiredTable, c_gFiredTableSizes, network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, cnd, network->_nodeNum, time, cFiredTableCap, cnd->_min_delay, curr_delay);
 
 
 		MPI_Request request_t;
-		if (curr_delay >= minDelay - 1) {
-			msg_cnd(cnd, &request_t);
-		} else {
-			for (int i=0; i<node_num; i++) {
-				cnd->_send_start[i*(minDelay+1)+curr_delay+2] = cnd->_send_num[i*(minDelay+1)+curr_delay+1];
-			}
-		}
+		update_cnd(cnd, curr_delay, &request_t);
+		// if (curr_delay >= minDelay - 1) {
+		// 	msg_cnd(cnd, &request_t);
+		// } else {
+		// 	for (int i=0; i<node_num; i++) {
+		// 		cnd->_send_start[i*(minDelay+1)+curr_delay+2] = cnd->_send_num[i*(minDelay+1)+curr_delay+1];
+		// 	}
+		// }
 #endif
 #ifdef PROF
 		gettimeofday(&t3, NULL);
