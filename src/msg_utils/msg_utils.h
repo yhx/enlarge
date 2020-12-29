@@ -2,7 +2,13 @@
 #ifndef MSG_UTILS
 #define MSG_UTILS
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "mpi.h"
+
+int to_attach();
 
 template <typename T>
 int print_mpi_x32(T *array, int size, const char *name)

@@ -17,6 +17,7 @@
 // #include "../gpu_utils/gpu_utils.h"
 #include "../gpu_utils/runtime.h"
 #include "../gpu_utils/GBuffers.h"
+#include "../msg_utils/msg_utils.h"
 #include "../net/Network.h"
 #include "../neuron/lif/LIFData.h"
 #include "MultiNodeSimulator.h"
@@ -163,6 +164,11 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 	FILE *v_file = fopen(v_filename, "w+");
 	assert(v_file != NULL);
 
+	char msg_filename[512];
+	sprintf(msg_filename, "msg.mpi_%d.log", network->_nodeIdx); 
+	FILE *msg_file = fopen(msg_filename, "w+");
+	assert(msg_file != NULL);
+
 	GNetwork *pNetCPU = network->_network;
 
 	int nTypeNum = pNetCPU->nTypeNum;
@@ -175,6 +181,7 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 	int maxDelay = pNetCPU->pConnection->maxDelay;
 	int minDelay = pNetCPU->pConnection->minDelay;
+	assert(minDelay == cnd->_min_delay);
 
 	printf("Thread %d MaxDelay: %d MinDelay: %d\n", network->_nodeIdx, maxDelay,  minDelay);
 
@@ -222,6 +229,10 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 		int currentIdx = time % (maxDelay+1);
 		c_gFiredTableSizes[currentIdx] = 0;
 
+		if (time == 38) {
+			to_attach();
+		}
+
 		for (int i=0; i<nTypeNum; i++) {
 			updateType[pNetCPU->pNTypes[i]](pNetCPU->pConnection, pNetCPU->ppNeurons[i], c_gNeuronInput, c_gNeuronInput_I, c_gFiredTable, c_gFiredTableSizes, cFiredTableCap, pNetCPU->pNeuronNums[i+1]-pNetCPU->pNeuronNums[i], pNetCPU->pNeuronNums[i], time);
 		}
@@ -254,7 +265,7 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 		MPI_Barrier(MPI_COMM_WORLD);
 		gettimeofday(&t6, NULL);
-	        sync_time += 1000000 * (t6.tv_sec - t3.tv_sec) + (t6.tv_usec - t3.tv_usec);
+		sync_time += 1000000 * (t6.tv_sec - t3.tv_sec) + (t6.tv_usec - t3.tv_usec);
 #endif
 
 
@@ -268,21 +279,50 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 		comp_time += 1000000 * (t4.tv_sec - t6.tv_sec) + (t4.tv_usec - t6.tv_usec);
 #endif
 
-#if 1
-#ifdef ASYNC
-		MPI_Status status_t;
-		int ret = MPI_Wait(&request_t, &status_t);
-		assert(ret == MPI_SUCCESS);
+#ifdef LOG_DATA
+		LIFData *c_lif = (LIFData *)pNetCPU->ppNeurons[copy_idx];
+		real *c_vm = c_lif->pV_m;
+		int copy_size = c_gFiredTableSizes[currentIdx];
+
+		log_array(v_file, c_vm, pNetCPU->pNeuronNums[copy_idx+1] - pNetCPU->pNeuronNums[copy_idx]);
+
+		log_array(log_file, c_gFiredTable + allNeuronNum * currentIdx, copy_size);
+
+		// for (int i=0; i<pNetCPU->pNeuronNums[copy_idx+1] - pNetCPU->pNeuronNums[copy_idx]; i++) {
+		// 	fprintf(v_file, "%.10lf \t", c_vm[i]);
+		// }
+		// fprintf(v_file, "\n");
+
+		// for (int i=0; i<copySize; i++) {
+		// 	fprintf(log_file, "%d ", c_gFiredTable[allNeuronNum*currentIdx+i]);
+		// }
+		// fprintf(log_file, "\n");
+
 #endif
+
+#if 1
 		if (curr_delay >= minDelay - 1) {
-			for (int n_ = 0; n_ < node_num; n_++) {
-				for (int d_ =0; d_ < minDelay; d_++) {
-					int delay_idx = (time-minDelay+2+d_+maxDelay)%(maxDelay+1);
-					for (int i=cnd->_recv_start[n_*(minDelay+1)+d_]; i<cnd->_recv_start[n_*(minDelay+1)+d_+1]; i++) {
+#ifdef ASYNC
+			MPI_Status status_t;
+			int ret = MPI_Wait(&request_t, &status_t);
+			assert(ret == MPI_SUCCESS);
+#endif
+			for (int d_ =0; d_ < minDelay; d_++) {
+				int delay_idx = (time-minDelay+2+d_+maxDelay)%(maxDelay+1);
+				for (int n_ = 0; n_ < node_num; n_++) {
+					int start = cnd->_recv_start[n_*(minDelay+1)+d_];
+					int end = cnd->_recv_start[n_*(minDelay+1)+d_+1];
+					for (int i=start; i<end; i++) {
 						c_gFiredTable[allNeuronNum*delay_idx + c_gFiredTableSizes[delay_idx] + i] = cnd->_recv_data[cnd->_recv_offset[n_]+i];
 					}
-					c_gFiredTableSizes[delay_idx] += cnd->_recv_start[n_*(minDelay+1)+d_+1] - cnd->_recv_start[n_*(minDelay+1)+d_];
+					c_gFiredTableSizes[delay_idx] += end - start;
+#ifdef LOG_DATA
+					log_array_noendl(msg_file, cnd->_recv_data + cnd->_recv_offset[n_], end - start); 
+#endif
 				}
+#ifdef LOG_DATA
+				fprintf(msg_file, "\n");
+#endif
 			}
 			resetCND(cnd);
 		}
@@ -292,23 +332,6 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 		comm_time += 1000000 * (t5.tv_sec - t4.tv_sec) + (t5.tv_usec - t4.tv_usec);
 #endif
 
-#ifdef LOG_DATA
-		LIFData *c_lif = (LIFData *)pNetCPU->ppNeurons[copy_idx];
-		real *c_vm = c_lif->pV_m;
-
-
-		for (int i=0; i<pNetCPU->pNeuronNums[copy_idx+1] - pNetCPU->pNeuronNums[copy_idx]; i++) {
-			fprintf(v_file, "%.10lf \t", c_vm[i]);
-		}
-		fprintf(v_file, "\n");
-		int copySize = c_gFiredTableSizes[currentIdx];
-
-		for (int i=0; i<copySize; i++) {
-			fprintf(log_file, "%d ", c_gFiredTable[allNeuronNum*currentIdx+i]);
-		}
-		fprintf(log_file, "\n");
-
-#endif
 	}
 #ifdef DEBUG
 		printf("\n");

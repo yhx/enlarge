@@ -58,14 +58,14 @@ TEST(MPITEST, CNDTest) {
 
 	if (node_id == 0) {
 		ASSERT_THAT(vector<int>(data->_recv_offset, data->_recv_offset+NODE_NUM+1),
-				ElementsAreArray({0, 0, 4}));
+				ElementsAreArray({0, 0, 6}));
 		ASSERT_THAT(vector<int>(data->_send_offset, data->_send_offset+NODE_NUM+1),
-				ElementsAreArray({0, 0, 4}));
+				ElementsAreArray({0, 0, 6}));
 	} else {
 		ASSERT_THAT(vector<int>(data->_recv_offset, data->_recv_offset+NODE_NUM+1),
-				ElementsAreArray({0, 4, 4}));
+				ElementsAreArray({0, 6, 6}));
 		ASSERT_THAT(vector<int>(data->_send_offset, data->_send_offset+NODE_NUM+1),
-				ElementsAreArray({0, 4, 4}));
+				ElementsAreArray({0, 6, 6}));
 	}
 }
 
@@ -75,28 +75,28 @@ TEST(MPITEST, MSGTest) {
 				ElementsAreArray({0, 0, 0, 0, 0, 2, 4, 5}));
 		ASSERT_THAT(vector<int>(data->_send_num, data->_send_num+NODE_NUM),
 				ElementsAreArray({0, 5}));
-		ASSERT_THAT(vector<int>(data->_send_data, data->_send_data+NODE_NUM*DELAY),
+		ASSERT_THAT(vector<int>(data->_send_data, data->_send_data+data->_send_num[1]),
 				ElementsAreArray({4, 5, 4, 5, 5}));
 
 		ASSERT_THAT(vector<int>(data->_recv_start, data->_recv_start+NODE_NUM*(DELAY+1)),
 				ElementsAreArray({0, 0, 0, 0, 0, 2, 4, 5}));
 		ASSERT_THAT(vector<int>(data->_recv_num, data->_recv_num+NODE_NUM),
 				ElementsAreArray({0, 5}));
-		ASSERT_THAT(vector<int>(data->_recv_data, data->_recv_data+NODE_NUM*DELAY),
+		ASSERT_THAT(vector<int>(data->_recv_data, data->_recv_data+data->_recv_num[1]),
 				ElementsAreArray({4, 5, 4, 5, 4}));
 	} else {
 		ASSERT_THAT(vector<int>(data->_send_start, data->_send_start+NODE_NUM*(DELAY+1)),
 				ElementsAreArray({0, 2, 4, 5, 0, 0, 0, 0}));
 		ASSERT_THAT(vector<int>(data->_send_num, data->_send_num+NODE_NUM),
 				ElementsAreArray({5, 0}));
-		ASSERT_THAT(vector<int>(data->_send_data, data->_send_data+NODE_NUM*DELAY),
+		ASSERT_THAT(vector<int>(data->_send_data, data->_send_data+data->_send_num[0]),
 				ElementsAreArray({4, 5, 4, 5, 4}));
 
 		ASSERT_THAT(vector<int>(data->_recv_start, data->_recv_start+NODE_NUM*(DELAY+1)),
 				ElementsAreArray({0, 2, 4, 5, 0, 0, 0, 0}));
-		ASSERT_THAT(vector<int>(data->_recv_num, data->_recv_num+NODE_NUM*DELAY),
+		ASSERT_THAT(vector<int>(data->_recv_num, data->_recv_num+NODE_NUM),
 				ElementsAreArray({5, 0}));
-		ASSERT_THAT(vector<int>(data->_recv_data, data->_recv_data+NODE_NUM*DELAY),
+		ASSERT_THAT(vector<int>(data->_recv_data, data->_recv_data+data->_recv_num[0]),
 				ElementsAreArray({4, 5, 4, 5, 5}));
 	}
 }

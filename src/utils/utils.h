@@ -87,5 +87,38 @@ bool isEqualArray(T const & a, T const & b, size_t size)
 	return true;
 }
 
+template<typename T>
+void log_array(FILE *f, T *array, size_t size)
+{
+	for (size_t i=0; i<size; i++) {
+		if (typeid(T) == typeid(int)) {
+			fprintf(f, "%d ", array[i]);
+		} else if (typeid(T) == typeid(float)) {
+			fprintf(f, "%.10lf \t", array[i]);
+		} else if (typeid(T) == typeid(double)) {
+			fprintf(f, "%.10lf \t", array[i]);
+		} else {
+			fprintf(f, "Unsupported type\n");
+			break;
+		}
+	}
+	fprintf(f, "\n");
+}
+
+template<typename T>
+void log_array_noendl(FILE *f, T *array, size_t size)
+{
+	for (size_t i=0; i<size; i++) {
+		if (typeid(T) == typeid(int)) {
+			fprintf(f, "%d ", array[i]);
+		} else if (typeid(T) == typeid(float)) {
+			fprintf(f, "%.10lf \t", array[i]);
+		} else if (typeid(T) == typeid(double)) {
+			fprintf(f, "%.10lf \t", array[i]);
+		} else {
+			fprintf(f, "Unsupported type\n");
+		}
+	}
+}
 
 #endif /* UTILS_H */

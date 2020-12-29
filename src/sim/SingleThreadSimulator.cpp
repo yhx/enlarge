@@ -113,17 +113,21 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 		LIFData *c_lif = (LIFData *)pNetCPU->ppNeurons[copy_idx];
 		real *c_vm = c_lif->pV_m;
 
-		int copySize = c_gFiredTableSizes[currentIdx];
+		int copy_size = c_gFiredTableSizes[currentIdx];
 
-		for (int i=0; i<pNetCPU->pNeuronNums[copy_idx+1] - pNetCPU->pNeuronNums[copy_idx]; i++) {
-			fprintf(v_file, "%.10lf \t", c_vm[i]);
-		}
-		fprintf(v_file, "\n");
+		log_array(v_file, c_vm, pNetCPU->pNeuronNums[copy_idx+1] - pNetCPU->pNeuronNums[copy_idx]);
 
-		for (int i=0; i<copySize; i++) {
-			fprintf(log_file, "%d ", c_gFiredTable[totalNeuronNum*currentIdx+i]);
-		}
-		fprintf(log_file, "\n");
+		log_array(log_file, c_gFiredTable + totalNeuronNum * currentIdx, copy_size);
+
+		// for (int i=0; i<pNetCPU->pNeuronNums[copy_idx+1] - pNetCPU->pNeuronNums[copy_idx]; i++) {
+		// 	fprintf(v_file, "%.10lf \t", c_vm[i]);
+		// }
+		// fprintf(v_file, "\n");
+
+		// for (int i=0; i<copy_size; i++) {
+		// 	fprintf(log_file, "%d ", c_gFiredTable[totalNeuronNum*currentIdx+i]);
+		// }
+		// fprintf(log_file, "\n");
 #endif
 		
 	}
