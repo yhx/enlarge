@@ -1,5 +1,6 @@
 
 #include <unistd.h>
+#include <assert.h>
 
 #include "msg_utils.h"
 
@@ -16,5 +17,14 @@ int to_attach()
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
 	return 0;
+}
+
+FILE * log_file_mpi(const char *name, int nidx)
+{
+	char log_filename[512];
+	snprintf(log_filename, 512, "%s.mpi_%d.log", name, nidx); 
+	FILE *log_file = fopen(log_filename, "w+");
+	assert(log_file != NULL);
+	return log_file;
 }
 

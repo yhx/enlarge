@@ -10,6 +10,8 @@
 
 int to_attach();
 
+FILE * log_file_mpi(const char *name, int nidx);
+
 template <typename T>
 int print_mpi_x32(T *array, int size, const char *name)
 {

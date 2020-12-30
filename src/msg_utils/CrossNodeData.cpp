@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <string.h>
 
+#include "../utils/utils.h"
 #include "msg_utils.h"
 #include "CrossNodeData.h"
 
@@ -195,6 +196,31 @@ int update_cnd(CrossNodeData *cnd, int curr_delay, MPI_Request *request) {
 		for (int i=0; i<cnd->_node_num; i++) {
 			cnd->_send_start[i*(min_delay+1)+curr_delay+2] = cnd->_send_start[i*(min_delay+1)+curr_delay+1];
 		}
+	}
+	return 0;
+}
+
+int log_cnd(CrossNodeData *cnd, int time, FILE *sfile, FILE *rfile)
+{
+	fprintf(sfile, "%d: \n", time);
+	for (int n=0; n<cnd->_node_num; n++) {
+		for (int d=0; d<cnd->_min_delay; d++) {
+			int start = cnd->_send_start[n*(cnd->_min_delay+1)+d];
+			int end = cnd->_send_start[n*(cnd->_min_delay+1)+d+1];
+			log_array_noendl(sfile, cnd->_send_data + cnd->_send_offset[n]+start, end-start);
+			fprintf(sfile, "\t");
+		}
+		fprintf(sfile, "\n");
+	}
+	fprintf(rfile, "%d: \n", time);
+	for (int n=0; n<cnd->_node_num; n++) {
+		for (int d=0; d<cnd->_min_delay; d++) {
+			int start = cnd->_recv_start[n*(cnd->_min_delay+1)+d];
+			int end = cnd->_recv_start[n*(cnd->_min_delay+1)+d+1];
+			log_array_noendl(sfile, cnd->_recv_data + cnd->_recv_offset[n]+start, end-start);
+			fprintf(sfile, "\t");
+		}
+		fprintf(sfile, "\n");
 	}
 	return 0;
 }

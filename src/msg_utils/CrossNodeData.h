@@ -48,4 +48,6 @@ int msg_cnd(CrossNodeData *cnd, MPI_Request *request);
 
 int update_cnd(CrossNodeData *cnd, int curr_delay, MPI_Request *request);
 
+int log_cnd(CrossNodeData *cnd, int time, FILE *sfile, FILE *rfile);
+
 #endif // CROSSNODEDATA_H

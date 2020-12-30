@@ -154,20 +154,26 @@ int MultiNodeSimulator::run(real time, FireInfo &log, bool gpu)
 }
 
 int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
-	char log_filename[512];
-	sprintf(log_filename, "sim.mpi_%d.log", network->_nodeIdx); 
-	FILE *log_file = fopen(log_filename, "w+");
-	assert(log_file != NULL);
+	// char sim_filename[512];
+	// sprintf(sim_filename, "sim.mpi_%d.log", network->_nodeIdx); 
+	// FILE *sim_file = fopen(sim_filename, "w+");
+	// assert(sim_file != NULL);
 
-	char v_filename[512];
-	sprintf(v_filename, "v.mpi_%d.log", network->_nodeIdx); 
-	FILE *v_file = fopen(v_filename, "w+");
-	assert(v_file != NULL);
+	// char v_filename[512];
+	// sprintf(v_filename, "v.mpi_%d.log", network->_nodeIdx); 
+	// FILE *v_file = fopen(v_filename, "w+");
+	// assert(v_file != NULL);
 
-	char msg_filename[512];
-	sprintf(msg_filename, "msg.mpi_%d.log", network->_nodeIdx); 
-	FILE *msg_file = fopen(msg_filename, "w+");
-	assert(msg_file != NULL);
+	// char msg_filename[512];
+	// sprintf(msg_filename, "msg.mpi_%d.log", network->_nodeIdx); 
+	// FILE *msg_file = fopen(msg_filename, "w+");
+	// assert(msg_file != NULL);
+
+	FILE *v_file = log_file_mpi("v", network->_nodeIdx);
+	FILE *sim_file = log_file_mpi("sim", network->_nodeIdx);
+	FILE *msg_file = log_file_mpi("msg", network->_nodeIdx);
+	FILE *send_file = log_file_mpi("send", network->_nodeIdx);
+	FILE *recv_file = log_file_mpi("recv", network->_nodeIdx);
 
 	GNetwork *pNetCPU = network->_network;
 
@@ -286,7 +292,7 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 		log_array(v_file, c_vm, pNetCPU->pNeuronNums[copy_idx+1] - pNetCPU->pNeuronNums[copy_idx]);
 
-		log_array(log_file, c_gFiredTable + allNeuronNum * currentIdx, copy_size);
+		log_array(sim_file, c_gFiredTable + allNeuronNum * currentIdx, copy_size);
 
 		// for (int i=0; i<pNetCPU->pNeuronNums[copy_idx+1] - pNetCPU->pNeuronNums[copy_idx]; i++) {
 		// 	fprintf(v_file, "%.10lf \t", c_vm[i]);
@@ -294,9 +300,9 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 		// fprintf(v_file, "\n");
 
 		// for (int i=0; i<copySize; i++) {
-		// 	fprintf(log_file, "%d ", c_gFiredTable[allNeuronNum*currentIdx+i]);
+		// 	fprintf(sim_file, "%d ", c_gFiredTable[allNeuronNum*currentIdx+i]);
 		// }
-		// fprintf(log_file, "\n");
+		// fprintf(sim_file, "\n");
 
 #endif
 
@@ -317,13 +323,17 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 					}
 					c_gFiredTableSizes[delay_idx] += end - start;
 #ifdef LOG_DATA
-					log_array_noendl(msg_file, cnd->_recv_data + cnd->_recv_offset[n_], end - start); 
+					log_array_noendl(msg_file, cnd->_recv_data + cnd->_recv_offset[n_] + start, end - start); 
 #endif
 				}
 #ifdef LOG_DATA
 				fprintf(msg_file, "\n");
 #endif
 			}
+
+#ifdef LOG_DATA
+			log_cnd(cnd, time, send_file, recv_file);
+#endif
 			resetCND(cnd);
 		}
 #endif
@@ -337,23 +347,15 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 		printf("\n");
 #endif 
 	gettimeofday(&te, NULL);
-	long seconds = te.tv_sec - ts.tv_sec;
-	long hours = seconds/3600;
-	seconds = seconds%3600;
-	long minutes = seconds/60;
-	seconds = seconds%60;
-	long uSeconds = te.tv_usec - ts.tv_usec;
-	if (uSeconds < 0) {
-		uSeconds += 1000000;
-		seconds = seconds - 1;
-	}
 
-	printf("Thread %d Simulation finesed in %ld:%ld:%ld.%06lds\n", network->_nodeIdx, hours, minutes, seconds, uSeconds);
+	double seconds =  te.tv_sec - ts.tv_sec + (te.tv_usec - ts.tv_usec)/1000000.0;
+
+	printf("Thread %d Simulation finesed in %lfs\n", network->_nodeIdx, seconds);
 #ifdef PROF
 	printf("Thread %d Simulation perf %lf:%lf:%lf\n", network->_nodeIdx, comp_time, comm_time, sync_time);
 #endif
 
-	fclose(log_file);
+	fclose(sim_file);
 	fclose(v_file);
 
 	return 0;
@@ -361,10 +363,10 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 	print_mem("Inside Run");
-	char log_filename[512];
-	sprintf(log_filename, "sim.gpu.mpi_%d.log", network->_nodeIdx); 
-	FILE *log_file = fopen(log_filename, "w+");
-	assert(log_file != NULL);
+	char sim_filename[512];
+	sprintf(sim_filename, "sim.gpu.mpi_%d.log", network->_nodeIdx); 
+	FILE *sim_file = fopen(sim_filename, "w+");
+	assert(sim_file != NULL);
 
 	char v_filename[512];
 	sprintf(v_filename, "v.gpu.mpi_%d.log", network->_nodeIdx); 
@@ -552,9 +554,9 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 		
 #ifdef LOG_DATA
 		for (int i=0; i<copySize; i++) {
-			fprintf(log_file, "%d ", buffers->c_neuronsFired[i]);
+			fprintf(sim_file, "%d ", buffers->c_neuronsFired[i]);
 		}
-		fprintf(log_file, "\n");
+		fprintf(sim_file, "\n");
 
 		for (int i=0; i<c_pNetGPU->pNeuronNums[copy_idx+1] - c_pNetGPU->pNeuronNums[copy_idx]; i++) {
 			fprintf(v_file, "%.10lf \t", c_vm[i]);
@@ -600,7 +602,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 	free(rate);
 	fclose(rate_file);
 
-	fclose(log_file);
+	fclose(sim_file);
 	fclose(v_file);
 
 	free_buffers(buffers);
