@@ -235,7 +235,7 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 		int currentIdx = time % (maxDelay+1);
 		c_gFiredTableSizes[currentIdx] = 0;
 
-		if (time == 38) {
+		if (time == 37) {
 			to_attach();
 		}
 
