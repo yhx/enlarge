@@ -188,7 +188,8 @@ int msg_cnd(CrossNodeData *cnd, MPI_Request *request)
 	return ret;
 }
 
-int update_cnd(CrossNodeData *cnd, int curr_delay, MPI_Request *request) {
+int update_cnd(CrossNodeData *cnd, int curr_delay, MPI_Request *request) 
+{
 	int min_delay = cnd->_min_delay;
 	if (curr_delay >= min_delay - 1) {
 		msg_cnd(cnd, request);

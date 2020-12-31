@@ -79,8 +79,8 @@ public:
 
 	DistriNetwork * buildNetworks(const SimInfo &info, bool auto_splited = true);
 
-	CrossThreadData* arrangeCrossThreadData(int node_num);
-	CrossThreadDataGPU* arrangeCrossThreadDataGPU(int node_num);
+	CrossThreadData * arrangeCrossThreadData(int node_num);
+	CrossThreadDataGPU * arrangeCrossThreadDataGPU(int node_num);
 
 	CrossNodeData * arrangeCrossNodeData(int node_num, const SimInfo &info);
 

@@ -232,10 +232,10 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 #ifdef PROF
 		gettimeofday(&t1, NULL);
 #endif
-#ifdef DEBUG
-		printf("%d ", time);
-		fflush(stdout);
-#endif 
+// #ifdef DEBUG
+// 		printf("%d ", time);
+// 		fflush(stdout);
+// #endif 
 		int currentIdx = time % (maxDelay+1);
 		c_gFiredTableSizes[currentIdx] = 0;
 
@@ -377,15 +377,16 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 	print_mem("Inside Run");
-	char sim_filename[512];
-	sprintf(sim_filename, "sim.gpu.mpi_%d.log", network->_nodeIdx); 
-	FILE *sim_file = fopen(sim_filename, "w+");
-	assert(sim_file != NULL);
 
-	char v_filename[512];
-	sprintf(v_filename, "v.gpu.mpi_%d.log", network->_nodeIdx); 
-	FILE *v_file = fopen(v_filename, "w+");
-	assert(v_file != NULL);
+	FILE *v_file = log_file_mpi("v", network->_nodeIdx);
+	FILE *sim_file = log_file_mpi("sim", network->_nodeIdx);
+#ifdef LOG_DATA
+	FILE *msg_file = log_file_mpi("msg", network->_nodeIdx);
+	FILE *send_file = log_file_mpi("send", network->_nodeIdx);
+	FILE *recv_file = log_file_mpi("recv", network->_nodeIdx);
+	FILE *input_i_file = log_file_mpi("input_i", network->_nodeIdx);
+	FILE *input_e_file = log_file_mpi("input_e", network->_nodeIdx);
+#endif
 
 	print_mem("Before SetDevice");
 	checkCudaErrors(cudaSetDevice(0));
@@ -414,6 +415,10 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 	print_mem("Before Buffers");
 
 	GBuffers *buffers = alloc_buffers(allNeuronNum, nodeSynapseNum, pNetCPU->pConnection->maxDelay, network->_dt);
+
+	int *c_fired_sizes = NULL;
+	checkCudaErrors(cudaMallocHost((void**)&c_fired_sizes, sizeof(int)*(maxDelay+1)));
+	memset(c_fired_sizes, 0, sizeof(int)*(maxDelay+1));
 
 	BlockSize *updateSize = getBlockSize(allNeuronNum, nodeSynapseNum);
 
@@ -475,44 +480,29 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 			cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->pConnection, c_pNetGPU->ppNeurons[i], buffers->c_gNeuronInput, buffers->c_gNeuronInput_I, buffers->c_gFiredTable, buffers->c_gFiredTableSizes, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i], time, &updateSize[c_pNetGPU->pNTypes[i]]);
 		}
 
-		cudaMemset(cnd_gpu->_send_num, 0, sizeof(int)*(cnd_gpu->_node_num));
 #ifdef PROF
 		t2 = MPI_Wtime();
 		comp_time += t2-t1;
 #endif
-		cudaGenerateCND<<<(allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(c_pNetGPU->pConnection, buffers->c_gFiredTable, buffers->c_gFiredTableSizes, c_g_idx2index, c_g_cross_index2idx, cnd_gpu->_send_data, cnd_gpu->_send_offset, cnd_gpu->_send_num, node_num, time);
+		int curr_delay = time % cnd->_min_delay;
+		cudaGenerateCND(c_pNetGPU->pConnection, buffers->c_gFiredTable, buffers->c_gFiredTableSizes, c_g_idx2index, c_g_cross_index2idx, cnd_gpu, node_num, time, curr_delay, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
 
 		// checkCudaErrors(cudaMemcpy(gCrossDataGPU->_firedNum + network->_nodeIdx * node_num, c_g_fired_n_num, sizeof(int)*node_num, cudaMemcpyDeviceToHost));
-
-		checkCudaErrors(cudaMemcpy(cnd->_send_num, cnd_gpu->_send_num, sizeof(int)*(node_num), cudaMemcpyDeviceToHost));
-		for (int i=0; i< node_num; i++) {
-			if (cnd->_send_num[i] > 0) {
-				checkCudaErrors(cudaMemcpy((&cnd->_send_data[cnd->_send_offset[i]]), cnd_gpu->_send_data + cnd->_send_offset[i], sizeof(int)*(cnd->_send_num[i]), cudaMemcpyDeviceToHost));
-			}
-		}
-
-		int ret = MPI_Alltoall(cnd->_send_num, 1, MPI_INT, cnd->_recv_num, 1,MPI_INT,MPI_COMM_WORLD);
-		assert(ret == MPI_SUCCESS);
-
-		for (int i=0; i<node_num; i++) {
-			cnd->_recv_offset[i+1] = cnd->_recv_offset[i] + cnd->_recv_num[i];
-		}
-
 		MPI_Request request_t;
-		MPI_Status status_t;
-		ret = MPI_Ialltoallv(cnd->_send_data, cnd->_send_num, cnd->_send_offset , MPI_INT, 
-				cnd->_recv_data, cnd->_recv_num, cnd->_recv_offset, MPI_INT, MPI_COMM_WORLD, &request_t);
-		assert(ret == MPI_SUCCESS);
+		update_cnd_gpu(cnd_gpu, cnd, curr_delay, &request_t);
+
 #ifdef PROF
 		t3 = MPI_Wtime();
 		comm_time += t3-t2;
 		MPI_Barrier(MPI_COMM_WORLD);
-		for (int i=0; i<node_num; i++) {
-			send_count[i] += cnd->_send_num[i];
-			recv_count[i] += cnd->_recv_num[i];
+		if (curr_delay >= minDelay-1) {
+			for (int i=0; i<node_num; i++) {
+				send_count[i] += cnd->_send_num[i];
+				recv_count[i] += cnd->_recv_num[i];
+			}
 		}
 		t6 = MPI_Wtime();
-	        sync_time += t6- t3;
+		sync_time += t6- t3;
 #endif
 
 #ifdef LOG_DATA
@@ -539,16 +529,26 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 		t4 = MPI_Wtime();
 		comp_time += t4 - t6;
 #endif
-		ret = MPI_Wait(&request_t, &status_t);
-		assert(ret == MPI_SUCCESS);
+		if (curr_delay >= minDelay -1) {
+			MPI_Status status_t;
+			int ret = MPI_Wait(&request_t, &status_t);
+			assert(ret == MPI_SUCCESS);
 
-		int delay_idx = time % (maxDelay + 1);
+			int delay_idx = time % (maxDelay + 1);
 
-		int firedSize = 0;
-		checkCudaErrors(cudaMemcpy(&firedSize, buffers->c_gFiredTableSizes+delay_idx, sizeof(int), cudaMemcpyDeviceToHost));
+			checkCudaErrors(cudaMemcpy(buffers->c_gFiredTableSizes, c_fired_sizes, sizeof(int)*(maxDelay+1), cudaMemcpyDeviceToHost));
 
-		checkCudaErrors(cudaMemcpy(buffers->c_gFiredTable + allNeuronNum * delay_idx + firedSize , cnd->_recv_data, sizeof(int)*(cnd->_recv_offset[node_num]), cudaMemcpyHostToDevice));
-		cudaUpdateFTS<<<1, 1>>>(buffers->c_gFiredTableSizes, cnd->_recv_offset[node_num], delay_idx);
+			for (int d_=0; d_ < minDelay; d_++) {
+				int delay_idx = (time-minDelay+2+d_+maxDelay)%(maxDelay+1);
+				for (int n_ = 0; n_<node_num; n_++) {
+					int start = cnd->_recv_start[n_*(minDelay+1)+d_];
+					int end = cnd->_recv_start[n_*(minDelay+1)+d_+1];
+					checkCudaErrors(cudaMemcpy(buffers->c_gFiredTable + allNeuronNum*delay_idx + c_fired_sizes[delay_idx], cnd->_recv_data + cnd->_recv_offset[n_] + start, sizeof(int)*(end-start), cudaMemcpyDeviceToHost));
+					c_fired_sizes[delay_idx] += end - start;
+				}
+			}
+			checkCudaErrors(cudaMemcpy(buffers->c_gFiredTableSizes, c_fired_sizes, sizeof(int)*(maxDelay+1), cudaMemcpyHostToDevice));
+		}
 
 
 #ifdef PROF

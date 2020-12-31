@@ -50,4 +50,8 @@ int update_cnd(CrossNodeData *cnd, int curr_delay, MPI_Request *request);
 
 int log_cnd(CrossNodeData *cnd, int time, FILE *sfile, FILE *rfile);
 
+void cudaGenerateCND(Connection *conn, int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, CrossNodeData *cnd, int node_num, int time, int delay, int gridSize, int blockSize);
+
+int update_cnd_gpu(CrossNodeData *gpu, CrossNodeData *cpu, int curr_delay, MPI_Request *request);
+
 #endif // CROSSNODEDATA_H
