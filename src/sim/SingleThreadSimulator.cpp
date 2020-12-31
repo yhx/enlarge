@@ -39,7 +39,7 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 	FILE *v_file = openFile("v.cpu.log", "w+");
 	FILE *log_file = openFile("sim.cpu.log", "w+");
 	FILE *fire_file = openFile("fire.cpu.log", "w+");
-#ifdef MY_DEBUG
+#ifdef LOG_DATA
 	FILE *input_e_file = openFile("input_e.cpu.log", "w+");
 	FILE *input_i_file = openFile("input_i.cpu.log", "w+");
 	FILE *ie_file = openFile("ie.cpu.log", "w+");
@@ -82,16 +82,18 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 		//fflush(stdout);
 #ifdef LOG_DATA
 		int copy_idx = getIndex(pNetCPU->pNTypes, nTypeNum, LIF);
-#endif
-#ifdef MY_DEBUG
-		for (int i=pNetCPU->pNeuronNums[copy_idx]; i<pNetCPU->pNeuronNums[copy_idx+1]; i++) {
-			fprintf(input_e_file, "%.10lf \t", c_gNeuronInput[i]);
-		}
-		fprintf(input_e_file, "\n");
-		for (int i=pNetCPU->pNeuronNums[copy_idx]; i<pNetCPU->pNeuronNums[copy_idx+1]; i++) {
-			fprintf(input_i_file, "%.10lf \t", c_gNeuronInput_I[i]);
-		}
-		fprintf(input_i_file, "\n");
+
+		log_array(input_e_file, c_gNeuronInput, totalNeuronNum);
+		log_array(input_i_file, c_gNeuronInput_I, totalNeuronNum);
+
+		// for (int i=pNetCPU->pNeuronNums[copy_idx]; i<pNetCPU->pNeuronNums[copy_idx+1]; i++) {
+		// 	fprintf(input_e_file, "%.10lf \t", c_gNeuronInput[i]);
+		// }
+		// fprintf(input_e_file, "\n");
+		// for (int i=pNetCPU->pNeuronNums[copy_idx]; i<pNetCPU->pNeuronNums[copy_idx+1]; i++) {
+		// 	fprintf(input_i_file, "%.10lf \t", c_gNeuronInput_I[i]);
+		// }
+		// fprintf(input_i_file, "\n");
 #endif
 
 		info.currCycle = time;

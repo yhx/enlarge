@@ -171,9 +171,13 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 	FILE *v_file = log_file_mpi("v", network->_nodeIdx);
 	FILE *sim_file = log_file_mpi("sim", network->_nodeIdx);
+#ifdef LOG_DATA
 	FILE *msg_file = log_file_mpi("msg", network->_nodeIdx);
 	FILE *send_file = log_file_mpi("send", network->_nodeIdx);
 	FILE *recv_file = log_file_mpi("recv", network->_nodeIdx);
+	FILE *input_i_file = log_file_mpi("input_i", network->_nodeIdx);
+	FILE *input_e_file = log_file_mpi("input_e", network->_nodeIdx);
+#endif
 
 	GNetwork *pNetCPU = network->_network;
 
@@ -235,9 +239,14 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 		int currentIdx = time % (maxDelay+1);
 		c_gFiredTableSizes[currentIdx] = 0;
 
-		if (time == 37) {
+		if (time == 38) {
 			to_attach();
 		}
+
+#ifdef LOG_DATA
+		log_array(input_e_file, c_gNeuronInput, nodeNeuronNum);
+		log_array(input_i_file, c_gNeuronInput_I, nodeNeuronNum);
+#endif
 
 		for (int i=0; i<nTypeNum; i++) {
 			updateType[pNetCPU->pNTypes[i]](pNetCPU->pConnection, pNetCPU->ppNeurons[i], c_gNeuronInput, c_gNeuronInput_I, c_gFiredTable, c_gFiredTableSizes, cFiredTableCap, pNetCPU->pNeuronNums[i+1]-pNetCPU->pNeuronNums[i], pNetCPU->pNeuronNums[i], time);
@@ -273,8 +282,6 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 		gettimeofday(&t6, NULL);
 		sync_time += 1000000 * (t6.tv_sec - t3.tv_sec) + (t6.tv_usec - t3.tv_usec);
 #endif
-
-
 
 		for (int i=0; i<sTypeNum; i++) {
 			updateType[pNetCPU->pSTypes[i]](pNetCPU->pConnection, pNetCPU->ppSynapses[i], c_gNeuronInput, c_gNeuronInput_I, c_gFiredTable, c_gFiredTableSizes, cFiredTableCap, pNetCPU->pSynapseNums[i+1]-pNetCPU->pSynapseNums[i], pNetCPU->pSynapseNums[i], time);
@@ -319,7 +326,7 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 					int start = cnd->_recv_start[n_*(minDelay+1)+d_];
 					int end = cnd->_recv_start[n_*(minDelay+1)+d_+1];
 					for (int i=start; i<end; i++) {
-						c_gFiredTable[allNeuronNum*delay_idx + c_gFiredTableSizes[delay_idx] + i] = cnd->_recv_data[cnd->_recv_offset[n_]+i];
+						c_gFiredTable[allNeuronNum*delay_idx + c_gFiredTableSizes[delay_idx] + i-start] = cnd->_recv_data[cnd->_recv_offset[n_]+i];
 					}
 					c_gFiredTableSizes[delay_idx] += end - start;
 #ifdef LOG_DATA
@@ -357,6 +364,13 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 	fclose(sim_file);
 	fclose(v_file);
+#ifdef LOG_DATA
+	fclose(msg_file);
+	fclose(send_file);
+	fclose(recv_file);
+	fclose(input_e_file);
+	fclose(input_i_file);
+#endif
 
 	return 0;
 }
