@@ -2,7 +2,6 @@
 #include <assert.h>
 
 #include "../third_party/cuda/helper_cuda.h"
-
 #include "../gpu_utils/runtime.h"
 #include "CrossNodeData.h"
 
@@ -132,8 +131,8 @@ int fetch_cnd_gpu(CrossNodeData *gpu, CrossNodeData *cpu)
 	int num = cpu->_node_num;
 	int size = cpu->_node_num * cpu->_min_delay;
 
-	checkCudaErrors(cudaMemcpy(gpu->_send_start, cpu->_send_start, sizeof(int)*(size+num), cudaMemcpyDeviceToHost));
-	checkCudaErrors(cudaMemcpy(gpu->_send_data, cpu->_send_data, sizeof(int)*(cpu->_send_offset[num]), cudaMemcpyDeviceToHost));
+	checkCudaErrors(cudaMemcpy(cpu->_send_start, gpu->_send_start, sizeof(int)*(size+num), cudaMemcpyDeviceToHost));
+	checkCudaErrors(cudaMemcpy(cpu->_send_data, gpu->_send_data, sizeof(int)*(cpu->_send_offset[num]), cudaMemcpyDeviceToHost));
 
 	return 0;
 }

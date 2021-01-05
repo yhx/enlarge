@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <typeinfo>
 
 #include "../third_party/json/json.h"
 #include "type.h"

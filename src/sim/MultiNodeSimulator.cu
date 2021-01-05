@@ -536,15 +536,17 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 			int delay_idx = time % (maxDelay + 1);
 
-			checkCudaErrors(cudaMemcpy(buffers->c_gFiredTableSizes, c_fired_sizes, sizeof(int)*(maxDelay+1), cudaMemcpyDeviceToHost));
+			checkCudaErrors(cudaMemcpy(c_fired_sizes, buffers->c_gFiredTableSizes, sizeof(int)*(maxDelay+1), cudaMemcpyDeviceToHost));
 
 			for (int d_=0; d_ < minDelay; d_++) {
 				int delay_idx = (time-minDelay+2+d_+maxDelay)%(maxDelay+1);
 				for (int n_ = 0; n_<node_num; n_++) {
 					int start = cnd->_recv_start[n_*(minDelay+1)+d_];
 					int end = cnd->_recv_start[n_*(minDelay+1)+d_+1];
-					checkCudaErrors(cudaMemcpy(buffers->c_gFiredTable + allNeuronNum*delay_idx + c_fired_sizes[delay_idx], cnd->_recv_data + cnd->_recv_offset[n_] + start, sizeof(int)*(end-start), cudaMemcpyDeviceToHost));
-					c_fired_sizes[delay_idx] += end - start;
+					if (end > start) {
+						checkCudaErrors(cudaMemcpy(buffers->c_gFiredTable + allNeuronNum*delay_idx + c_fired_sizes[delay_idx], cnd->_recv_data + cnd->_recv_offset[n_] + start, sizeof(int)*(end-start), cudaMemcpyHostToDevice));
+						c_fired_sizes[delay_idx] += end - start;
+					}
 				}
 			}
 			checkCudaErrors(cudaMemcpy(buffers->c_gFiredTableSizes, c_fired_sizes, sizeof(int)*(maxDelay+1), cudaMemcpyHostToDevice));
