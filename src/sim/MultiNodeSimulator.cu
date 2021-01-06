@@ -239,9 +239,9 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 		int currentIdx = time % (maxDelay+1);
 		c_gFiredTableSizes[currentIdx] = 0;
 
-		if (time == 38) {
-			to_attach();
-		}
+		// if (time == 38) {
+		// 	to_attach();
+		// }
 
 #ifdef LOG_DATA
 		log_array(input_e_file, c_gNeuronInput, nodeNeuronNum);
@@ -475,6 +475,10 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 #endif
 		update_time<<<1, 1>>>(c_pNetGPU->pConnection, time, buffers->c_gFiredTableSizes);
 
+		if (time == 64) {
+			to_attach();
+		}
+
 		for (int i=0; i<nTypeNum; i++) {
 			assert(c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i] > 0);
 			cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->pConnection, c_pNetGPU->ppNeurons[i], buffers->c_gNeuronInput, buffers->c_gNeuronInput_I, buffers->c_gFiredTable, buffers->c_gFiredTableSizes, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i], time, &updateSize[c_pNetGPU->pNTypes[i]]);
@@ -530,6 +534,9 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 		comp_time += t4 - t6;
 #endif
 		if (curr_delay >= minDelay -1) {
+#ifdef LOG_DATA
+			log_cnd(cnd, time, send_file, recv_file);
+#endif
 			MPI_Status status_t;
 			int ret = MPI_Wait(&request_t, &status_t);
 			assert(ret == MPI_SUCCESS);
@@ -544,6 +551,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 					int start = cnd->_recv_start[n_*(minDelay+1)+d_];
 					int end = cnd->_recv_start[n_*(minDelay+1)+d_+1];
 					if (end > start) {
+						assert(c_fired_sizes[delay_idx] + end - start <= allNeuronNum);
 						checkCudaErrors(cudaMemcpy(buffers->c_gFiredTable + allNeuronNum*delay_idx + c_fired_sizes[delay_idx], cnd->_recv_data + cnd->_recv_offset[n_] + start, sizeof(int)*(end-start), cudaMemcpyHostToDevice));
 						c_fired_sizes[delay_idx] += end - start;
 					}

@@ -213,15 +213,20 @@ int log_cnd(CrossNodeData *cnd, int time, FILE *sfile, FILE *rfile)
 		}
 		fprintf(sfile, "\n");
 	}
+	fprintf(sfile, "\n");
+	fflush(sfile);
+
 	fprintf(rfile, "%d: \n", time);
 	for (int n=0; n<cnd->_node_num; n++) {
 		for (int d=0; d<cnd->_min_delay; d++) {
 			int start = cnd->_recv_start[n*(cnd->_min_delay+1)+d];
 			int end = cnd->_recv_start[n*(cnd->_min_delay+1)+d+1];
-			log_array_noendl(sfile, cnd->_recv_data + cnd->_recv_offset[n]+start, end-start);
-			fprintf(sfile, "\t");
+			log_array_noendl(rfile, cnd->_recv_data + cnd->_recv_offset[n]+start, end-start);
+			fprintf(rfile, "\t");
 		}
-		fprintf(sfile, "\n");
+		fprintf(rfile, "\n");
 	}
+	fprintf(rfile, "\n");
+	fflush(rfile);
 	return 0;
 }
