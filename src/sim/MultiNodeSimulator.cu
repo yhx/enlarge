@@ -469,15 +469,13 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 	checkCudaErrors(cudaMemGetInfo(&fmem, &tmem));
 	printf("Thread %d, GPUMEM used: %lfGB\n", network->_nodeIdx, static_cast<double>((tmem - fmem)/1024.0/1024.0/1024.0));
 
+	to_attach();
+
 	for (int time=0; time<network->_simCycle; time++) {
 #ifdef PROF
 		t1 = MPI_Wtime();
 #endif
 		update_time<<<1, 1>>>(c_pNetGPU->pConnection, time, buffers->c_gFiredTableSizes);
-
-		if (time == 64) {
-			to_attach();
-		}
 
 		for (int i=0; i<nTypeNum; i++) {
 			assert(c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i] > 0);
@@ -534,9 +532,6 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 		comp_time += t4 - t6;
 #endif
 		if (curr_delay >= minDelay -1) {
-#ifdef LOG_DATA
-			log_cnd(cnd, time, send_file, recv_file);
-#endif
 			MPI_Status status_t;
 			int ret = MPI_Wait(&request_t, &status_t);
 			assert(ret == MPI_SUCCESS);
@@ -558,6 +553,10 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 				}
 			}
 			checkCudaErrors(cudaMemcpy(buffers->c_gFiredTableSizes, c_fired_sizes, sizeof(int)*(maxDelay+1), cudaMemcpyHostToDevice));
+#ifdef LOG_DATA
+			log_cnd(cnd, time, send_file, recv_file);
+#endif
+			reset_cnd_gpu(cnd_gpu, cnd);
 		}
 
 

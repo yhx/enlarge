@@ -54,4 +54,6 @@ void cudaGenerateCND(Connection *conn, int *firedTable, int *firedTableSizes, in
 
 int update_cnd_gpu(CrossNodeData *gpu, CrossNodeData *cpu, int curr_delay, MPI_Request *request);
 
+int reset_cnd_gpu(CrossNodeData *gpu, CrossNodeData *cpu);
+
 #endif // CROSSNODEDATA_H

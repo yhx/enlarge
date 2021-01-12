@@ -148,3 +148,15 @@ int update_cnd_gpu(CrossNodeData *gpu, CrossNodeData *cpu, int curr_delay, MPI_R
 	}
 	return 0;
 }
+
+int reset_cnd_gpu(CrossNodeData *gpu, CrossNodeData *cpu)
+{
+	int node_num = cpu->_node_num;
+	int size = cpu->_min_delay * cpu->_node_num;
+	cudaMemset(gpu->_recv_start, 0, sizeof(int)*(size+node_num));
+	cudaMemset(gpu->_send_start, 0, sizeof(int) * (size+node_num));
+
+	memset(cpu->_recv_num, 0, sizeof(int) * node_num);
+	memset(cpu->_send_num, 0, sizeof(int) * node_num);
+	return 0;
+}
