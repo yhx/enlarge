@@ -35,11 +35,11 @@ int main(int argc, char **argv)
 			w2 = -0.9;
 			break;
 		default:
-			w1 = 0.7;
-			w2 = -0.5;
+			w1 = 2.0;
+			w2 = -1.5;
 	};
 
-	const real i_offset =6.5e-10;//*nA
+	const real i_offset =5.5e-10;//*nA
 
 	if (node_id == 0) {
 		printf("n0=%d n1=%d\n", 1000, 1000);
