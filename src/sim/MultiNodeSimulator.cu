@@ -25,6 +25,8 @@
 
 MultiNodeSimulator::MultiNodeSimulator(Network *network, real dt) : Simulator(network, dt)
 {
+	_node_nets = NULL;
+	_node_datas = NULL;
 }
 
 MultiNodeSimulator::~MultiNodeSimulator()
@@ -50,7 +52,7 @@ int MultiNodeSimulator::run(real time, FireInfo &log)
 	return 0;
 }
 
-int MultiNodeSimulator::distribute(DistriNetwork **pp_net, CrossNodeData **pp_data, SimInfo &info, int sim_cycle)
+int MultiNodeSimulator::build_net()
 {
 	MPI_Comm_rank(MPI_COMM_WORLD, &_node_id);
 	MPI_Comm_size(MPI_COMM_WORLD, &_node_num);
@@ -59,25 +61,83 @@ int MultiNodeSimulator::distribute(DistriNetwork **pp_net, CrossNodeData **pp_da
 	MPI_Get_processor_name(processor_name, &name_len);
 	printf("Processor %s, rank %d out of %d processors\n", processor_name, _node_id, _node_num);
 
-	if (_node_id == 0) {
-#if 1
+	SimInfo info(_dt);
+	info.save_mem = true;
+
+	if (!_node_nets) {
 		_network->setNodeNum(_node_num);
-		DistriNetwork *node_nets = _network->buildNetworks(info);
-		print_mem("Finish Network");
-		CrossNodeData *node_datas = _network->arrangeCrossNodeData(_node_num, info);
-		print_mem("Finish CND");
+		_node_nets = _network->buildNetworks(info);
+		for (int i=0; i<_node_num; i++) {
+			_node_nets[i]._simCycle = 0;
+			_node_nets[i]._nodeIdx = i;
+			_node_nets[i]._nodeNum = _node_num;
+			_node_nets[i]._dt = _dt;
+		}
+	}
+
+	if (!_node_datas) {
+		_node_datas = _network->arrangeCrossNodeData(_node_num, info);
+	}
+
+	return 0;
+}
+
+int MultiNodeSimulator::save_net(const char *name)
+{
+	if (_node_nets && _node_datas) {
+		char name_t[512];
+		sprintf(name_t, "%s.num", name);
+		FILE *f = openFile(name_t, "w+");
+		fwrite_c(&(_node_num), sizeof(int), 1, f);
+		closeFile(f);
 
 		for (int i=0; i<_node_num; i++) {
-			node_nets[i]._simCycle = sim_cycle;
-			node_nets[i]._nodeIdx = i;
-			node_nets[i]._nodeNum = _node_num;
-			node_nets[i]._dt = _dt;
+			sprintf(name_t, "%s_%d.net", name, i);
+			f = openFile(name_t, "w+");
+			saveDistriNet(_node_nets[i], f);
+			closeFile(f);
 		}
 
-		*pp_net = &(node_nets[0]);
-		*pp_data = &(node_datas[0]);
+		for (int i=0; i<_node_num; i++) {
+			sprintf(name_t, "%s_%d.cnd", name, i);
+			f = openFile(name_t, "w+");
+			saveCND(_node_datas[i], f);
+			closeFile(f);
+		}
+	} else {
+		printf("Before save, build the net first\n");
+		return 1;
+	}
+
+	return 0;
+}
+
+int MultiNodeSimulator::load_net(const char *name)
+{
+}
+
+int MultiNodeSimulator::distribute(DistriNetwork **pp_net, CrossNodeData **pp_data, SimInfo &info, int sim_cycle)
+{
+
+	if (_node_id == 0) {
+#if 1
+		// print_mem("Finish Network");
+		// print_mem("Finish CND");
+		if (!(_node_nets && _node_datas)) {
+			build_net();
+		}
+
+		for (int i=0; i<_node_num; i++) {
+			_node_nets[i]._simCycle = sim_cycle;
+			_node_nets[i]._nodeIdx = i;
+			_node_nets[i]._nodeNum = _node_num;
+			_node_nets[i]._dt = _dt;
+		}
+
+		*pp_net = &(_node_nets[0]);
+		*pp_data = &(_node_datas[0]);
 		allocDataCND(*pp_data);
-		print_mem("AllocData CND");
+		// print_mem("AllocData CND");
 
 		for (int i=1; i<_node_num; i++) {
 #ifdef DEBUG
@@ -376,7 +436,7 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 }
 
 int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
-	print_mem("Inside Run");
+	// print_mem("Inside Run");
 
 	FILE *v_file = log_file_mpi("v", network->_nodeIdx);
 	FILE *sim_file = log_file_mpi("sim", network->_nodeIdx);
@@ -388,16 +448,16 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 	FILE *input_e_file = log_file_mpi("input_e", network->_nodeIdx);
 #endif
 
-	print_mem("Before SetDevice");
+	// print_mem("Before SetDevice");
 	checkCudaErrors(cudaSetDevice(0));
-	print_mem("Before Network");
+	// print_mem("Before Network");
 
 	GNetwork *pNetCPU = network->_network;
 	GNetwork *c_pNetGPU = copyGNetworkToGPU(pNetCPU);
-	print_mem("Copied Network");
+	// print_mem("Copied Network");
 
 	CrossNodeData * cnd_gpu = copyCNDtoGPU(cnd);
-	print_mem("Copied CND");
+	// print_mem("Copied CND");
 
 	int nTypeNum = c_pNetGPU->nTypeNum;
 	int sTypeNum = c_pNetGPU->sTypeNum;
@@ -412,7 +472,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 	printf("Thread %d MaxDelay: %d MinDelay: %d\n", network->_nodeIdx, maxDelay,  minDelay);
 
-	print_mem("Before Buffers");
+	// print_mem("Before Buffers");
 
 	GBuffers *buffers = alloc_buffers(allNeuronNum, nodeSynapseNum, pNetCPU->pConnection->maxDelay, network->_dt);
 
@@ -422,7 +482,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 	BlockSize *updateSize = getBlockSize(allNeuronNum, nodeSynapseNum);
 
-	print_mem("Alloced Buffers");
+	// print_mem("Alloced Buffers");
 
 #ifdef LOG_DATA
 	real *c_vm = hostMalloc<real>(nodeNeuronNum);
@@ -620,7 +680,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 		fprintf(rate_file, "%d \t", rate[i]);
 	}
 
-	print_mem("Before Free");
+	// print_mem("Before Free");
 
 	free(rate);
 	fclose(rate_file);
@@ -631,7 +691,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 	free_buffers(buffers);
 	freeGNetworkGPU(c_pNetGPU);
 
-	print_mem("After Free");
+	// print_mem("After Free");
 
 	return 0;
 }

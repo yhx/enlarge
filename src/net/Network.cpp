@@ -15,11 +15,11 @@
 
 #define SYN_BASE 0
 #define NEU_BASE 1
-#define ROUND_ROBIN 1
-#define BALANCED 2
+#define ROUND_ROBIN 2
+#define BALANCED 3
 #define SYN_POP 100
 
-#define SPLIT SYN_BASE
+#define SPLIT ROUND_ROBIN
 
 using namespace std::chrono;
 
@@ -1062,6 +1062,7 @@ void Network::splitNetwork()
 	
 
 #if SPLIT==SYN_BASE
+	printf("===========SYN_BASE==========\n");
 	int nodeIdx = 0;
 	unsigned long long  synapseCount = 0;
 	unsigned long long synapsePerNode = _totalSynapseNum/_nodeNum;
@@ -1083,6 +1084,7 @@ void Network::splitNetwork()
 		}
 	}
 #elif SPLIT==NEU_BASE
+	printf("===========NEU_BASE==========\n");
 	int nodeIdx = 0;
 	unsigned long long neuronCount = 0;
 	unsigned long long  neuronPerNode = _totalNeuronNum/_nodeNum;
@@ -1093,7 +1095,7 @@ void Network::splitNetwork()
 			p->locate(i)->setNode(nodeIdx);
 			auto n2sIter = n2sInput.find(p->locate(i));
 			if (n2sIter != n2sInput.end()) {
-				synapseCount += n2sIter->second.size();
+				// synapseCount += n2sIter->second.size();
 				for (auto vIter = n2sIter->second.begin(); vIter != n2sIter->second.end(); vIter++) {
 					(*vIter)->setNode(nodeIdx);
 				}
@@ -1104,6 +1106,7 @@ void Network::splitNetwork()
 		}
 	}
 #elif SPLIT==ROUND_ROBIN
+	printf("===========ROUND_ROBIN==========\n");
 	unsigned long long neuronCount = 0;
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 		Population * p = *pIter;
@@ -1114,7 +1117,7 @@ void Network::splitNetwork()
 			p->locate(i)->setNode(nodeIdx);
 			auto n2sIter = n2sInput.find(p->locate(i));
 			if (n2sIter != n2sInput.end()) {
-				synapseCount += n2sIter->second.size();
+				// synapseCount += n2sIter->second.size();
 				for (auto vIter = n2sIter->second.begin(); vIter != n2sIter->second.end(); vIter++) {
 					(*vIter)->setNode(nodeIdx);
 				}
@@ -1122,7 +1125,9 @@ void Network::splitNetwork()
 		}
 	}
 #elif SPLIT==BALANCED
+	printf("===========BALANCED==========\n");
 #else
+	printf("===========Default==========\n");
 	int nodeIdx = 0;
 	unsigned long long synapseCount = 0;
 	unsigned long long synapsePerNode = _totalSynapseNum/_nodeNum;

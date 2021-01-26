@@ -14,6 +14,9 @@ public:
 
 	using Simulator::run;
 	int mpi_init(int *argc, char ***argv);
+	int build_net();
+	int save_net(const char *name);
+	int load_net(const char *name);
 	int distribute(DistriNetwork **, CrossNodeData **, SimInfo &, int);
 	virtual int run(real time, bool gpu);
 	virtual int run(real time, FireInfo &log);
@@ -21,6 +24,8 @@ public:
 protected:
 	int _node_id;
 	int _node_num;
+	DistriNetwork *_node_nets;
+	CrossNodeData *_node_datas;
 };
 
 int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd);

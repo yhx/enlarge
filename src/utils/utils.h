@@ -46,14 +46,14 @@ inline int upzero_else_set_one(int value) {
 }
 
 template<typename T>
-T *getRandomArray(T range, int size) {
+T *getRandomArray(T range, size_t size) {
 	if (!rand_seed_inited) {
 		srand(time(NULL));
 		rand_seed_inited = true;
 	}
 
 	T *res = new T[size];
-	for (int i=0; i<size; i++) {
+	for (size_t i=0; i<size; i++) {
 		res[i] = static_cast<T>(realRandom(static_cast<double>(range)));
 	}
 
@@ -61,10 +61,10 @@ T *getRandomArray(T range, int size) {
 }
 
 template<typename T>
-T *getConstArray(T value, int size)
+T *getConstArray(T value, size_t size)
 {
 	T *res = new T[size];
-	for (int i=0; i<size; i++) {
+	for (size_t i=0; i<size; i++) {
 		res[i] = value;
 	}
 

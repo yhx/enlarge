@@ -11,8 +11,8 @@ void allocParaCND(CrossNodeData *data, int node_num, int delay)
 {
 	assert(delay > 0);
 	assert(node_num > 0);
-	printf("Delay: %d\n", delay);
-	printf("Node: %d\n", node_num);
+	// printf("Delay: %d\n", delay);
+	// printf("Node: %d\n", node_num);
 	data->_node_num = node_num;
 	data->_min_delay = delay;
 
@@ -51,17 +51,17 @@ void allocDataCND(CrossNodeData *data)
 {
 	int num = data->_node_num;
 	int data_size = data->_recv_offset[num];
-	printf("Data Size1: %d\n", data_size);
+	// printf("Data Size1: %d\n", data_size);
 	if (data_size > 0) {
-		printf("Size_t: %lu\n", sizeof(int)*data_size);
+		// printf("Size_t: %lu\n", sizeof(int)*data_size);
 		data->_recv_data = (int*)malloc(sizeof(int)*(data_size));
 		memset(data->_recv_data, 0, sizeof(int) * (data_size));
 	}
 
 	data_size = data->_send_offset[num];
-	printf("Data Size2: %d\n", data_size);
+	// printf("Data Size2: %d\n", data_size);
 	if (data_size > 0) {
-		printf("Size_t: %lu\n", sizeof(int)*data_size);
+		// printf("Size_t: %lu\n", sizeof(int)*data_size);
 		data->_send_data = (int*)malloc(sizeof(int)*(data_size));
 		memset(data->_send_data, 0, sizeof(int) * (data_size));
 	}

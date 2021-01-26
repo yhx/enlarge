@@ -93,15 +93,15 @@ void freeGNetwork(GNetwork * network)
 
 int saveGNetwork(GNetwork *net, FILE *f)
 {
-	fwrite(&(net->nTypeNum), sizeof(int), 1, f);
-	fwrite(&(net->sTypeNum), sizeof(int), 1, f);
+	fwrite_c(&(net->nTypeNum), sizeof(int), 1, f);
+	fwrite_c(&(net->sTypeNum), sizeof(int), 1, f);
 	// fwrite(&(net->maxDelay), sizeof(int), 1, f);
 	// fwrite(&(net->minDelay), sizeof(int), 1, f);
 
-	fwrite(net->pNTypes, sizeof(Type), net->nTypeNum, f);
-	fwrite(net->pSTypes, sizeof(Type), net->sTypeNum, f);
-	fwrite(net->pNeuronNums, sizeof(int), net->nTypeNum+1, f);
-	fwrite(net->pSynapseNums, sizeof(int), net->sTypeNum+1, f);
+	fwrite_c(net->pNTypes, sizeof(Type), net->nTypeNum, f);
+	fwrite_c(net->pSTypes, sizeof(Type), net->sTypeNum, f);
+	fwrite_c(net->pNeuronNums, sizeof(int), net->nTypeNum+1, f);
+	fwrite_c(net->pSynapseNums, sizeof(int), net->sTypeNum+1, f);
 
 	for (int i=0; i<net->nTypeNum; i++) {
 		saveType[net->pNTypes[i]](net->ppNeurons[i], net->pNeuronNums[i+1]-net->pNeuronNums[i], f);
@@ -118,18 +118,18 @@ GNetwork *loadGNetwork(FILE *f)
 {
 	int nTypeNum = 0, sTypeNum = 0;
 
-	fread(&nTypeNum, sizeof(int), 1, f);
-	fread(&sTypeNum, sizeof(int), 1, f);
+	fread_c(&nTypeNum, sizeof(int), 1, f);
+	fread_c(&sTypeNum, sizeof(int), 1, f);
 
 	GNetwork * net = allocGNetwork(nTypeNum, sTypeNum);
 
 	// fread(&(net->maxDelay), sizeof(int), 1, f);
 	// fread(&(net->minDelay), sizeof(int), 1, f);
 
-	fread(net->pNTypes, sizeof(Type), net->nTypeNum, f);
-	fread(net->pSTypes, sizeof(Type), net->sTypeNum, f);
-	fread(net->pNeuronNums, sizeof(int), net->nTypeNum+1, f);
-	fread(net->pSynapseNums, sizeof(int), net->sTypeNum+1, f);
+	fread_c(net->pNTypes, sizeof(Type), net->nTypeNum, f);
+	fread_c(net->pSTypes, sizeof(Type), net->sTypeNum, f);
+	fread_c(net->pNeuronNums, sizeof(int), net->nTypeNum+1, f);
+	fread_c(net->pSynapseNums, sizeof(int), net->sTypeNum+1, f);
 
 	for (int i=0; i<net->nTypeNum; i++) {
 		net->ppNeurons[i] = loadType[net->pNTypes[i]](net->pNeuronNums[i+1]-net->pNeuronNums[i], f);
@@ -145,30 +145,34 @@ GNetwork *loadGNetwork(FILE *f)
 
 bool compareGNetwork(GNetwork *n1, GNetwork *n2)
 {
-	bool equal = true;
-	equal = (n1->nTypeNum == n2->nTypeNum) && equal;
-	equal = (n1->sTypeNum == n2->sTypeNum) && equal;
-	for (int i=0; i<n1->nTypeNum; i++) {
-		equal = (n1->pNTypes[i] == n2->pNTypes[i]) && equal;
-	}
-	for (int i=0; i<n1->sTypeNum; i++) {
-		equal = (n1->pSTypes[i] == n2->pSTypes[i]) && equal;
-	}
+	//bool equal = true;
+	//equal = (n1->nTypeNum == n2->nTypeNum) && equal;
+	//equal = (n1->sTypeNum == n2->sTypeNum) && equal;
+	//for (int i=0; i<n1->nTypeNum; i++) {
+	//	equal = (n1->pNTypes[i] == n2->pNTypes[i]) && equal;
+	//}
+	//for (int i=0; i<n1->sTypeNum; i++) {
+	//	equal = (n1->pSTypes[i] == n2->pSTypes[i]) && equal;
+	//}
 
-	for (int i=0; i<=n1->nTypeNum; i++) {
-		equal = (n1->pNeuronNums[i] == n2->pNeuronNums[i]) && equal;
-	}
-	for (int i=0; i<=n1->sTypeNum; i++) {
-		equal = (n1->pSynapseNums[i] == n2->pSynapseNums[i]) && equal;
-	}
+	//for (int i=0; i<=n1->nTypeNum; i++) {
+	//	equal = (n1->pNeuronNums[i] == n2->pNeuronNums[i]) && equal;
+	//}
+	//for (int i=0; i<=n1->sTypeNum; i++) {
+	//	equal = (n1->pSynapseNums[i] == n2->pSynapseNums[i]) && equal;
+	//}
 
-	for (int i=0; i<n1->nTypeNum; i++) {
-		equal = isEqualType[n1->pNTypes[i]](n1->ppNeurons[i], n2->ppNeurons[i], n1->pNeuronNums[i+1]-n1->pNeuronNums[i]) && equal;
-	}
-	for (int i=0; i<n1->sTypeNum; i++) {
-		equal = isEqualType[n1->pSTypes[i]](n1->ppSynapses[i], n2->ppSynapses[i], n1->pSynapseNums[i+1]-n1->pSynapseNums[i]) && equal;
-	}
-	return equal;
+	//for (int i=0; i<n1->nTypeNum; i++) {
+	//	equal = isEqualType[n1->pNTypes[i]](n1->ppNeurons[i], n2->ppNeurons[i], n1->pNeuronNums[i+1]-n1->pNeuronNums[i]) && equal;
+	//}
+	//for (int i=0; i<n1->sTypeNum; i++) {
+	//	equal = isEqualType[n1->pSTypes[i]](n1->ppSynapses[i], n2->ppSynapses[i], n1->pSynapseNums[i+1]-n1->pSynapseNums[i]) && equal;
+	//}
+	//
+	//return equal;
+	
+	printf("Departured, use isEqualGNetwork instead\n");
+	return true;
 }
 
 int copyGNetwork(GNetwork *dNet, GNetwork *sNet, int rank, int rankSize)

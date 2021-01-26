@@ -20,8 +20,8 @@ int main(int argc, char **argv)
 		}
 		return 0;
 	}
-	const int n0=atoi(argv[1]);
-	const int n1=atoi(argv[2]);
+	const size_t n0=(size_t)atoi(argv[1]);
+	const size_t n1=(size_t)atoi(argv[2]);
 
 	const int fr = atoi(argv[3]);
 	const int delay_step = atoi(argv[4]);
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 	const real i_offset =5.5e-10;//*nA
 
 	if (node_id == 0) {
-		printf("n0=%d n1=%d\n", 1000, 1000);
+		printf("n0=%ld n1=%ld\n", n0, n1);
 		printf("w1=%f w2=%f\n", w1, w2);
 	}
 
