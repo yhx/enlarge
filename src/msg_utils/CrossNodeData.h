@@ -39,6 +39,9 @@ void freeCND(CrossNodeData *data);
 int sendCND(CrossNodeData *data, int dst, int tag, MPI_Comm comm);
 CrossNodeData * recvCND(int src, int tag, MPI_Comm comm);
 
+int saveCND(CrossNodeData *data, FILE *f);
+CrossNodeData * loadCND(FILE *f);
+
 CrossNodeData * copyCNDtoGPU(CrossNodeData * data);
 int freeCNDGPU(CrossNodeData *data);
 

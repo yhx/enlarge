@@ -134,6 +134,19 @@ CrossNodeData * recvCND(int src, int tag, MPI_Comm comm)
 	return cnd;
 }
 
+
+int saveCND(CrossNodeData *data, FILE *f)
+{
+	return 0;
+}
+
+CrossNodeData * loadCND(FILE *f)
+{
+	CrossNodeData *cnd = (CrossNodeData *)malloc(sizeof(CrossNodeData));
+
+	return cnd;
+}
+
 int generateCND(Connection *conn, int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, CrossNodeData *cnd, int node_num, int time, int gFiredTableCap, int min_delay, int delay)
 {
 	int delay_idx = time % (conn->maxDelay+1);

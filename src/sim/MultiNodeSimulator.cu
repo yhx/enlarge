@@ -27,6 +27,12 @@ MultiNodeSimulator::MultiNodeSimulator(Network *network, real dt) : Simulator(ne
 {
 	_node_nets = NULL;
 	_node_datas = NULL;
+	MPI_Comm_rank(MPI_COMM_WORLD, &_node_id);
+	MPI_Comm_size(MPI_COMM_WORLD, &_node_num);
+	char processor_name[MPI_MAX_PROCESSOR_NAME];
+	int name_len;
+	MPI_Get_processor_name(processor_name, &name_len);
+	printf("Processor %s, rank %d out of %d processors\n", processor_name, _node_id, _node_num);
 }
 
 MultiNodeSimulator::~MultiNodeSimulator()
@@ -54,12 +60,6 @@ int MultiNodeSimulator::run(real time, FireInfo &log)
 
 int MultiNodeSimulator::build_net()
 {
-	MPI_Comm_rank(MPI_COMM_WORLD, &_node_id);
-	MPI_Comm_size(MPI_COMM_WORLD, &_node_num);
-	char processor_name[MPI_MAX_PROCESSOR_NAME];
-	int name_len;
-	MPI_Get_processor_name(processor_name, &name_len);
-	printf("Processor %s, rank %d out of %d processors\n", processor_name, _node_id, _node_num);
 
 	SimInfo info(_dt);
 	info.save_mem = true;
@@ -94,14 +94,14 @@ int MultiNodeSimulator::save_net(const char *name)
 		for (int i=0; i<_node_num; i++) {
 			sprintf(name_t, "%s_%d.net", name, i);
 			f = openFile(name_t, "w+");
-			saveDistriNet(_node_nets[i], f);
+			saveDistriNet(&(_node_nets[i]), f);
 			closeFile(f);
 		}
 
 		for (int i=0; i<_node_num; i++) {
 			sprintf(name_t, "%s_%d.cnd", name, i);
 			f = openFile(name_t, "w+");
-			saveCND(_node_datas[i], f);
+			saveCND(&(_node_datas[i]), f);
 			closeFile(f);
 		}
 	} else {
@@ -143,11 +143,11 @@ int MultiNodeSimulator::distribute(DistriNetwork **pp_net, CrossNodeData **pp_da
 #ifdef DEBUG
 			printf("Send to %d, tag: %d\n", i, DATA_TAG);
 #endif
-			sendDistriNet(&(node_nets[i]), i, DATA_TAG, MPI_COMM_WORLD);
+			sendDistriNet(&(_node_nets[i]), i, DATA_TAG, MPI_COMM_WORLD);
 #ifdef DEBUG
 			printf("Send DistriNet to %d, tag: %d\n", i, DATA_TAG);
 #endif
-			sendCND(&(node_datas[i]), i, DATA_TAG + DNET_TAG, MPI_COMM_WORLD);
+			sendCND(&(_node_datas[i]), i, DATA_TAG + DNET_TAG, MPI_COMM_WORLD);
 #ifdef DEBUG
 			printf("Send CND to %d, tag: %d\n", i, DATA_TAG);
 #endif
@@ -191,6 +191,8 @@ int MultiNodeSimulator::run(real time, FireInfo &log, bool gpu)
 
 	DistriNetwork *network = NULL;
 	CrossNodeData *data = NULL;
+
+	to_attach();
 
 	distribute(&network, &data, info, sim_cycle);
 
@@ -596,7 +598,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 			int ret = MPI_Wait(&request_t, &status_t);
 			assert(ret == MPI_SUCCESS);
 
-			int delay_idx = time % (maxDelay + 1);
+			//int delay_idx = time % (maxDelay + 1);
 
 			checkCudaErrors(cudaMemcpy(c_fired_sizes, buffers->c_gFiredTableSizes, sizeof(int)*(maxDelay+1), cudaMemcpyDeviceToHost));
 

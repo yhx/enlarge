@@ -19,7 +19,7 @@
 #define BALANCED 3
 #define SYN_POP 100
 
-#define SPLIT ROUND_ROBIN
+#define SPLIT ROUND_ROBIN 
 
 using namespace std::chrono;
 
