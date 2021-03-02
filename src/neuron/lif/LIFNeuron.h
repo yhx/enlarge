@@ -6,8 +6,8 @@
 
 class LIFNeuron : public Neuron {
 public:
-	LIFNeuron(real v_init, real v_rest, real v_reset, real cm, real tau_m, real tau_refrac, real tau_syn_E, real tau_syn_I, real v_thresh, real i_offset);
-	LIFNeuron(const LIFNeuron &neuron);
+	LIFNeuron(real v_init, real v_rest, real v_reset, real cm, real tau_m, real tau_refrac, real tau_syn_E, real tau_syn_I, real v_thresh, real i_offset, real dt, int n=0);
+	LIFNeuron(const LIFNeuron &neuron, int n=0);
 	~LIFNeuron();
 
 	// virtual int recv(real I)  override;
@@ -26,34 +26,22 @@ public:
 
 	const static Type type;
 protected:
-	// real _vm;
-	// real _CI;
-	// real _CE;
-	// real _C_I;
-	// real _C_E;
-	// real _v_tmp;
-	// real _i_I;
-	// real _i_E;
-	// real _v_thresh;
-	// real _v_reset;
-	// real _Cm;
+	vector<int> _refract_step;
+	vector<int> _refract_time;
 
-	// int _refrac_step;
-	// int _refrac_time;
+	vector<real> _v;
+	vector<real> _Ci;
+	vector<real> _Ce;
+	vector<real> _Cm;
+	vector<real> _C_i;
+	vector<real> _C_e;
+	vector<real> _v_tmp;
+	vector<real> _V_thresh;
+	vector<real> _V_reset;
 
-	real _v_init;
-	real _v_rest;
-	real _v_reset;
-	real _cm;
-	real _tau_m;
-	real _tau_refrac;
-	real _tau_syn_E;
-	real _tau_syn_I;
-	real _v_thresh;
-	real _i_offset;
-
-	// real _i_syn_E;
-	// real _i_syn_I;
+	vector<real> _i_i;
+	vector<real> _i_e;
+	
 };
 
 #endif /* LIFNEURON_H */

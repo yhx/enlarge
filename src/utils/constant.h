@@ -20,8 +20,6 @@ typedef double real;
 #define MPI_U_REAL MPI_DOUBLE
 #endif
 
-typedef int ID;
-
 const real ZERO = 1e-10;
 
 const int MAX_BLOCK_SIZE = 1024;
