@@ -8,50 +8,44 @@
 #include <map>
 
 #include "../utils/SimInfo.h"
+#include "../utils/ID.h"
 
 using std::map;
 
 class Model {
 public:
-	Model(int node=0) : _id(0), _node(node) {}
-	virtual ~Model() {}
+	Model() : _num(0), _type(UNSET), _id() {}
 
-	inline ID getID() const {
+	Model(Type type, int num, int offset=0) : _num(num), _type(type) {
+		_id.set_type(type);
+		_id.set_offset(offset);
+	}
+
+	virtual ~Model() { _num=0; }
+
+	inline int get_size () const {
+		return _num;
+	}
+
+	inline Type get_type() const {
+		return _type;
+	}
+
+	inline ID get_ID() const {
 		return _id;
 	}
 
-	inline int getNode() const {
-		return _node;
-	}
-
-	inline void setID(ID id) {
+	inline void set_ID(ID id) {
 		this->_id = id;
 	}
 
-	inline void setNode(int node) {
-		this->_node = node;
-	}
 
-	virtual Type getType() const = 0;
-	// virtual int reset(SimInfo &info) {
-	// 	printf("Reset is depracated, it is not required anymore.");
-	// 	return 0;
-	// }
-	// virtual int update(SimInfo &info) {
-	// 	printf("Update is depracated, it is not required anymore.");
-	// 	return 0;
-	// }
-	// virtual void monitor(SimInfo &info) {
-	// 	printf("monitor is depracated, it is not required anymore.");
-	// }
-
-	// virtual size_t getSize() = 0;
-	// virtual int getData(void *data) = 0;
-	// virtual int hardCopy(void *data, int idx, int base, const SimInfo &info) = 0;
+	virtual int packup(void *data) = 0;
 	
 protected:
+	int _num;
+	Type _type;
 	ID _id;
-	int _node;
 };
 
 #endif /* MODEL_H */

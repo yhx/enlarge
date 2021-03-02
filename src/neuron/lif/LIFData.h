@@ -19,7 +19,6 @@ struct LIFData {
 	real *pV_i;
 	real *pCe;
 	real *pV_reset;
-	real *pV_e;
 	real *pV_tmp;
 	real *pI_i;
 	real *pV_thresh;
@@ -28,6 +27,8 @@ struct LIFData {
 	real *pC_e;
 	real *pC_m;
 	real *pC_i;
+	// real *pV_e;
+	bool is_view;
 };
 
 

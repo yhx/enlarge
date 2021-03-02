@@ -16,12 +16,13 @@ enum Type {
 	// Mem,
 	// Max,
 	LIF = 0,
-    Izhikevich=1,
-    TraubMiles=2,
+    // Izhikevich=1,
+    // TraubMiles=2,
 	// TJ,
-	Static,
-	STDP,
-	TYPESIZE
+	Static=1,
+	// STDP,
+	TYPESIZE,
+	UNSET
 }; 
 
 enum SpikeType { Excitatory = 0, Inhibitory = 1, SPIKETYPESIZE = 2};

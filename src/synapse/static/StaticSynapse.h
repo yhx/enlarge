@@ -13,18 +13,9 @@ public:
 	StaticSynapse(const StaticSynapse &synapse);
 	~StaticSynapse();
 
-	// virtual int recv()  override;
-	// virtual void setDst(NeuronBase *p)  override;
-
 	virtual Type getType() const override;
 
-	// virtual int reset(SimInfo &info) override;
-	// virtual int update(SimInfo &info) override;
-	// virtual void monitor(SimInfo &info) override;
-
-	// virtual size_t getSize() override;
-	// virtual int getData(void *data) override;
-	virtual int hardCopy(void * data, int idx, int base, const SimInfo &info) override;
+	virtual int packup(void * data) override;
 
 protected:
 	const static Type type;
