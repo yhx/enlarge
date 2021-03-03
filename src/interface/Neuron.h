@@ -9,12 +9,12 @@
 
 class Neuron : public Model {
 public:
-	Neuron(Type type, int num, int offset=0) : Model(num, type, offset) {
+	Neuron(Type type, size_t num, size_t offset=0) : Model(type, num, offset) {
 	}
 
 	virtual ~Neuron() = 0;
 
-	virtual int append(const Neuron *n, int num) = 0;
+	virtual int append(const Neuron *n, size_t num) = 0;
 };
 
 #endif /* NEURON_H */

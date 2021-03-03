@@ -14,7 +14,8 @@ public:
 	~ModelView();
 
 	Type type() const;
-	size_t size();
+	size_t offset() const;
+	size_t size() const;
 
 private:
 	size_t _offset;
@@ -39,16 +40,22 @@ ModelView<Item>::~ModelView()
 }
 
 template<class Item>
-size_t ModelView<Item>::size()
+size_t ModelView<Item>::size() const
 {
 	return _size;
+}
+
+template<class Item>
+size_t ModelView<Item>::offset() const 
+{
+	return _offset;
 }
 
 
 template<class Item>
 Type ModelView<Item>::type() const 
 {
-	return _items->get_type();
+	return _items->type();
 }
 
 #endif /* ModelView_H */

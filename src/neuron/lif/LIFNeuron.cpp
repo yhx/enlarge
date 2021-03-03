@@ -6,7 +6,7 @@
 #include "LIFData.h"
 
 
-LIFNeuron::LIFNeuron(real v_init, real v_rest, real v_reset, real cm, real tau_m, real tau_refrac, real tau_syn_E, real tau_syn_I, real v_thresh, real i_offset, real dt, int num) : Neuron(LIF, num){
+LIFNeuron::LIFNeuron(real v_init, real v_rest, real v_reset, real cm, real tau_m, real tau_refrac, real tau_syn_E, real tau_syn_I, real v_thresh, real i_offset, real dt, size_t num) : Neuron(LIF, num){
 
 	real rm = (fabs(cm) > ZERO)?(tau_m/cm):1.0;
 	real Cm = (tau_m>0)?exp(-dt/tau_m):0.0;
@@ -42,7 +42,7 @@ LIFNeuron::LIFNeuron(real v_init, real v_rest, real v_reset, real cm, real tau_m
 	assert(_num == _v.size());
 }
 
-LIFNeuron::LIFNeuron(const LIFNeuron &n, int num) : Neuron(LIF, 0)
+LIFNeuron::LIFNeuron(const LIFNeuron &n, size_t num) : Neuron(LIF, 0)
 {
 	append(dynamic_cast<const Neuron *>(&n), num);
 }
@@ -67,11 +67,11 @@ LIFNeuron::~LIFNeuron()
 	_i_e.clear();
 }
 
-int LIFNeuron::append(const Neuron * neuron, int num)
+int LIFNeuron::append(const Neuron * neuron, size_t num)
 {
 	const LIFNeuron *n = dynamic_cast<const LIFNeuron *>(neuron);
 	int ret = 0;
-	if (num > 0) {
+	if ((num > 0) && (num != n->size())) {
 		ret = num;
 		_refract_step.insert(_refract_step.end(), num, 0);
 		_refract_time.insert(_refract_time.end(), num, n->_refract_time[0]);

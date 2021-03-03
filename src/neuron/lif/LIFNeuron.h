@@ -6,11 +6,11 @@
 
 class LIFNeuron : public Neuron {
 public:
-	LIFNeuron(real v_init, real v_rest, real v_reset, real cm, real tau_m, real tau_refrac, real tau_syn_E, real tau_syn_I, real v_thresh, real i_offset, real dt, int num=1);
-	LIFNeuron(const LIFNeuron &n, int num=0);
+	LIFNeuron(real v_init, real v_rest, real v_reset, real cm, real tau_m, real tau_refrac, real tau_syn_E, real tau_syn_I, real v_thresh, real i_offset, real dt, size_t num=1);
+	LIFNeuron(const LIFNeuron &n, size_t num=0);
 	~LIFNeuron();
 
-	virtual int append(const Neuron *n, int num=0) override;
+	virtual int append(const Neuron *n, size_t num=0) override;
 	virtual int packup(void * data) override;
 
 	const static Type type;

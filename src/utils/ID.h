@@ -36,9 +36,10 @@ public:
 	ID(uint64_t id) {
 		_id = id;
 	}
-	ID(int id) {
-		_id = 0;
-		_id += id;
+	ID(Type type,  uint64_t offset, uint64_t id) {
+		_id = id;
+		set_type(type);
+		set_offset(offset);
 	}
 	~ID() {}
 

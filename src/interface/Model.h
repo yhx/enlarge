@@ -16,14 +16,14 @@ class Model {
 public:
 	Model() : _num(0), _type(UNSET), _id() {}
 
-	Model(Type type, int num, int offset=0) : _num(num), _type(type) {
+	Model(Type type, size_t num, size_t offset=0) : _num(num), _type(type) {
 		_id.set_type(type);
 		_id.set_offset(offset);
 	}
 
 	virtual ~Model() { _num=0; }
 
-	inline int size () const {
+	inline size_t size () const {
 		return _num;
 	}
 

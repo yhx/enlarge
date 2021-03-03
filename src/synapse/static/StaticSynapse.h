@@ -9,11 +9,11 @@ using std::list;
 
 class StaticSynapse : public Synapse {
 public:
-	StaticSynapse(real weight, real delay, real tau_syn, real dt, int num=1);
-	StaticSynapse(const StaticSynapse &s, int num=0);
+	StaticSynapse(real weight, real delay, real tau_syn, real dt, size_t num=1);
+	StaticSynapse(const StaticSynapse &s, size_t num=0);
 	~StaticSynapse();
 
-	virtual int append(const Synapse *s, int num=0) override;
+	virtual int append(const Synapse *s, size_t num=0) override;
 
 	virtual int packup(void * data) override;
 

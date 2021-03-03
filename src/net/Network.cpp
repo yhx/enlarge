@@ -211,89 +211,95 @@ int Network::connect(Population *pSrc, Population *pDst, real *weight, real *del
 	return count;
 }
 
-int Network::connectOne2One(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t size) {
-	assert(size == pSrc->getNum());
-	assert(size == pDst->getNum()); 
+// int Network::connectOne2One(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t size) {
+// 	assert(size == pSrc->getNum());
+// 	assert(size == pDst->getNum()); 
+// 
+// 	if (find(_pPopulations.begin(), _pPopulations.end(), pSrc) == _pPopulations.end()) {
+// 		_pPopulations.push_back(pSrc);
+// 		_populationNum++;
+// 		//neuronNum += pSrc->getNum();
+// 		addNeuronNum(pSrc->getType(), pSrc->getNum());
+// 	}
+// 	if (find(_pPopulations.begin(), _pPopulations.end(), pDst) == _pPopulations.end()) {
+// 		_pPopulations.push_back(pDst);
+// 		_populationNum++;
+// 		//neuronNum += pDst->getNum();
+// 		addNeuronNum(pDst->getType(), pDst->getNum());
+// 	}
+// 
+// 	int count = 0;
+// 	for (size_t i=0; i<size; i++) {
+// 		if (type == NULL) {
+// 			connect(pSrc->locate(i), pDst->locate(i), weight[i], delay[i], Excitatory, 0.0, false);
+// 		} else {
+// 			connect(pSrc->locate(i), pDst->locate(i), weight[i], delay[i], type[i], 0.0, false);
+// 		}
+// 		count++;
+// 	}
+// 
+// 	return count;
+// }
+// 
+// int Network::connectConv(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t height, size_t width, size_t k_height, size_t k_width) {
+// 	assert(pSrc->getNum() == height * width); 
+// 	assert(pDst->getNum() == height * width); 
+// 
+//         size_t count = 0;
+// 	for (size_t h = 0; h < height; h++) {
+// 		for (size_t w = 0; w < width; w++) {
+// 			for (size_t i = 0; i< k_height; i++) {
+// 				for (size_t j = 0; j < k_width; j++) {
+// 					size_t idx_h = h + i - (k_height - 1)/2;
+// 					size_t idx_w = w + j - (k_width - 1)/2;
+// 
+// 					if (idx_h >= 0 && idx_h < height && idx_w >= 0 && idx_w < width) {
+// 						count++;
+// 						if (type == NULL) {
+// 							connect(pSrc->locate(idx_h * width + idx_w), pDst->locate(h * width + w), weight[i*k_width + j], delay[i*k_width + j], Excitatory, 0.0, false);
+// 
+// 						} else {
+// 							connect(pSrc->locate(idx_h * width + idx_w), pDst->locate(h * width + w), weight[i*k_width + j], delay[i*k_width + j], type[i*k_width + j], 0.0, false);
+// 						}
+// 					}
+// 				}
+// 			}
+// 		}	
+// 	}
+// 
+// 	return count;
+// }
+// 
+// int Network::connectPooling(Population *pSrc, Population *pDst, real delay, size_t height, size_t width, size_t p_height, size_t p_width)
+// {
+// 	assert(pDst->getNum() == pSrc->getNum() / p_height / p_width); 
+// 
+// 	//size_t d_height = height/p_height;
+// 	size_t d_width = width/p_width;
+// 
+// 	size_t count = 0;
+// 	for (size_t h = 0; h < height; h++) {
+// 		for (size_t w = 0; w < width; w++) {
+// 			size_t d_h = h/p_height;
+// 			size_t d_w = w/p_width;
+// 			size_t d_h_ = h % p_height;
+// 			size_t d_w_ = w % p_width;
+// 			size_t idx = d_h_ * p_width + d_w_;
+// 
+// 			count++;
+// 			connect(pSrc->locate(h * width + w), pDst->locate(d_h*d_width + d_w), (real)(1 << idx), delay, Excitatory, 0.0, false);
+// 		}	
+// 	}
+// 
+// 	return count;
+// }
 
-	if (find(_pPopulations.begin(), _pPopulations.end(), pSrc) == _pPopulations.end()) {
-		_pPopulations.push_back(pSrc);
-		_populationNum++;
-		//neuronNum += pSrc->getNum();
-		addNeuronNum(pSrc->getType(), pSrc->getNum());
-	}
-	if (find(_pPopulations.begin(), _pPopulations.end(), pDst) == _pPopulations.end()) {
-		_pPopulations.push_back(pDst);
-		_populationNum++;
-		//neuronNum += pDst->getNum();
-		addNeuronNum(pDst->getType(), pDst->getNum());
-	}
-
-	int count = 0;
-	for (size_t i=0; i<size; i++) {
-		if (type == NULL) {
-			connect(pSrc->locate(i), pDst->locate(i), weight[i], delay[i], Excitatory, 0.0, false);
-		} else {
-			connect(pSrc->locate(i), pDst->locate(i), weight[i], delay[i], type[i], 0.0, false);
-		}
-		count++;
-	}
-
-	return count;
-}
-
-int Network::connectConv(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t height, size_t width, size_t k_height, size_t k_width) {
-	assert(pSrc->getNum() == height * width); 
-	assert(pDst->getNum() == height * width); 
-
-        size_t count = 0;
-	for (size_t h = 0; h < height; h++) {
-		for (size_t w = 0; w < width; w++) {
-			for (size_t i = 0; i< k_height; i++) {
-				for (size_t j = 0; j < k_width; j++) {
-					size_t idx_h = h + i - (k_height - 1)/2;
-					size_t idx_w = w + j - (k_width - 1)/2;
-
-					if (idx_h >= 0 && idx_h < height && idx_w >= 0 && idx_w < width) {
-						count++;
-						if (type == NULL) {
-							connect(pSrc->locate(idx_h * width + idx_w), pDst->locate(h * width + w), weight[i*k_width + j], delay[i*k_width + j], Excitatory, 0.0, false);
-
-						} else {
-							connect(pSrc->locate(idx_h * width + idx_w), pDst->locate(h * width + w), weight[i*k_width + j], delay[i*k_width + j], type[i*k_width + j], 0.0, false);
-						}
-					}
-				}
-			}
-		}	
-	}
-
-	return count;
-}
-
-int Network::connectPooling(Population *pSrc, Population *pDst, real delay, size_t height, size_t width, size_t p_height, size_t p_width)
+int Network::connect(ID src, ID dst, ID syn, unsigned int delay)
 {
-	assert(pDst->getNum() == pSrc->getNum() / p_height / p_width); 
-
-	//size_t d_height = height/p_height;
-	size_t d_width = width/p_width;
-
-	size_t count = 0;
-	for (size_t h = 0; h < height; h++) {
-		for (size_t w = 0; w < width; w++) {
-			size_t d_h = h/p_height;
-			size_t d_w = w/p_width;
-			size_t d_h_ = h % p_height;
-			size_t d_w_ = w % p_width;
-			size_t idx = d_h_ * p_width + d_w_;
-
-			count++;
-			connect(pSrc->locate(h * width + w), pDst->locate(d_h*d_width + d_w), (real)(1 << idx), delay, Excitatory, 0.0, false);
-		}	
-	}
-
-	return count;
+	n2s_conn[src][delay].push_back(syn);
+	s2n_conn[syn] = dst;
+	return 1;
 }
-
 
 int Network::addNeuronNum(Type type, size_t num)
 {

@@ -40,7 +40,7 @@ int StaticSynapse::append(const Synapse *syn, int num)
 {
 	const StaticSynapse *s = dynamic_cast<const StaticSynapse *>(syn);
 	int ret = 0;
-	if (num > 0) {
+	if ((num > 0) && (num != s->size())) {
 		ret = num;
 		_weight.insert(_weight.end(), num, s->_weight[0]);
 		_delay.insert(_delay.end(), num, s->_delay[0]);

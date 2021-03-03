@@ -25,7 +25,7 @@ enum Type {
 	UNSET
 }; 
 
-enum SpikeType { Excitatory = 0, Inhibitory = 1, SPIKETYPESIZE = 2};
+enum SpikeType { Exc = 0, Inh = 1, SPIKETYPESIZE = 2};
 
 #endif /* TYPE_H */
 
