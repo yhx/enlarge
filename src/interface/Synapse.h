@@ -13,7 +13,9 @@
 class Synapse: public Model {
 public:
 	Synapse(Type type, int num, int offset=0) : Model(type, num, offset) {}
-	virtual ~Synapse() { _delay.clear(); };
+	virtual ~Synapse() { 
+		_delay.clear(); 
+	};
 
 	const vector<real> & get_delay() {
 		return _delay;
@@ -26,6 +28,8 @@ public:
 	// inline int getDelaySteps(real dt) {
 	// 	return static_cast<int>(round(_delay/dt));
 	// }
+	
+	virtual int append(const Synapse *s, int num) = 0;
 
 protected:
 	// vector<real> _weight;

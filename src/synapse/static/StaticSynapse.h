@@ -9,19 +9,20 @@ using std::list;
 
 class StaticSynapse : public Synapse {
 public:
-	StaticSynapse(real weight=0, real delay=1e-4, real tau_syn=1e-4);
-	StaticSynapse(const StaticSynapse &synapse);
+	StaticSynapse(real weight, real delay, real tau_syn, real dt, int num=1);
+	StaticSynapse(const StaticSynapse &s, int num=0);
 	~StaticSynapse();
 
-	virtual Type getType() const override;
+	virtual int append(const Synapse *s, int num=0) override;
 
 	virtual int packup(void * data) override;
 
 protected:
-	const static Type type;
+	vector<real> _weight;
+	// const static Type type;
 	// real _weight;
 	// real _delay;
-	real _tau_syn;
+	// real _tau_syn;
 	// list<int> delay_queue;
 	// NeuronBase *pDest;
 };

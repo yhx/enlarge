@@ -23,11 +23,11 @@ public:
 
 	virtual ~Model() { _num=0; }
 
-	inline int get_size () const {
+	inline int size () const {
 		return _num;
 	}
 
-	inline Type get_type() const {
+	inline Type type() const {
 		return _type;
 	}
 
@@ -43,7 +43,7 @@ public:
 	virtual int packup(void *data) = 0;
 	
 protected:
-	int _num;
+	size_t _num;
 	Type _type;
 	ID _id;
 };

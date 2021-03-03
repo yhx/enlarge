@@ -6,8 +6,7 @@
 #include "LIFData.h"
 
 
-LIFNeuron::LIFNeuron(real v_init, real v_rest, real v_reset, real cm, real tau_m, real tau_refrac, real tau_syn_E, real tau_syn_I, real v_thresh, real i_offset, real dt, int n) : Neuron(LIF, n){
-	_num = n;
+LIFNeuron::LIFNeuron(real v_init, real v_rest, real v_reset, real cm, real tau_m, real tau_refrac, real tau_syn_E, real tau_syn_I, real v_thresh, real i_offset, real dt, int num) : Neuron(LIF, num){
 
 	real rm = (fabs(cm) > ZERO)?(tau_m/cm):1.0;
 	real Cm = (tau_m>0)?exp(-dt/tau_m):0.0;
@@ -25,58 +24,27 @@ LIFNeuron::LIFNeuron(real v_init, real v_rest, real v_reset, real cm, real tau_m
 	
 	int refract_time = static_cast<int>(tau_refrac/dt);
 
-	_refract_step.insert(_refract_step.end(), n, 0);
-	_refract_time.insert(_refract_time.end(), n, refract_time);
+	_refract_step.insert(_refract_step.end(), num, 0);
+	_refract_time.insert(_refract_time.end(), num, refract_time);
 
-	_v.insert(_v.end(), n, v_init);
-	_Ci.insert(_Ci.end(), n, Ci);
-	_Ce.insert(_Ce.end(), n, Ce);
-	_C_i.insert(_C_i.end(), n, C_i);
-	_C_e.insert(_C_e.end(), n, C_e);
-	_v_tmp.insert(_v_tmp.end(), n, v_tmp);
-	_V_thresh.insert(_V_thresh.end(), n, v_thresh);
-	_V_reset.insert(_V_reset.end(), n, v_reset);
+	_v.insert(_v.end(), num, v_init);
+	_Ci.insert(_Ci.end(), num, Ci);
+	_Ce.insert(_Ce.end(), num, Ce);
+	_C_i.insert(_C_i.end(), num, C_i);
+	_C_e.insert(_C_e.end(), num, C_e);
+	_v_tmp.insert(_v_tmp.end(), num, v_tmp);
+	_V_thresh.insert(_V_thresh.end(), num, v_thresh);
+	_V_reset.insert(_V_reset.end(), num, v_reset);
 
-	_i_e.insert(_i_e.end(), n, 0);
-	_i_i.insert(_i_i.end(), n, 0);
+	_i_e.insert(_i_e.end(), num, 0);
+	_i_i.insert(_i_i.end(), num, 0);
+
+	assert(_num == _v.size());
 }
 
-LIFNeuron::LIFNeuron(const LIFNeuron &neuron, int n) : Neuron(LIF, n)
+LIFNeuron::LIFNeuron(const LIFNeuron &n, int num) : Neuron(LIF, 0)
 {
-	if (n > 0) {
-		_num = n;
-		_refract_step.insert(_refract_step.end(), n, 0);
-		_refract_time.insert(_refract_time.end(), n, neuron._refract_time[0]);
-
-		_v.insert(_v.end(), n, neuron._v[0]);
-		_Ci.insert(_Ci.end(), n, neuron._Ci[0]);
-		_Ce.insert(_Ce.end(), n, neuron._Ce[0]);
-		_C_i.insert(_C_i.end(), n, neuron._C_i[0]);
-		_C_e.insert(_C_e.end(), n, neuron._C_e[0]);
-		_v_tmp.insert(_v_tmp.end(), n, neuron._v_tmp[0]);
-		_V_thresh.insert(_V_thresh.end(), n, neuron._V_thresh[0]);
-		_V_reset.insert(_V_reset.end(), n, neuron._V_reset[0]);
-
-		_i_e.insert(_i_e.end(), n, 0);
-		_i_i.insert(_i_i.end(), n, 0);
-	} else {
-		_num = neuron._num;
-		_refract_step.insert(_refract_step.end(), neuron._v.begin(), neuron._v.end());
-		_refract_time.insert(_refract_time.end(), neuron._refract_time.begin(), neuron._refract_time.end());
-
-		_v.insert(_v.end(), neuron._v.begin(), neuron._v.begin());
-		_Ci.insert(_Ci.end(), neuron._Ci.begin(), neuron._Ci.end());
-		_Ce.insert(_Ce.end(), neuron._Ce.begin(), neuron._Ce.end());
-		_C_i.insert(_C_i.end(), neuron._C_i.begin(), neuron._C_i.end());
-		_C_e.insert(_C_e.end(), neuron._C_e.begin(), neuron._C_e.end());
-		_v_tmp.insert(_v_tmp.end(), neuron._v_tmp.begin(), neuron._v_tmp.end());
-		_V_thresh.insert(_V_thresh.end(), neuron._V_thresh.begin(), neuron._V_thresh.end());
-		_V_reset.insert(_V_reset.end(), neuron._V_reset[0]);
-
-		_i_e.insert(_i_e.end(),  neuron._i_e.begin(), neuron._i_e.end());
-		_i_i.insert(_i_i.end(),  neuron._i_i.begin(), neuron._i_i.end());
-	}
-
+	append(dynamic_cast<const Neuron *>(&n), num);
 }
 
 LIFNeuron::~LIFNeuron()
@@ -97,6 +65,50 @@ LIFNeuron::~LIFNeuron()
 
 	_i_i.clear();
 	_i_e.clear();
+}
+
+int LIFNeuron::append(const Neuron * neuron, int num)
+{
+	const LIFNeuron *n = dynamic_cast<const LIFNeuron *>(neuron);
+	int ret = 0;
+	if (num > 0) {
+		ret = num;
+		_refract_step.insert(_refract_step.end(), num, 0);
+		_refract_time.insert(_refract_time.end(), num, n->_refract_time[0]);
+
+		_v.insert(_v.end(), num, n->_v[0]);
+		_Ci.insert(_Ci.end(), num, n->_Ci[0]);
+		_Ce.insert(_Ce.end(), num, n->_Ce[0]);
+		_C_i.insert(_C_i.end(), num, n->_C_i[0]);
+		_C_e.insert(_C_e.end(), num, n->_C_e[0]);
+		_v_tmp.insert(_v_tmp.end(), num, n->_v_tmp[0]);
+		_V_thresh.insert(_V_thresh.end(), num, n->_V_thresh[0]);
+		_V_reset.insert(_V_reset.end(), num, n->_V_reset[0]);
+
+		_i_e.insert(_i_e.end(), num, 0);
+		_i_i.insert(_i_i.end(), num, 0);
+	} else {
+		ret = n->_num;
+		_refract_step.insert(_refract_step.end(), n->_v.begin(), n->_v.end());
+		_refract_time.insert(_refract_time.end(), n->_refract_time.begin(), n->_refract_time.end());
+
+		_v.insert(_v.end(), n->_v.begin(), n->_v.begin());
+		_Ci.insert(_Ci.end(), n->_Ci.begin(), n->_Ci.end());
+		_Ce.insert(_Ce.end(), n->_Ce.begin(), n->_Ce.end());
+		_C_i.insert(_C_i.end(), n->_C_i.begin(), n->_C_i.end());
+		_C_e.insert(_C_e.end(), n->_C_e.begin(), n->_C_e.end());
+		_v_tmp.insert(_v_tmp.end(), n->_v_tmp.begin(), n->_v_tmp.end());
+		_V_thresh.insert(_V_thresh.end(), n->_V_thresh.begin(), n->_V_thresh.end());
+		_V_reset.insert(_V_reset.end(), n->_V_reset[0]);
+
+		_i_e.insert(_i_e.end(), n->_i_e.begin(), n->_i_e.end());
+		_i_i.insert(_i_i.end(), n->_i_i.begin(), n->_i_i.end());
+	}
+
+	_num += ret;
+	assert(_num == _v.size());
+
+	return ret;
 }
 
 int LIFNeuron::packup(void * data)

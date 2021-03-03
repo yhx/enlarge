@@ -7,55 +7,61 @@
 #include "StaticSynapse.h"
 #include "StaticData.h"
 
-const Type StaticSynapse::type = Static;
+// const Type StaticSynapse::type = Static;
 
-StaticSynapse::StaticSynapse(real weight, real delay, real tau_syn)
-	: Synapse(0, weight, delay), _tau_syn(tau_syn)
+StaticSynapse::StaticSynapse(real weight, real delay, real tau_syn, real dt, int num)
+	: Synapse(Static, num)
 {
+	int delay_steps = static_cast<int>(round(_delay/dt));
+	assert(fabs(tau_syn) > ZERO);
+	if (fabs(tau_syn) > ZERO) {
+		real c1 = exp(-(delay-dt*delay_steps)/tau_syn);
+		weight = weight * c1;
+	}
+
+	_weight.insert(_weight.end(), num, weight);
+	_delay.insert(_delay.end(), num, delay_steps);
+	assert(_num == _weight.size());
 }
 
-StaticSynapse::StaticSynapse(const StaticSynapse &synapse) : Synapse()
+StaticSynapse::StaticSynapse(const StaticSynapse &s, int num) : Synapse(Static, 0)
 {
-	this->_weight = synapse._weight;
-	this->_delay = synapse._delay;
-	this->_tau_syn = synapse._tau_syn;
+	append(dynamic_cast<const Synapse *>(&s), num);
 }
 
 StaticSynapse::~StaticSynapse()
 {
-	// delay_queue.clear();
+	_num = 0;
+	_delay.clear();
+	_weight.clear();
 }
 
-// int StaticSynapse::recv()
-// {
-// 	delay_queue.push_back(_delay_steps);
-// 
-// 	return 0;
-// }
-
-Type StaticSynapse::getType() const
+int StaticSynapse::append(const Synapse *syn, int num) 
 {
-	return type;
+	const StaticSynapse *s = dynamic_cast<const StaticSynapse *>(syn);
+	int ret = 0;
+	if (num > 0) {
+		ret = num;
+		_weight.insert(_weight.end(), num, s->_weight[0]);
+		_delay.insert(_delay.end(), num, s->_delay[0]);
+	} else {
+		ret = s->_num;
+		_weight.insert(_weight.end(), s->_weight.begin(), s->_weight.end());
+		_delay.insert(_delay.end(), s->_delay.begin(), s->_delay.end());
+	}
+	_num += ret;
+	assert(_num == _weight.size());
+
+	return ret;
 }
 
-
-int StaticSynapse::packup(void * data, int idx, int base, const SimInfo &info)
+int StaticSynapse::packup(void * data)
 {
 	StaticData *p = (StaticData *) data;
 
-	real dt = info.dt;
-	int delay_steps = static_cast<int>(round(_delay/dt));
-	real weight = this->_weight;
-	assert(fabs(_tau_syn) > ZERO);
-	if (fabs(_tau_syn) > ZERO) {
-		real c1 = exp(-(_delay-dt*delay_steps)/_tau_syn);
-		weight = weight * c1;
-	}
-	setID(idx+base);
-
-	p->pWeight[idx] = weight;
-	//p->p_src[idx] = this->getSrc()->getID();
-	p->pDst[idx] = this->getDst()->getID();
+	p->pWeight = _weight.data();
+	// p->p_src[idx] = this->getSrc()->getID();
+	// p->pDst[idx] = this->getDst()->getID();
 
 	return 1;
 }
