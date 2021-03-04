@@ -30,7 +30,7 @@ typedef ModelView<Synapse> Projection;
 
 class Network {
 public:
-	Network(int nodeNum = 1);
+	Network(int node_num = 1);
 	~Network();
 
 	int set_node_num(int node_num); 
@@ -48,20 +48,22 @@ public:
 	template<class S>
 	int connect(Population *p_src, size_t src, Population *p_dst, size_t dst, S syn, SpikeType s_type);
 
-	int connect(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t size);
+	int connect(Population *p_src, Population *p_dst, real weight, real delay, SpikeType type);
 	int connect(Population *p_src, size_t src, Population *p_dst, size_t dst, real weight, real delay, real tau=0);
+	int connect(Population *p_src, Population *p_dst, real *weight, real *delay, SpikeType *type, size_t size);
 
-	// int connect(Population *pSrc, Population *pDst, real weight, real delay, SpikeType type);
 	// int connectOne2One(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t size);
 	// int connectConv(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t height, size_t width, size_t k_height, size_t k_width);
 	// int connectPooling(Population *pSrc, Population *pDst, real weight, size_t height, size_t width, size_t p_height, size_t p_width);
 	
-	int connect(ID src, ID dst, ID syn);
+	int connect(ID src, ID dst, ID syn, unsigned int delay);
 	
 	// int connect(size_t populationIDSrc, size_t neuronIDSrc, size_t populationIDDst, size_t neuronIDDst, real weight, real delay, real tau = 0);
 	// Synapse* connect(Neuron *pSrc, Neuron *pDst, real weight, real delay, SpikeType type = Excitatory, real tau = 0, bool store = true);
 
 	GNetwork* buildNetwork(const SimInfo &info);
+
+	int reset(const SimInfo &info);
 
 	void logMap();
 	void status();
@@ -161,18 +163,10 @@ Population * Network::createPopulation(size_t num, N templ)
 
 template<class S>
 int Network::connect(Population *p_src, Population *p_dst, S templ, SpikeType sp) {
-	size_t src_num = p_src->size();
-	size_t dst_num = p_dst->size();
-
-	Synapse *syn = NULL;
+	size_t src_size = p_src->size();
+	size_t dst_size = p_dst->size();
 
 	size_t size = src_num * dst_num;
-
-	if (templ.size() != src_num * dst_num) {
-		syn = new S(templ, size);
-	} else {
-		syn = new S(templ);
-	}
 
 	Type type = templ.type();
 	size_t offset = 0;
@@ -180,13 +174,13 @@ int Network::connect(Population *p_src, Population *p_dst, S templ, SpikeType sp
 		_synapses[type] = new S(templ, size);
 	} else {
 		offset = _synapses.size();
-		_synapses[type].append(templ, size);
+		_synapses[type]->append(&templ, size);
 	}
 
 	int count = 0;
 	for (size_t s=0; s<src_num; s++) {
 		for (size_t d =0; d<dst_num; d++) {
-			int s_offset = offset + s * dst_num + d;
+			size_t s_offset = offset + s * dst_num + d;
 			connect(ID(p_src->type(), 0, p_src->offset()+s), ID(p_dst->type(), sp, p_dst->offset()+d), ID(type, 0, s_offset), _synapses[type]->get_delay()[s_offset]);
 			count++;
 		}
@@ -196,32 +190,21 @@ int Network::connect(Population *p_src, Population *p_dst, S templ, SpikeType sp
 }
 
 template<class S>
-int Network::connect(Population *pSrc, Population *pDst, S *pTempl, size_t size) {
-	size_t dstNum = pDst->getNum();
-	assert(size == (pSrc->getNum() * dstNum)); 
+int Network::connect(Population *p_src, size_t src, Population *p_dst, size_t dst, S templ, SpikeType sp)
+{
 
-	if (find(_pPopulations.begin(), _pPopulations.end(), pSrc) == _pPopulations.end()) {
-		_pPopulations.push_back(pSrc);
-		_populationNum++;
-		//neuronNum += pSrc->getNum();
-		addNeuronNum(pSrc->getType(), pSrc->getNum());
-	}
-	if (find(_pPopulations.begin(), _pPopulations.end(), pDst) == _pPopulations.end()) {
-		_pPopulations.push_back(pDst);
-		_populationNum++;
-		//neuronNum += pDst->getNum();
-		addNeuronNum(pDst->getType(), pDst->getNum());
+	Type type = templ.type();
+	size_t offset = 0;
+	if (_synapses.find(type) == _synapses.end()) {
+		_synapses[type] = new S(templ);
+	} else {
+		offset = _synapses.size();
+		_synapses[type]->append(&templ);
 	}
 
-	int count = 0;
-	for (size_t i=0; i<size; i++) {
-		size_t iSrc = i/dstNum;
-		size_t iDst = i%dstNum;
-		connect(pSrc->locate(iSrc), pDst->locate(iDst), pTempl[i], false);
-		count++;
-	}
+	connect(ID(p_src->type(), 0, p_src->offset()+src), ID(p_dst->type(), sp, p_dst->offset()+dst), ID(type, 0, offset), _synapses[type]->get_delay()[offset]);
 
-	return count;
+	return 1;
 }
 
 #endif /* NETWORK_H */

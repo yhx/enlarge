@@ -50,9 +50,9 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 
 	size_t neuronTypeNum = _nTypes.size();
 	size_t synapseTypeNum = _sTypes.size();
-	int maxDelaySteps = static_cast<unsigned int>(round(_maxDelay/info.dt));
-	int minDelaySteps = static_cast<unsigned int>(round(_minDelay/info.dt));
-	int deltaDelay = maxDelaySteps - minDelaySteps + 1;
+	// int _max_delay = static_cast<unsigned int>(round(_maxDelay/info.dt));
+	// int _min_delay = static_cast<unsigned int>(round(_minDelay/info.dt));
+	int deltaDelay = _max_delay - _min_delay + 1;
 
 	GNetwork * ret = allocGNetwork(neuronTypeNum, synapseTypeNum);
 
@@ -101,7 +101,7 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 				const vector<Synapse *> &s_vec = p->locate(nidx)->getSynapses();
 				for (int delay_t=0; delay_t < deltaDelay; delay_t++) {
 					for (auto siter = s_vec.begin(); siter != s_vec.end(); siter++) {
-						if ((*siter)->getDelaySteps(info.dt) == delay_t + minDelaySteps) {
+						if ((*siter)->getDelaySteps(info.dt) == delay_t + _min_delay) {
 							if ((*siter)->getType() == _sTypes[i]) {
 								//int sid = (*iter)->getID();
 								//assert(synapseIdx < totalSynapseNum);
@@ -129,7 +129,7 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 
 	logMap();
 
-	ret->pConnection = allocConnection(_totalNeuronNum, _totalSynapseNum, maxDelaySteps, minDelaySteps);
+	ret->pConnection = allocConnection(_totalNeuronNum, _totalSynapseNum, _max_delay, _min_delay);
 
 	size_t synapseIdx = 0;
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
@@ -141,7 +141,7 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 				ret->pConnection->pDelayStart[delay_t + deltaDelay*nid] = synapseIdx;
 
 				for (auto iter = s_vec.begin(); iter != s_vec.end(); iter++) {
-					if ((*iter)->getDelaySteps(info.dt) == delay_t + minDelaySteps) {
+					if ((*iter)->getDelaySteps(info.dt) == delay_t + _min_delay) {
 						ID sid = (*iter)->getID();
 						assert(synapseIdx < _totalSynapseNum);
 						assert(synapseIdx == sid);

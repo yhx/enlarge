@@ -17,7 +17,7 @@ public:
 		_delay.clear(); 
 	};
 
-	const vector<real> & get_delay() {
+	vector<unsigned int> & get_delay() {
 		return _delay;
 	}
 
@@ -33,7 +33,7 @@ public:
 
 protected:
 	// vector<real> _weight;
-	vector<real> _delay;
+	vector<unsigned int> _delay;
 };
 
 // class Greater {

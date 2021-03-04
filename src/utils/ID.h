@@ -1,4 +1,7 @@
 
+#ifndef ID_H
+#define ID_H
+
 #include <cstdint>
 
 #include "type.h"
@@ -64,3 +67,5 @@ public:
 	// UnionID _id;
 	uint64_t _id;
 };
+
+#endif // ID_H

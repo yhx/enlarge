@@ -23,26 +23,23 @@
 
 using namespace std::chrono;
 
-Network::Network(int nodeNum)
+Network::Network(int node_num)
 {
-	_maxDelay = 0.0;
-	_minDelay = 1.0e7;
+	_max_delay = 0;
+	_min_delay = INT_MAX;
 	// maxDelaySteps = 0;
 	// minDelaySteps = 1e7;
 	_maxFireRate = 0.0;
-	_populationNum = 0;
-	_totalNeuronNum = 0;
-	_totalSynapseNum = 0;
 
-	_nodeNum = nodeNum;
+	_node_num = node_num;
 	//n2sNetwork.clear();
 	//
-	_crossnodeNeuronsSend.resize(nodeNum);
-	_crossnodeNeuronsRecv.resize(nodeNum);
-	_crossnodeNeuron2idx.resize(nodeNum);
+	_crossnodeNeuronsSend.resize(node_num);
+	_crossnodeNeuronsRecv.resize(node_num);
+	_crossnodeNeuron2idx.resize(node_num);
 
-	_globalNTypeNum.resize(nodeNum);
-	_globalSTypeNum.resize(nodeNum);
+	_globalNTypeNum.resize(node_num);
+	_globalSTypeNum.resize(node_num);
 }
 
 Network::~Network()
@@ -128,9 +125,9 @@ Network::~Network()
 	print_mem("Free Network 2");
 }
 
-int Network::setNodeNum(int nodeNum)
+int Network::setNodeNum(int node_num)
 {
-	_nodeNum = nodeNum;
+	_node_num = node_num;
 
 	_crossnodeNeuronsSend.clear();
 	_crossnodeNeuronsRecv.clear();
@@ -139,20 +136,20 @@ int Network::setNodeNum(int nodeNum)
 	_globalNTypeNum.clear();
 	_globalSTypeNum.clear();
 
-	_crossnodeNeuronsSend.resize(nodeNum);
-	_crossnodeNeuronsRecv.resize(nodeNum);
-	_crossnodeNeuron2idx.resize(nodeNum);
+	_crossnodeNeuronsSend.resize(node_num);
+	_crossnodeNeuronsRecv.resize(node_num);
+	_crossnodeNeuron2idx.resize(node_num);
 
-	_globalNTypeNum.resize(nodeNum);
-	_globalSTypeNum.resize(nodeNum);
+	_globalNTypeNum.resize(node_num);
+	_globalSTypeNum.resize(node_num);
 
-	return _nodeNum;
+	return _node_num;
 }
 
-int Network::connect(Population *pSrc, Population *pDst, real weight, real delay, SpikeType type) {
-	int srcSize = pSrc->getNum();
-	int dstNum = pDst->getNum();
-	int size = srcSize * dstNum; 
+int Network::connect(Population *p_src, Population *p_dst, real weight, real delay, SpikeType type) {
+	size_t src_size = p_src->size();
+	size_t dst_size = p_dst->size();
+	size_t size = src_size * dst_size; 
 
 	if (find(_pPopulations.begin(), _pPopulations.end(), pSrc) == _pPopulations.end()) {
 		_pPopulations.push_back(pSrc);
@@ -611,10 +608,10 @@ CrossThreadData* Network::arrangeCrossThreadData(int node_num)
 	CrossThreadData * cross_data = (CrossThreadData*)malloc(sizeof(CrossThreadData) * node_num * node_num);
 	assert(cross_data != NULL);
 
-	for (int i=0; i<_nodeNum; i++) {
-		for (int j=0; j<_nodeNum; j++) {
+	for (int i=0; i<_node_num; i++) {
+		for (int j=0; j<_node_num; j++) {
 			// i->j 
-			int i2j = j * _nodeNum + i;
+			int i2j = j * _node_num + i;
 			cross_data[i2j]._firedNNum = 0;
 
 			int count = 0;
@@ -630,11 +627,11 @@ CrossThreadData* Network::arrangeCrossThreadData(int node_num)
 	}
 
 
-	for (int i=0; i<_nodeNum; i++) {
-		int idx = i*_nodeNum + i;
-		for (int j=0; j<_nodeNum; j++) {
+	for (int i=0; i<_node_num; i++) {
+		int idx = i*_node_num + i;
+		for (int j=0; j<_node_num; j++) {
 			if (j != i) {
-				cross_data[idx]._maxNNum += cross_data[i*_nodeNum+j]._maxNNum;
+				cross_data[idx]._maxNNum += cross_data[i*_node_num+j]._maxNNum;
 			}
 		}
 
@@ -1071,7 +1068,7 @@ void Network::splitNetwork()
 	printf("===========SYN_BASE==========\n");
 	int nodeIdx = 0;
 	unsigned long long  synapseCount = 0;
-	unsigned long long synapsePerNode = _totalSynapseNum/_nodeNum;
+	unsigned long long synapsePerNode = _totalSynapseNum/_node_num;
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 		Population * p = *pIter;
 		// p->setNode(nodeIdx);
@@ -1084,7 +1081,7 @@ void Network::splitNetwork()
 					(*vIter)->setNode(nodeIdx);
 				}
 			}
-			if (synapseCount >= (nodeIdx+1) * synapsePerNode && nodeIdx < _nodeNum - 1) {
+			if (synapseCount >= (nodeIdx+1) * synapsePerNode && nodeIdx < _node_num - 1) {
 				nodeIdx++;	
 			}
 		}
@@ -1093,7 +1090,7 @@ void Network::splitNetwork()
 	printf("===========NEU_BASE==========\n");
 	int nodeIdx = 0;
 	unsigned long long neuronCount = 0;
-	unsigned long long  neuronPerNode = _totalNeuronNum/_nodeNum;
+	unsigned long long  neuronPerNode = _totalNeuronNum/_node_num;
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 		Population * p = *pIter;
 		// p->setNode(nodeIdx);
@@ -1106,7 +1103,7 @@ void Network::splitNetwork()
 					(*vIter)->setNode(nodeIdx);
 				}
 			}
-			if (neuronCount >= (nodeIdx+1) * neuronPerNode && nodeIdx < _nodeNum - 1) {
+			if (neuronCount >= (nodeIdx+1) * neuronPerNode && nodeIdx < _node_num - 1) {
 				nodeIdx++;
 			}
 		}
@@ -1118,7 +1115,7 @@ void Network::splitNetwork()
 		Population * p = *pIter;
 		// p->setNode(nodeIdx);
 		for (size_t i=0; i<p->getNum(); i++) {
-			int nodeIdx = neuronCount % _nodeNum;
+			int nodeIdx = neuronCount % _node_num;
 			neuronCount++;
 			p->locate(i)->setNode(nodeIdx);
 			auto n2sIter = n2sInput.find(p->locate(i));
@@ -1136,7 +1133,7 @@ void Network::splitNetwork()
 	printf("===========Default==========\n");
 	int nodeIdx = 0;
 	unsigned long long synapseCount = 0;
-	unsigned long long synapsePerNode = _totalSynapseNum/_nodeNum;
+	unsigned long long synapsePerNode = _totalSynapseNum/_node_num;
 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
 		Population * p = *pIter;
 		// p->setNode(nodeIdx);
@@ -1151,7 +1148,7 @@ void Network::splitNetwork()
 			}
 
 		}
-		if (synapseCount >= (nodeIdx+1) * synapsePerNode && nodeIdx < _nodeNum - 1) {
+		if (synapseCount >= (nodeIdx+1) * synapsePerNode && nodeIdx < _node_num - 1) {
 			nodeIdx++;	
 		}
 	}
@@ -1188,11 +1185,11 @@ DistriNetwork* Network::buildNetworks(const SimInfo &info, bool auto_splited)
 {
 	print_mem("Before build");
 
-	assert(_nodeNum >= 1);
-	DistriNetwork * net = initDistriNet(_nodeNum, info.dt);
+	assert(_node_num >= 1);
+	DistriNetwork * net = initDistriNet(_node_num, info.dt);
 
 	printf("=====================Split Network=============================\n");
-	if (auto_splited && _nodeNum > 1) {
+	if (auto_splited && _node_num > 1) {
 		splitNetwork();
 	}
 
@@ -1200,7 +1197,7 @@ DistriNetwork* Network::buildNetworks(const SimInfo &info, bool auto_splited)
 	countTypeNum();
 
 	printf("=====================Arrange Connect===========================\n");
-	for (int nodeIdx =0; nodeIdx <_nodeNum; nodeIdx++) {
+	for (int nodeIdx =0; nodeIdx <_node_num; nodeIdx++) {
 		net[nodeIdx]._network = arrangeData(nodeIdx, info);
 
 		int nNum = net[nodeIdx]._network->pNeuronNums[net[nodeIdx]._network->nTypeNum] + _crossnodeNeuron2idx[nodeIdx].size();
@@ -1212,9 +1209,9 @@ DistriNetwork* Network::buildNetworks(const SimInfo &info, bool auto_splited)
 	print_mem("After build");
 
 	printf("=====================Arrange Map===============================\n");
-	for (int nodeIdx =0; nodeIdx <_nodeNum; nodeIdx++) {
+	for (int nodeIdx =0; nodeIdx <_node_num; nodeIdx++) {
 		int nNum = net[nodeIdx]._network->pNeuronNums[net[nodeIdx]._network->nTypeNum] + _crossnodeNeuron2idx[nodeIdx].size();
-		net[nodeIdx]._crossnodeMap = arrangeCrossNodeMap(nNum, nodeIdx, _nodeNum);
+		net[nodeIdx]._crossnodeMap = arrangeCrossNodeMap(nNum, nodeIdx, _node_num);
 	}
 
 	print_mem("Finish build");
