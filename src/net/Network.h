@@ -48,15 +48,16 @@ public:
 	template<class S>
 	int connect(Population *p_src, size_t src, Population *p_dst, size_t dst, S syn, SpikeType s_type);
 
-	int connect(Population *p_src, Population *p_dst, real weight, real delay, SpikeType type);
-	int connect(Population *p_src, size_t src, Population *p_dst, size_t dst, real weight, real delay, real tau=0);
+	int connect(ID src, ID dst, ID syn, unsigned int delay);
+
+	int connect(Population *p_src, Population *p_dst, real weight, real delay, real tau, SpikeType type=Exc);
 	int connect(Population *p_src, Population *p_dst, real *weight, real *delay, SpikeType *type, size_t size);
+	int connect(Population *p_src, size_t src, Population *p_dst, size_t dst, real weight, real delay, real tau, SpikeType=Exc);
 
 	// int connectOne2One(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t size);
 	// int connectConv(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t height, size_t width, size_t k_height, size_t k_width);
 	// int connectPooling(Population *pSrc, Population *pDst, real weight, size_t height, size_t width, size_t p_height, size_t p_width);
 	
-	int connect(ID src, ID dst, ID syn, unsigned int delay);
 	
 	// int connect(size_t populationIDSrc, size_t neuronIDSrc, size_t populationIDDst, size_t neuronIDDst, real weight, real delay, real tau = 0);
 	// Synapse* connect(Neuron *pSrc, Neuron *pDst, real weight, real delay, SpikeType type = Excitatory, real tau = 0, bool store = true);
@@ -122,13 +123,13 @@ public:
 	uint64_t _neuron_num;
 	uint64_t _synapse_num;
 	int _node_num;
-private:
-	real _maxFireRate;
-	vector<Type> _nTypes;
-	vector<Type> _sTypes;
-	vector<int> _neuronNums;
-	vector<int> _connectNums;
-	vector<int> _synapseNums;
+// private:
+// 	real _maxFireRate;
+// 	vector<Type> _nTypes;
+// 	vector<Type> _sTypes;
+// 	vector<int> _neuronNums;
+// 	vector<int> _connectNums;
+// 	vector<int> _synapseNums;
 };
 
 template<class N>
@@ -166,7 +167,7 @@ int Network::connect(Population *p_src, Population *p_dst, S templ, SpikeType sp
 	size_t src_size = p_src->size();
 	size_t dst_size = p_dst->size();
 
-	size_t size = src_num * dst_num;
+	size_t size = src_size * dst_size;
 
 	Type type = templ.type();
 	size_t offset = 0;
@@ -178,9 +179,9 @@ int Network::connect(Population *p_src, Population *p_dst, S templ, SpikeType sp
 	}
 
 	int count = 0;
-	for (size_t s=0; s<src_num; s++) {
-		for (size_t d =0; d<dst_num; d++) {
-			size_t s_offset = offset + s * dst_num + d;
+	for (size_t s=0; s<src_size; s++) {
+		for (size_t d =0; d<dst_size; d++) {
+			size_t s_offset = offset + s * dst_size + d;
 			connect(ID(p_src->type(), 0, p_src->offset()+s), ID(p_dst->type(), sp, p_dst->offset()+d), ID(type, 0, s_offset), _synapses[type]->get_delay()[s_offset]);
 			count++;
 		}

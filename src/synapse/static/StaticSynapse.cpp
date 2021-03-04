@@ -9,7 +9,7 @@
 
 // const Type StaticSynapse::type = Static;
 
-StaticSynapse::StaticSynapse(real weight, real delay, real tau_syn, real dt, int num)
+StaticSynapse::StaticSynapse(real weight, real delay, real tau_syn, real dt, size_t num)
 	: Synapse(Static, num)
 {
 	int delay_steps = static_cast<int>(round(_delay/dt));
@@ -21,6 +21,27 @@ StaticSynapse::StaticSynapse(real weight, real delay, real tau_syn, real dt, int
 
 	_weight.insert(_weight.end(), num, weight);
 	_delay.insert(_delay.end(), num, delay_steps);
+	assert(_num == _weight.size());
+}
+
+StaticSynapse::StaticSynapse(const real *weight, const real *delay, const real *tau_syn, real dt, size_t num)
+	: Synapse(Static, num)
+{
+	_weight.resize(num);
+	_delay.resize(num);
+
+	for (size_t i=0; i<num; i++) {
+		int delay_steps = static_cast<int>(round(_delay[i]/dt));
+		assert(fabs(tau_syn[i]) > ZERO);
+		real w = weight[i];
+		if (fabs(tau_syn[i]) > ZERO) {
+			real c1 = exp(-(delay[i]-dt*delay_steps)/tau_syn[i]);
+			w = w * c1;
+		}
+		_weight[i] = w;
+		_delay[i] = delay_steps;
+	}
+
 	assert(_num == _weight.size());
 }
 

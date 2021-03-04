@@ -10,6 +10,7 @@ using std::list;
 class StaticSynapse : public Synapse {
 public:
 	StaticSynapse(real weight, real delay, real tau_syn, real dt, size_t num=1);
+	StaticSynapse(const real *weight, const real *delay, const real *tau_syn, real dt, size_t num=1);
 	StaticSynapse(const StaticSynapse &s, size_t num=0);
 	~StaticSynapse();
 

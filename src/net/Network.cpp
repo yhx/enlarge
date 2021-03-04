@@ -29,11 +29,11 @@ Network::Network(int node_num)
 	_min_delay = INT_MAX;
 	// maxDelaySteps = 0;
 	// minDelaySteps = 1e7;
-	_maxFireRate = 0.0;
+	// _maxFireRate = 0.0;
 
 	_node_num = node_num;
 	//n2sNetwork.clear();
-	//
+	
 	_crossnodeNeuronsSend.resize(node_num);
 	_crossnodeNeuronsRecv.resize(node_num);
 	_crossnodeNeuron2idx.resize(node_num);
@@ -44,76 +44,16 @@ Network::Network(int node_num)
 
 Network::~Network()
 {
-#if 0
-	if (!_pSynapses.empty()) {
-		for (auto iter = _pSynapses.begin(); iter != _pSynapses.end(); iter++) {
-			Synapse * t = *iter;
-			if (s) {
-				delete t;
-			}
-		}
-	}
-#else
- 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end();  pIter++) {
- 		Population *p = *pIter;
-		if (!p) {
-			continue;
-		}
- 		for (auto nIter = p->_items.begin(); nIter != p->_items.end(); nIter++) {
- 			Neuron *n = *nIter;
- 			const vector<Synapse *> &s_vec = n->getSynapses();
- 			for (auto sIter = s_vec.begin(); sIter != s_vec.end(); sIter++) {
- 				Synapse *s = *sIter;
-				if (s) {
-					delete s;
-				}
- 			}
- 		}
- 
- 	}
-#endif
+	del_content_vec(_populations);
+	del_content_map(_neurons);
+	del_content_map(_synapses);
 
-	if (!_pPopulations.empty()) {
-		for (auto iter = _pPopulations.begin(); iter != _pPopulations.end(); iter++) {
-			Population* t = *iter;
-			if (t) {
-				delete t;
-			}
-		}
-	}
-
-	//if (!pNeurons.empty()) {
-	//	vector<NeuronBase*>::iterator iter;
-	//	for (iter = pNeurons.begin(); iter != pNeurons.end(); iter++) {
-	//		NeuronBase * t = *iter;
-	//		if (t) {
-	//			delete t;
-	//		}
-	//	}
-	//}
-
-
-#if 0
-	_pSynapses.clear();
-#endif
 	print_mem("Free Network 1");
-	_pPopulations.clear();
-	// _pOutputs.clear();
-	// n2sNetwork.clear();
-	// n2sTargetNetwork.clear();
-	// s2nNetwork.clear();
-	// s2nForwardNetwork.clear();
-	// id2neuron.clear();
-	// id2synapse.clear();
-	// nid2idx.clear();
-	// idx2nid.clear();
-	// sid2idx.clear();
-	// idx2sid.clear();
-	_neuronNums.clear();
-	_connectNums.clear();
-	_synapseNums.clear();
-	_nTypes.clear();
-	_sTypes.clear();
+	// _neuronNums.clear();
+	// _connectNums.clear();
+	// _synapseNums.clear();
+	// _nTypes.clear();
+	// _sTypes.clear();
 
 	_crossnodeNeuronsSend.clear();
 	_crossnodeNeuronsRecv.clear();
@@ -146,64 +86,89 @@ int Network::setNodeNum(int node_num)
 	return _node_num;
 }
 
-int Network::connect(Population *p_src, Population *p_dst, real weight, real delay, SpikeType type) {
+int Network::connect(ID src, ID dst, ID syn, unsigned int delay)
+{
+	n2s_conn[src][delay].push_back(syn);
+	s2n_conn[syn] = dst;
+	return 1;
+}
+
+int Network::connect(Population *p_src, Population *p_dst, real weight, real delay, real tau, SpikeType type) {
 	size_t src_size = p_src->size();
 	size_t dst_size = p_dst->size();
 	size_t size = src_size * dst_size; 
 
-	if (find(_pPopulations.begin(), _pPopulations.end(), pSrc) == _pPopulations.end()) {
-		_pPopulations.push_back(pSrc);
-		_populationNum++;
-		//neuronNum += pSrc->getNum();
-		addNeuronNum(pSrc->getType(), pSrc->getNum());
-	}
-	if (find(_pPopulations.begin(), _pPopulations.end(), pDst) == _pPopulations.end()) {
-		_pPopulations.push_back(pDst);
-		_populationNum++;
-		//neuronNum += pDst->getNum();
-		addNeuronNum(pDst->getType(), pDst->getNum());
+	Type type = Static;
+	size_t offset = 0;
+	if (_synapses.find(type) == _synapses.end()) {
+		_synapses[type] = new Synapse(weight, delay, tau, _dt, size);
+	} else {
+		offset = _synapses.size();
+		Synapse t(weight, delay, tau, _dt, size);
+		_synapses[type]->append(&t, size);
 	}
 
 	int count = 0;
-	for (int i=0; i<size; i++) {
-		int iSrc = i/dstNum;
-		int iDst = i%dstNum;
-		connect(pSrc->locate(iSrc), pDst->locate(iDst), weight, delay, type, 0.0, false);
-		count++;
+	for (size_t s=0; s<src_size; s++) {
+		for (size_t d=0; d<dst_size; d++) {
+			size_t s_offset = offset + s*dst_size + d;
+			connect(ID(p_src->type(), 0, p_src->offset()+s), 
+					ID(p_dst->type(), sp, p_dst->offset()+d),
+				   ID(type, 0, s_offset),
+				   _synapses[type]->get_delay()[s_offset]);
+			count++;
+		}
 	}
 
 	return count;
 }
 
-int Network::connect(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t size) {
-	size_t dstNum = pDst->getNum();
-	assert(size == (pSrc->getNum() * dstNum)); 
+int Network::connect(Population *p_src, Population *p_dst, real *weight, real *delay, real *tau, SpikeType *type, size_t size) {
+	size_t dst_size = p_dst->get_size();
+	assert(size == (p_src->size() * dst_size)); 
 
-	if (find(_pPopulations.begin(), _pPopulations.end(), pSrc) == _pPopulations.end()) {
-		_pPopulations.push_back(pSrc);
-		_populationNum++;
-		//neuronNum += pSrc->getNum();
-		addNeuronNum(pSrc->getType(), pSrc->getNum());
-	}
-	if (find(_pPopulations.begin(), _pPopulations.end(), pDst) == _pPopulations.end()) {
-		_pPopulations.push_back(pDst);
-		_populationNum++;
-		//neuronNum += pDst->getNum();
-		addNeuronNum(pDst->getType(), pDst->getNum());
+	Type type = Static;
+	size_t offset = 0;
+	if (_synapses.find(type) == _synapses.end()) {
+		_synapses[type] = new Synapse(weight, delay, tau, _dt, size);
+	} else {
+		offset = _synapses.size();
+		Synapse t(weight, delay, tau, _dt, size);
+		_synapses[type]->append(&t, size);
 	}
 
 	int count = 0;
-	for (size_t i=0; i<size; i++) {
-		size_t iSrc = i/dstNum;
-		size_t iDst = i%dstNum;
-		        //connect(Neuron *pn1, Neuron *pn2, real weight, real delay, SpikeType type, real tau, bool store)
-		if (type == NULL) {
-			connect(pSrc->locate(iSrc), pDst->locate(iDst), weight[i], delay[i], Excitatory, 0.0, false);
-		} else {
-			connect(pSrc->locate(iSrc), pDst->locate(iDst), weight[i], delay[i], type[i], 0.0, false);
+	for (size_t s=0; s<src_size; s++) {
+		for (size_t d=0; d<dst_size; d++) {
+			size_t s_offset = offset + s*dst_size + d;
+			connect(ID(p_src->type(), 0, p_src->offset()+s), 
+					ID(p_dst->type(), sp, p_dst->offset()+d),
+				   ID(type, 0, s_offset),
+				   _synapses[type]->get_delay()[s_offset]);
+			count++;
 		}
-		count++;
 	}
+
+	return count;
+}
+
+int connect(Population *p_src, size_t src, Population *p_dst, size_t dst, real weight, real delay, real tau, SpikeType=Exc) 
+{
+	Type type = Static;
+	size_t offset = 0;
+	if (_synapses.find(type) == _synapses.end()) {
+		_synapses[type] = new Synapse(weight, delay, tau, _dt);
+	} else {
+		offset = _synapses.size();
+		Synapse t(weight, delay, tau, _dt);
+		_synapses[type]->append(&t, size);
+	}
+
+	size_t s_offset = offset + s*dst_size + d;
+	connect(ID(p_src->type(), 0, p_src->offset()), 
+			ID(p_dst->type(), sp, p_dst->offset()),
+			ID(type, 0, s_offset),
+			_synapses[type]->get_delay()[s_offset]);
 
 	return count;
 }
@@ -291,232 +256,7 @@ int Network::connect(Population *pSrc, Population *pDst, real *weight, real *del
 // 	return count;
 // }
 
-int Network::connect(ID src, ID dst, ID syn, unsigned int delay)
-{
-	n2s_conn[src][delay].push_back(syn);
-	s2n_conn[syn] = dst;
-	return 1;
-}
 
-int Network::addNeuronNum(Type type, size_t num)
-{
-	vector<Type>::iterator iter = find(_nTypes.begin(), _nTypes.end(), type);
-	if (iter == _nTypes.end()) {
-		_nTypes.push_back(type);
-		_neuronNums.push_back(num);
-		_connectNums.push_back(0);
-	} else {
-		size_t idx = std::distance(_nTypes.begin(), iter);
-		_neuronNums[idx] += num;
-	}
-	_totalNeuronNum += num;
-
-	return num;
-}
-
-int Network::addConnectionNum(Type type, size_t num)
-{
-	// To be updated
-	vector<Type>::iterator iter = find(_nTypes.begin(), _nTypes.end(), type);
-	if (iter == _nTypes.end()) {
-		//_nTypes.push_back(type);
-		//_neuronNums.push_back(num);
-		//_connectNums.push_back(0);
-		printf("This should not happed, when a connect is added, a pre-neuron must exist!\n");
-	} else {
-		size_t idx = std::distance(_nTypes.begin(), iter);
-		_connectNums[idx] += num;
-	}
-
-	return num;
-}
-
-int Network::addSynapseNum(Type type, size_t num)
-{
-	vector<Type>::iterator iter = find(_sTypes.begin(), _sTypes.end(), type);
-	if (iter == _sTypes.end()) {
-		_sTypes.push_back(type);
-		_synapseNums.push_back(num);
-	} else {
-		size_t idx = std::distance(_sTypes.begin(), iter);
-		_synapseNums[idx] += num;
-	}
-	_totalSynapseNum += num;
-	return num;
-}
-
-Synapse* Network::connect(Neuron *pn1, Neuron *pn2, real weight, real delay, SpikeType type, real tau, bool store)
-{
-	//if (store) {
-	//	if (find(pNeurons.begin(), pNeurons.end(), pn1) == pNeurons.end()) {
-	//		pNeurons.push_back(pn1);
-	//		addNeuronNum(pn1->getType(), 1);
-	//	}
-	//	if (find(pNeurons.begin(), pNeurons.end(), pn2) == pNeurons.end()) {
-	//		pNeurons.push_back(pn2);
-	//		addNeuronNum(pn2->getType(), 1);
-	//	}
-	//}
-
-	Synapse * p = pn2->createSynapse(weight, delay, type, tau);
-	p->setSrc(pn1);
-	p->setDst(pn2);
-	pn1->addSynapse(p);
-
-#if 0
-	_pSynapses.push_back(p);
-#endif
-	addConnectionNum(pn1->getType(), 1);
-	addSynapseNum(p->getType(), 1);
-
-	//n2sTargetNetwork[pn2->getID()].push_back(p->getID());
-	//n2sNetwork[pn1->getID()].push_back(p->getID());
-	//s2nNetwork[p->getID()] = pn2->getID(); 
-	//s2nForwardNetwork[p->getID()] = pn1->getID();
-
-
-	if (delay > _maxDelay) {
-		_maxDelay = delay;
-	}
-	if (delay < _minDelay) {
-		_minDelay = delay;
-	}
-	
-	return p;
-}
-
-Population * Network::findPopulation(size_t populationID)
-{
-	if (populationID >= _pPopulations.size()) {
-		return NULL;
-	}
-
-	return _pPopulations[populationID];
-}
-
-Neuron * Network::findNeuron(size_t populationIDSrc, size_t neuronIDSrc)
-{
-	Population *pP = findPopulation(populationIDSrc);
-
-	if (pP == NULL) {
-		printf("Cann't find population: %lu\n", populationIDSrc);
-		return NULL;
-	}
-
-	Neuron *pN = NULL;
-	pN = pP->locate(neuronIDSrc);
-	if (pN == NULL) {
-		printf("Cann't find neuron: %lu:%lu\n", populationIDSrc, neuronIDSrc);
-		return NULL;
-	}
-
-	return pN;
-}
-
-// int Network::addOutput(int populationIDSrc, int neuronIDSrc)
-// {
-// 	Neuron *pN = findNeuron(populationIDSrc, neuronIDSrc);
-// 	if (pN == NULL) {
-// 		printf("OUTPUT Cann't find neuron: %d:%d\n", populationIDSrc, neuronIDSrc);
-// 		return -1;
-// 	} else {
-// 		pOutputs.push_back(pN);
-// 	}
-// 
-// 	return 0;
-// }
-
-//int Network::addProbe(int populationIDSrc, int neuronIDSrc, double weight)
-//{
-//	NeuronBase *pN = findNeuron(populationIDSrc, neuronIDSrc);
-//	if (pN == NULL) {
-//		printf("PROBE NEURON Cann't find neuron: %d:%d\n", populationIDSrc, neuronIDSrc);
-//		return -1;
-//	}
-//
-//	NeuronBase *probe = findNeuron(-2, populationIDSrc);
-//	if (probe == NULL) {
-//		PopulationBase *pP = findPopulation(-2);
-//		if (pP == NULL) {
-//			pP = createPopulation(ID(0, -2), 1, ProbeNeuron(ID(0, 0), 0.01, 0.01));
-//		}
-//		Population<ProbeNeuron> *pNewP = (Population<ProbeNeuron>*)pP;
-//		pNewP->addNeuron(ProbeNeuron(ID(-2, populationIDSrc), 0.01, 0.01));
-//		probe = findNeuron(-2, populationIDSrc);
-//		if (probe == NULL) {
-//			printf("PROBE Cann't find neuron: %d:%d\n", -2, populationIDSrc);
-//			return -1;
-//		}
-//		probe->monitorOn();
-//	}
-//	((ProbeNeuron*)probe)->addProbe(pN, weight);
-//
-//	return 0;
-//}
-
-// int Network::addMonitor(int populationIDSrc, int neuronIDSrc)
-// {
-// 	Neuron *pN = findNeuron(populationIDSrc, neuronIDSrc);
-// 	if (pN == NULL) {
-// 		printf("MONITOR Cann't find neuron: %d:%d\n", populationIDSrc, neuronIDSrc);
-// 		return -1;
-// 	} else {
-// 		pN->monitorOn();
-// 	}
-// 
-// 	return 0;
-// }
-
-int Network::connect(size_t populationIDSrc, size_t neuronIDSrc, size_t populationIDDst, size_t neuronIDDst, real weight, real delay, real tau)
-{
-	//PopulationBase *ppSrc = NULL, *ppDst = NULL;
-	//vector<PopulationBase*>::iterator iter;
-	//for (iter = _pPopulations.begin(); iter != _pPopulations.end(); iter++) {
-	//	PopulationBase * t = *iter;
-	//	if (t->getID().id == populationIDSrc) {
-	//		ppSrc = *iter;
-	//	}
-	//	if (t->getID().id == populationIDDst) {
-	//		ppDst = *iter;
-	//	}
-
-	//	if ((ppSrc != NULL) && (ppDst != NULL)) {
-	//		break;
-	//	}
-	//}
-
-	//if (ppSrc == NULL) {
-	//	printf("Cann't find population: %d\n", populationIDSrc);
-	//	return -1;
-	//}
-
-	//if (ppDst == NULL) {
-	//	printf("Cann't find population: %d\n", populationIDDst);
-	//	return -2;
-	//}
-
-	Neuron *pnSrc = NULL, *pnDst = NULL;
-	pnSrc = findNeuron(populationIDSrc, neuronIDSrc);
-	pnDst = findNeuron(populationIDDst, neuronIDDst);
-
-	if (pnSrc == NULL) {
-		printf("CONNECTION SRC Cann't find neuron: %lu:%lu\n", populationIDSrc, neuronIDSrc);
-		return -1;
-	}
-
-	if (pnDst == NULL) {
-		printf("CONNECTION DST Cann't find neuron: %lu:%lu\n", populationIDDst, neuronIDDst);
-		return -2;
-	}
-	
-	SpikeType type = Excitatory;
-	if (weight < 0.0) {
-		type = Inhibitory;
-	}
-	connect(pnSrc, pnDst, weight, delay, type, tau, false);
-
-	return 0;
-}
 
 int Network::reset(const SimInfo &info)
 {
@@ -547,7 +287,7 @@ int Network::reset(const SimInfo &info)
 	
 	return 0;
 }
-// 
+ 
 // int Network::update(const SimInfo &info)
 // {
 // 	vector<SynapseBase*>::iterator iterS;
