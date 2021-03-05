@@ -76,14 +76,15 @@ int StaticSynapse::append(const Synapse *syn, int num)
 	return ret;
 }
 
-int StaticSynapse::packup(void * data)
+void * StaticSynapse::packup()
 {
-	StaticData *p = (StaticData *) data;
+	StaticData *p = static_cast<StaticData *>(mallocStatic());
 
+	p->num = _num;
 	p->pWeight = _weight.data();
 	// p->p_src[idx] = this->getSrc()->getID();
 	// p->pDst[idx] = this->getDst()->getID();
 
-	return 1;
+	return p;
 }
 

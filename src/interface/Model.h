@@ -40,7 +40,7 @@ public:
 	}
 
 
-	virtual int packup(void *data) = 0;
+	virtual void * packup() = 0;
 	
 protected:
 	size_t _num;

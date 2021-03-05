@@ -11,21 +11,23 @@
 struct Connection {
 	//int *pSynapsesIdx; 
 	//int synapsesNum; 
-	int nNum;
-	int sNum;
+	size_t nNum;
+	size_t sNum;
 
-	int maxDelay;
-	int minDelay;
+	unsigned int maxDelay;
+	unsigned int minDelay;
 
-	int *pDelayStart;
-	int *pDelayNum;
+    size_t *pDelayStart;
+	size_t *pDelayNum;
+	size_t *pSidMap;
+    size_t *dst;
 
-	int *pDelayStartRev;
-	int *pDelayNumRev; 
-	int *pSidMapRev;
+	size_t *pDelayStartRev;
+	size_t *pDelayNumRev; 
+	size_t *pSidMapRev;
 };
 
-Connection * allocConnection(int nNum, int sNum, int maxDelay, int minDelay);
+Connection * allocConnection(size_t nNum, size_t sNum, unsigned int maxDelay, unsigned int minDelay);
 
 int freeConnection(Connection * pCPU);
 

@@ -20,6 +20,20 @@ typedef double real;
 #define MPI_U_REAL MPI_DOUBLE
 #endif
 
+#if SIZE_MAX == UCHAR_MAX
+   #define MPI_SIZE_T MPI_UNSIGNED_CHAR
+#elif SIZE_MAX == USHRT_MAX
+   #define MPI_SIZE_T MPI_UNSIGNED_SHORT
+#elif SIZE_MAX == UINT_MAX
+   #define MPI_SIZE_T MPI_UNSIGNED
+#elif SIZE_MAX == ULONG_MAX
+   #define MPI_SIZE_T MPI_UNSIGNED_LONG
+#elif SIZE_MAX == ULLONG_MAX
+   #define MPI_SIZE_T MPI_UNSIGNED_LONG_LONG
+#else
+   #error "unsupported size_t"
+#endif
+
 const real ZERO = 1e-10;
 
 const int MAX_BLOCK_SIZE = 1024;

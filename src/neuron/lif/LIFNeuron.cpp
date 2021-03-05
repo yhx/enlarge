@@ -1,4 +1,6 @@
 
+#include <assert.h>
+
 #include "math.h"
 
 #include "../../third_party/json/json.h"
@@ -111,9 +113,10 @@ int LIFNeuron::append(const Neuron * neuron, size_t num)
 	return ret;
 }
 
-int LIFNeuron::packup(void * data)
+void * LIFNeuron::packup()
 {
-	LIFData *p = (LIFData *) data;
+	LIFData *p = static_cast<LIFData*>(mallocLIF());
+	assert(p != NULL);
 	p->num = _num;
 	p->pRefracTime = _refract_time.data();
 	p->pRefracStep = _refract_step.data();
@@ -133,5 +136,5 @@ int LIFNeuron::packup(void * data)
 	p->pC_i = _C_i.data();
 	p->is_view = true;
 
-	return 0;
+	return p;
 }

@@ -266,81 +266,12 @@ int Network::reset(const SimInfo &info)
 
 	_globalNTypeNum.clear();
 	_globalSTypeNum.clear();
-	// maxDelaySteps = static_cast<int>(round(maxDelay/info.dt));
-	// minDelaySteps = static_cast<int>(round(minDelay/info.dt));
-
-	// vector<SynapseBase*>::iterator iterS;
-	// vector<NeuronBase*>::iterator iterN;
-	// vector<PopulationBase*>::iterator iterP;
-	// for (iterS=_pSynapses.begin(); iterS!=_pSynapses.end(); iterS++) {
-	// 	SynapseBase *p = *iterS;
-	// 	p->reset(info);
-	// }
-	// //for (iterN=pNeurons.begin(); iterN!=pNeurons.end(); iterN++) {
-	// //	NeuronBase * p = *iterN;
-	// //	p->reset(info);
-	// //}
-	// for (iterP=_pPopulations.begin(); iterP!=_pPopulations.end(); iterP++) {
-	// 	PopulationBase * p = *iterP;
-	// 	p->reset(info);
-	// }
 	
 	return 0;
 }
  
-// int Network::update(const SimInfo &info)
-// {
-// 	vector<SynapseBase*>::iterator iterS;
-// 	vector<NeuronBase*>::iterator iterN;
-// 	vector<PopulationBase*>::iterator iterP;
-// 
-// 	for (iterP=_pPopulations.begin(); iterP!=_pPopulations.end(); iterP++) {
-// 		PopulationBase * p = *iterP;
-// 		p->update(info);
-// 	}
-// 
-// 	//for (iterN=pNeurons.begin(); iterN!=pNeurons.end(); iterN++) {
-// 	//	NeuronBase * p = *iterN;
-// 	//	p->update(info);
-// 	//}
-// 
-// 	for (iterS=_pSynapses.begin(); iterS!=_pSynapses.end(); iterS++) {
-// 		SynapseBase *p = *iterS;
-// 		p->update(info);
-// 	}
-// 
-// 	return 0;
-// }
-// 
-// void Network::monitor(const SimInfo &info)
-// {
-// 	vector<SynapseBase*>::iterator iterS;
-// 	vector<NeuronBase*>::iterator iterN;
-// 	vector<PopulationBase*>::iterator iterP;
-// 
-// 	for (iterP=_pPopulations.begin(); iterP!=_pPopulations.end(); iterP++) {
-// 		PopulationBase * p = *iterP;
-// 		//p->monitorOn();
-// 		p->monitor(info);
-// 	}
-// 
-// 	//for (iterN=pNeurons.begin(); iterN!=pNeurons.end(); iterN++) {
-// 	//	NeuronBase * p = *iterN;
-// 	//	p->monitor(info);
-// 	//}
-// 
-// 	for (iterS=_pSynapses.begin(); iterS!=_pSynapses.end(); iterS++) {
-// 		SynapseBase *p = *iterS;
-// 		//p->monitorOn();
-// 		p->monitor(info);
-// 	}
-// }
 
 void Network::logMap() {
-	//FILE *f = fopen("NID.map", "w+");
-	//for (map<int, ID>::const_iterator iter = idx2nid.begin(); iter != idx2nid.end(); iter++) {
-	//	fprintf(f, "%d:%s\n", iter->first, iter->second.getInfo().c_str());
-	//}
 }
 
 CrossThreadData* Network::arrangeCrossThreadData(int node_num)

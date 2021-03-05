@@ -11,7 +11,7 @@ public:
 	~LIFNeuron();
 
 	virtual int append(const Neuron *n, size_t num=0) override;
-	virtual int packup(void * data) override;
+	virtual void * packup() override;
 
 	const static Type type;
 protected:

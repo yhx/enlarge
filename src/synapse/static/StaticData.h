@@ -13,7 +13,7 @@
 struct StaticData {
 	int num;
 
-	int *pDst;
+	// int *pDst;
 	real *pWeight;
 };
 
