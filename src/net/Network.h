@@ -58,13 +58,13 @@ public:
 	// int connectConv(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t height, size_t width, size_t k_height, size_t k_width);
 	// int connectPooling(Population *pSrc, Population *pDst, real weight, size_t height, size_t width, size_t p_height, size_t p_width);
 	
-
-	GNetwork* buildNetwork(const SimInfo &info);
-
 	int reset(const SimInfo &info);
 
 	void logMap();
 	void status();
+
+	GNetwork* buildNetwork(const SimInfo &info);
+
 
 	DistriNetwork * buildNetworks(const SimInfo &info, bool auto_splited = true);
 
@@ -80,7 +80,8 @@ private:
 	// bool checkIDtoIdx();
 	
 	void splitNetwork();
-	void countTypeNum();
+	void updateStatus();
+
 	GNetwork* arrangeData(int node, const SimInfo &info);
 	Connection* arrangeConnect(size_t n_num, size_t s_num, int node_idx, const SimInfo &info);
 	CrossNodeMap* arrangeCrossNodeMap(size_t n_num, int node_idx, int node_num);
@@ -119,6 +120,8 @@ public:
 
 	uint64_t _neuron_num;
 	uint64_t _synapse_num;
+	map<Type, size_t> _neurons_offset;
+	map<Type, size_t> _synapses_offset;
 	int _node_num;
 // private:
 // 	real _maxFireRate;

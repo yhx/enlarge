@@ -11,35 +11,35 @@
 
 struct GNetwork {
 	//Numbers of types
-	int nTypeNum;
-	int sTypeNum;
+	size_t nTypeNum;
+	size_t sTypeNum;
 
-	// Delay info moved into connection
-	// int maxDelay;
-	// int minDelay;
+	// Delay info moved size_to connection
+	// size_t maxDelay;
+	// size_t minDelay;
 
 	//Type 
 	Type * pNTypes;
 	Type * pSTypes;
 
 	//Index for each type
-	int *pNeuronNums;
-	int *pSynapseNums;
+	size_t *pNeuronNums;
+	size_t *pSynapseNums;
 
-	//Pointers to neurons
+	//Posize_ters to neurons
 	void **ppNeurons;
 	//Pointers to synapses
 	void **ppSynapses;
 
 	//Neuron to Synapse Connection
-	Connection *pConnection;
+	Connection **ppConnection;
 
 };
 
 
 // init and free
-// This func just set pConnection to NULL
-GNetwork * allocGNetwork(int nTypeNum, int sTypeNum);
+// This func just set the content of ppConnection to NULL
+GNetwork * allocGNetwork(size_t nTypeNum, size_t sTypeNum);
 GNetwork * deepcopyGNetwork(GNetwork *net);
 // TODO freeGNetwork
 void freeGNetwork(GNetwork * network);

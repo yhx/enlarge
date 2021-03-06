@@ -14,32 +14,32 @@ GNetwork* copyGNetworkToGPU(GNetwork *pCpuNet)
 		return NULL;
 	}
 
-	int nTypeNum = pCpuNet->nTypeNum;
-	int sTypeNum = pCpuNet->sTypeNum;
+	size_t nTypeNum = pCpuNet->nTypeNum;
+	size_t sTypeNum = pCpuNet->sTypeNum;
 
 	GNetwork *tmp = allocGNetwork(nTypeNum, sTypeNum);
 
 	// tmp->maxDelay = pCpuNet->maxDelay;
 	// tmp->minDelay = pCpuNet->minDelay;
 
-	for (int i=0; i<nTypeNum; i++) {
+	for (size_t i=0; i<nTypeNum; i++) {
 		tmp->pNTypes[i] = pCpuNet->pNTypes[i];
 		tmp->pNeuronNums[i] = pCpuNet->pNeuronNums[i];
 	}
 	tmp->pNeuronNums[nTypeNum] = pCpuNet->pNeuronNums[nTypeNum];
 
-	for (int i=0; i<sTypeNum; i++) {
+	for (size_t i=0; i<sTypeNum; i++) {
 		tmp->pSTypes[i] = pCpuNet->pSTypes[i];
 		tmp->pSynapseNums[i] = pCpuNet->pSynapseNums[i];
 	}
 	tmp->pSynapseNums[sTypeNum] = pCpuNet->pSynapseNums[sTypeNum];
 
 
-	for (int i=0; i<nTypeNum; i++) {
+	for (size_t i=0; i<nTypeNum; i++) {
 		tmp->ppNeurons[i] = cudaAllocType[pCpuNet->pNTypes[i]](pCpuNet->ppNeurons[i], pCpuNet->pNeuronNums[i+1]-pCpuNet->pNeuronNums[i]);
 	}
 
-	for (int i=0; i<sTypeNum; i++) {
+	for (size_t i=0; i<sTypeNum; i++) {
 		tmp->ppSynapses[i] = cudaAllocType[pCpuNet->pSTypes[i]](pCpuNet->ppSynapses[i], pCpuNet->pSynapseNums[i+1]-pCpuNet->pSynapseNums[i]);
 	}
 
@@ -55,30 +55,30 @@ int fetchGNetworkFromGPU(GNetwork *pCpuNet, GNetwork *pGpuNet)
 		return -1;
 	}
 
-	int nTypeNum = pGpuNet->nTypeNum;
-	int sTypeNum = pGpuNet->sTypeNum;
+	size_t nTypeNum = pGpuNet->nTypeNum;
+	size_t sTypeNum = pGpuNet->sTypeNum;
 
 	assert(pCpuNet->nTypeNum == nTypeNum);
 	assert(pCpuNet->sTypeNum == sTypeNum);
 
-	for (int i=0; i<nTypeNum; i++) {
+	for (size_t i=0; i<nTypeNum; i++) {
 		pCpuNet->pNTypes[i] = pGpuNet->pNTypes[i];
 		pCpuNet->pNeuronNums[i] = pGpuNet->pNeuronNums[i];
 	}
 	pCpuNet->pNeuronNums[nTypeNum] = pGpuNet->pNeuronNums[nTypeNum];
 
-	for (int i=0; i<sTypeNum; i++) {
+	for (size_t i=0; i<sTypeNum; i++) {
 		pCpuNet->pSTypes[i] = pGpuNet->pSTypes[i];
 		pCpuNet->pSynapseNums[i] = pGpuNet->pSynapseNums[i];
 	}
 	pCpuNet->pSynapseNums[sTypeNum] = pGpuNet->pSynapseNums[sTypeNum];
 
 	//TODO support multitype N and S
-	for (int i=0; i<nTypeNum; i++) {
+	for (size_t i=0; i<nTypeNum; i++) {
 		//TODO: cudaFetchType
 		cudaFetchType[pCpuNet->pNTypes[i]](pCpuNet->ppNeurons[i], pGpuNet->ppNeurons[i], pCpuNet->pNeuronNums[i+1]-pCpuNet->pNeuronNums[i]);
 	}
-	for (int i=0; i<sTypeNum; i++) {
+	for (size_t i=0; i<sTypeNum; i++) {
 		//TODO: cudaFetchType
 		cudaFetchType[pCpuNet->pSTypes[i]](pCpuNet->ppSynapses[i], pGpuNet->ppSynapses[i], pCpuNet->pSynapseNums[i+1]-pCpuNet->pSynapseNums[i]);
 	}
@@ -91,14 +91,14 @@ int freeGNetworkGPU(GNetwork *pGpuNet)
 {
 	GNetwork *pTmp = pGpuNet;
 
-	int nTypeNum = pTmp->nTypeNum;
-	int sTypeNum = pTmp->sTypeNum;
+	size_t nTypeNum = pTmp->nTypeNum;
+	size_t sTypeNum = pTmp->sTypeNum;
 
-	for (int i=0; i<nTypeNum; i++) {
+	for (size_t i=0; i<nTypeNum; i++) {
 		cudaFreeType[pTmp->pNTypes[i]](pTmp->ppNeurons[i]);
 	}
 
-	for (int i=0; i<sTypeNum; i++) {
+	for (size_t i=0; i<sTypeNum; i++) {
 		cudaFreeType[pTmp->pSTypes[i]](pTmp->ppSynapses[i]);
 	}
 
@@ -127,13 +127,13 @@ int checkGNetworkGPU(GNetwork *g, GNetwork *c)
 
 	ret = 1;
 
-	//int totalNeuronNum = g->pNeuronNums[g->nTypeNum+1];
-	//int totalSynapseNum = g->pSynapseNums[g->sTypeNum+1];
+	//size_t totalNeuronNum = g->pNeuronNums[g->nTypeNum+1];
+	//size_t totalSynapseNum = g->pSynapseNums[g->sTypeNum+1];
 	// Connection p;
 	// checkCudaErrors(cudaMemcpy(&p, g->pConnection, sizeof(Connection), cudaMemcpyDeviceToHost));
 
-	// CHECK_GPU_TO_CPU_ARRAY(p.delayStart, c->pConnection->delayStart, sizeof(int)*(c->pConnection->nNum)*(maxDelay-minDelay+1));
-	// CHECK_GPU_TO_CPU_ARRAY(p.delayNum, c->pConnection->delayNum, sizeof(int)*(c->pConnection->nNum)*(maxDelay-minDelay+1));
+	// CHECK_GPU_TO_CPU_ARRAY(p.delayStart, c->pConnection->delayStart, sizeof(size_t)*(c->pConnection->nNum)*(maxDelay-minDelay+1));
+	// CHECK_GPU_TO_CPU_ARRAY(p.delayNum, c->pConnection->delayNum, sizeof(size_t)*(c->pConnection->nNum)*(maxDelay-minDelay+1));
 
 	ret = 2;
 

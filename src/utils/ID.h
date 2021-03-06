@@ -25,11 +25,12 @@ const int OFFSET_BITS = 8;
 const int64_t TYPE_CAST     = 0xFF;
 const int64_t OFFSET_CAST   = 0xFF;
 
-const int64_t TYPE_UNMASK     = 0xFF00000000000000;
-const int64_t OFFSET_UNMASK   = 0x00FF000000000000;
+const int64_t TYPE_UNMASK    = 0xFF00000000000000;
+const int64_t OFFSET_UNMASK  = 0x00FF000000000000;
+const int64_t ID_UNMASK        = 0x0000FFFFFFFFFFFF;
 
-const int64_t TYPE_MASK   = 0x00FFFFFFFFFFFFFF;
-const int64_t OFFSET_MASK = 0xFF00FFFFFFFFFFFF;
+const int64_t TYPE_MASK      = 0x00FFFFFFFFFFFFFF;
+const int64_t OFFSET_MASK    = 0xFF00FFFFFFFFFFFF;
 
 class ID {
 public:
@@ -51,8 +52,8 @@ public:
 		_id = (_id & TYPE_MASK) + ((t<<(64-TYPE_BITS)) & TYPE_UNMASK);
 	}
 
-	int get_type() {
-		return ((_id >> (64-TYPE_BITS)) & TYPE_CAST);
+	Type type() {
+		return static_cast<Type>((_id >> (64-TYPE_BITS)) & TYPE_CAST);
 	}
 
 	void set_offset(int offset) {
@@ -60,10 +61,30 @@ public:
 		_id = (_id & OFFSET_MASK) + ((t<<(64-TYPE_BITS-OFFSET_BITS)) & OFFSET_UNMASK);
 	}
 
-	int get_offset() {
+	int offset() {
 		return ((_id >> (64-TYPE_BITS-OFFSET_BITS)) & OFFSET_CAST);
 	}
 
+	uint64_t id() {
+		return (_id & ID_UNMASK);
+	}
+
+	bool operator==(ID &t)
+	{
+		return _id == t._id;
+	}
+
+	bool operator!=(ID &t)
+	{
+		return _id != t._id;
+	}
+
+	bool operator<(ID &t)
+	{
+		return _id < t._id;
+	}
+
+private:
 	// UnionID _id;
 	uint64_t _id;
 };
