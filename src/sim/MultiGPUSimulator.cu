@@ -60,7 +60,7 @@ int MultiGPUSimulator::run(real time, FireInfo &log)
 	pthread_barrier_init(&gpuCycleBarrier, NULL, device_count);
 
 	// MultiNetwork multiNet(_network, device_count);
-	_network->setNodeNum(device_count);
+	_network->set_node_num(device_count);
 
 	SimInfo info(_dt);
 	DistriNetwork *node_nets = _network->buildNetworks(info);
@@ -113,7 +113,7 @@ void * run_thread_gpu(void *para) {
 	int nTypeNum = c_pNetGPU->nTypeNum;
 	int sTypeNum = c_pNetGPU->sTypeNum;
 	int nodeNeuronNum = c_pNetGPU->pNeuronNums[nTypeNum];
-	int allNeuronNum = pNetCPU->pConnection->nNum;
+	int allNeuronNum = pNetCPU->ppConnections[0]->nNum;
 	int nodeSynapseNum = c_pNetGPU->pSynapseNums[sTypeNum];
 	printf("Thread %d NeuronTypeNum: %d, SynapseTypeNum: %d\n", network->_nodeIdx, nTypeNum, sTypeNum);
 	printf("Thread %d NeuronNum: %d, SynapseNum: %d\n", network->_nodeIdx, nodeNeuronNum, nodeSynapseNum);
@@ -121,15 +121,15 @@ void * run_thread_gpu(void *para) {
 	//int dataOffset = network->_nodeIdx * network->_nodeNum;
 	//int dataIdx = network->_nodeIdx * network->_nodeNum + network->_nodeIdx;
 
-	int maxDelay = pNetCPU->pConnection->maxDelay;
-	int minDelay = pNetCPU->pConnection->minDelay;
+	int maxDelay = pNetCPU->ppConnections[0]->maxDelay;
+	int minDelay = pNetCPU->ppConnections[0]->minDelay;
 	// int deltaDelay = maxDelay - minDelay;
 	// int deltaDelay = pNetCPU->pConnection->maxDelay - pNetCPU->pConnection->minDelay;
 	printf("Thread %d MaxDelay: %d MinDelay: %d\n", network->_nodeIdx, maxDelay,  minDelay);
 
 	// init_connection<<<1, 1>>>(c_pNetGPU->pConnection);
 
-	GBuffers *buffers = alloc_buffers(allNeuronNum, nodeSynapseNum, pNetCPU->pConnection->maxDelay, network->_dt);
+	GBuffers *buffers = alloc_buffers(allNeuronNum, nodeSynapseNum, pNetCPU->ppConnections[0]->maxDelay, network->_dt);
 
 	BlockSize *updateSize = getBlockSize(allNeuronNum, nodeSynapseNum);
 

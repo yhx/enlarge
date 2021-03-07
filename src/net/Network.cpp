@@ -11,6 +11,7 @@
 #include "../utils/TypeFunc.h"
 #include "../utils/proc_info.h"
 #include "../utils/utils.h"
+#include "../../include/Synapses.h"
 #include "Network.h"
 
 #define SYN_BASE 0
@@ -23,8 +24,9 @@
 
 using namespace std::chrono;
 
-Network::Network(int node_num)
+Network::Network(real dt, int node_num)
 {
+	_dt = dt;
 	_max_delay = 0;
 	_min_delay = INT_MAX;
 	// maxDelaySteps = 0;
@@ -65,7 +67,7 @@ Network::~Network()
 	print_mem("Free Network 2");
 }
 
-int Network::setNodeNum(int node_num)
+int Network::set_node_num(int node_num)
 {
 	_node_num = node_num;
 
@@ -93,7 +95,7 @@ int Network::connect(ID src, ID dst, ID syn, unsigned int delay)
 	return 1;
 }
 
-int Network::connect(Population *p_src, Population *p_dst, real weight, real delay, real tau, SpikeType type) {
+int Network::connect(Population *p_src, Population *p_dst, real weight, real delay, real tau, SpikeType sp) {
 	size_t src_size = p_src->size();
 	size_t dst_size = p_dst->size();
 	size_t size = src_size * dst_size; 
@@ -101,10 +103,10 @@ int Network::connect(Population *p_src, Population *p_dst, real weight, real del
 	Type type = Static;
 	size_t offset = 0;
 	if (_synapses.find(type) == _synapses.end()) {
-		_synapses[type] = new Synapse(weight, delay, tau, _dt, size);
+		_synapses[type] = new StaticSynapse(weight, delay, tau, _dt, size);
 	} else {
 		offset = _synapses.size();
-		Synapse t(weight, delay, tau, _dt, size);
+		StaticSynapse t(weight, delay, tau, _dt, size);
 		_synapses[type]->append(&t, size);
 	}
 
@@ -123,17 +125,18 @@ int Network::connect(Population *p_src, Population *p_dst, real weight, real del
 	return count;
 }
 
-int Network::connect(Population *p_src, Population *p_dst, real *weight, real *delay, real *tau, SpikeType *type, size_t size) {
-	size_t dst_size = p_dst->get_size();
-	assert(size == (p_src->size() * dst_size)); 
+int Network::connect(Population *p_src, Population *p_dst, real *weight, real *delay, real *tau, SpikeType *sp, size_t size) {
+	size_t dst_size = p_dst->size();
+	size_t src_size = p_src->size();
+	assert(size == (src_size * dst_size)); 
 
 	Type type = Static;
 	size_t offset = 0;
 	if (_synapses.find(type) == _synapses.end()) {
-		_synapses[type] = new Synapse(weight, delay, tau, _dt, size);
+		_synapses[type] = new StaticSynapse(weight, delay, tau, _dt, size);
 	} else {
 		offset = _synapses.size();
-		Synapse t(weight, delay, tau, _dt, size);
+		StaticSynapse t(weight, delay, tau, _dt, size);
 		_synapses[type]->append(&t, size);
 	}
 
@@ -142,7 +145,7 @@ int Network::connect(Population *p_src, Population *p_dst, real *weight, real *d
 		for (size_t d=0; d<dst_size; d++) {
 			size_t s_offset = offset + s*dst_size + d;
 			connect(ID(p_src->type(), 0, p_src->offset()+s), 
-					ID(p_dst->type(), sp, p_dst->offset()+d),
+					ID(p_dst->type(), sp[s*dst_size+d], p_dst->offset()+d),
 				   ID(type, 0, s_offset),
 				   _synapses[type]->get_delay()[s_offset]);
 			count++;
@@ -152,25 +155,25 @@ int Network::connect(Population *p_src, Population *p_dst, real *weight, real *d
 	return count;
 }
 
-int connect(Population *p_src, size_t src, Population *p_dst, size_t dst, real weight, real delay, real tau, SpikeType=Exc) 
+int Network::connect(Population *p_src, size_t src, Population *p_dst, size_t dst, real weight, real delay, real tau, SpikeType sp) 
 {
 	Type type = Static;
 	size_t offset = 0;
 	if (_synapses.find(type) == _synapses.end()) {
-		_synapses[type] = new Synapse(weight, delay, tau, _dt);
+		_synapses[type] = new StaticSynapse(weight, delay, tau, _dt);
 	} else {
 		offset = _synapses.size();
-		Synapse t(weight, delay, tau, _dt);
-		_synapses[type]->append(&t, size);
+		StaticSynapse t(weight, delay, tau, _dt);
+		_synapses[type]->append(&t);
 	}
 
-	size_t s_offset = offset + s*dst_size + d;
-	connect(ID(p_src->type(), 0, p_src->offset()), 
-			ID(p_dst->type(), sp, p_dst->offset()),
+	size_t s_offset = offset;
+	connect(ID(p_src->type(), 0, p_src->offset()+src), 
+			ID(p_dst->type(), sp, p_dst->offset()+dst),
 			ID(type, 0, s_offset),
 			_synapses[type]->get_delay()[s_offset]);
 
-	return count;
+	return 1;
 }
 
 // int Network::connectOne2One(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t size) {
@@ -318,7 +321,7 @@ CrossNodeData* Network::arrangeCrossNodeData(int node_num, const SimInfo &info)
 	CrossNodeData * cross_data = (CrossNodeData*)malloc(sizeof(CrossNodeData) * node_num);
 	assert(cross_data != NULL);
 
-	int delay_t = static_cast<int>(round(_minDelay/info.dt));
+	int delay_t = _min_delay;
 	for (int i=0; i<node_num; i++) {
 		allocParaCND(&(cross_data[i]), node_num, delay_t);
 	}
@@ -369,96 +372,14 @@ void printTypeNum(vector<map<Type, unsigned long long>> typeNum, const char *nam
 	printf("\n");
 }
 
-void Network::countTypeNum() 
-{
-	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end();  pIter++) {
-		Population * p = *pIter;
-
-#if 1
-		for (auto nIter = p->_items.begin(); nIter != p->_items.end(); nIter++) {
-			Neuron *n = *nIter;
-			Type type = n->getType();
-			int node = n->getNode();
-			if (_globalNTypeNum[node].find(type) == _globalNTypeNum[node].end()) {
-				_globalNTypeNum[node][type] = 1;
-			} else {
-				_globalNTypeNum[node][type] += 1;
-			}
-		}
-#else
-		Type type = p->getType();
-		int node = p->getNode();
-		if (_globalNTypeNum[node].find(type) == _globalNTypeNum[node].end()) {
-			_globalNTypeNum[node][type] = p->getNum();
-		} else {
-			_globalNTypeNum[node][type] += p->getNum();
-		}
-#endif
-	}
-
-// #ifdef PROF // Too costy // Too costy
-// 	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end();  pIter++) {
-// 		Population *p = *pIter;
-// 		for (auto nIter = p->_items.begin(); nIter != p->_items.end(); nIter++) {
-// 			Neuron *n = *nIter;
-// 			const vector<Synapse *> &s_vec = n->getSynapses();
-// 			for (auto sIter = s_vec.begin(); sIter != s_vec.end(); sIter++) {
-// 				Synapse *s = *sIter;
-// 				if (find(_pSynapses.begin(), _pSynapses.end(), s) == _pSynapses.end()) {
-// 					printf("Synapse %d (src %d, dst %d) not in global array\n", s->getID(), n->getID(), s->getDst()->getID());
-// 				}
-// 			}
-// 		}
-// 
-// 	}
-// #endif
-
-#if 0
-	for (auto siter = _pSynapses.begin(); siter != _pSynapses.end();  siter++) {
-		Synapse * p = *siter;
-		Type type = p->getType();
-		int node = p->getNode();
-
-		if (_globalSTypeNum[node].find(type) == _globalSTypeNum[node].end()) {
-			_globalSTypeNum[node][type] = 1;
-		} else {
-			_globalSTypeNum[node][type] += 1;
-		}
-	}
-#else
-	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end();  pIter++) {
-		Population *p = *pIter;
-		for (auto nIter = p->_items.begin(); nIter != p->_items.end(); nIter++) {
-			Neuron *n = *nIter;
-			const vector<Synapse *> &s_vec = n->getSynapses();
-			for (auto sIter = s_vec.begin(); sIter != s_vec.end(); sIter++) {
-				Synapse *s = *sIter;
-				Type type = s->getType();
-				int node = s->getNode();
-				if (_globalSTypeNum[node].find(type) == _globalSTypeNum[node].end()) {
-					_globalSTypeNum[node][type] = 1;
-				} else {
-					_globalSTypeNum[node][type] += 1;
-				}
-			}
-		}
-
-	}
-#endif
-
-	printTypeNum(_globalNTypeNum, "neuron");
-	printTypeNum(_globalSTypeNum, "synapse");
-
-}
-
 GNetwork* Network::arrangeData(int nodeIdx, const SimInfo &info) {
 	int nTypeNum = _globalNTypeNum[nodeIdx].size();
 	int sTypeNum = _globalSTypeNum[nodeIdx].size();
 
 	GNetwork * net = allocGNetwork(nTypeNum, sTypeNum);
 
-	int maxDelaySteps = static_cast<int>(round(_maxDelay/info.dt));
-	int minDelaySteps = static_cast<int>(round(_minDelay/info.dt));
+	int maxDelaySteps = _max_delay;
+	int minDelaySteps = _min_delay;
 	int delayLength = maxDelaySteps - minDelaySteps + 1;
 
 	int index = 0;

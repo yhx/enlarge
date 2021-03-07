@@ -6,6 +6,7 @@
 #define CONSTANT_H
 
 #include <stddef.h>
+#include <limits.h>
 #include "mpi.h"
 
 #ifndef USE_DOUBLE

@@ -30,7 +30,7 @@ typedef ModelView<Synapse> Projection;
 
 class Network {
 public:
-	Network(int node_num = 1);
+	Network(real dt, int node_num = 1);
 	~Network();
 
 	int set_node_num(int node_num); 
@@ -51,7 +51,7 @@ public:
 	int connect(ID src, ID dst, ID syn, unsigned int delay);
 
 	int connect(Population *p_src, Population *p_dst, real weight, real delay, real tau, SpikeType type=Exc);
-	int connect(Population *p_src, Population *p_dst, real *weight, real *delay, SpikeType *type, size_t size);
+	int connect(Population *p_src, Population *p_dst, real *weight, real *delay, real *tau, SpikeType *type, size_t size);
 	int connect(Population *p_src, size_t src, Population *p_dst, size_t dst, real weight, real delay, real tau, SpikeType=Exc);
 
 	// int connectOne2One(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t size);
@@ -123,6 +123,7 @@ public:
 	map<Type, size_t> _neurons_offset;
 	map<Type, size_t> _synapses_offset;
 	int _node_num;
+	real _dt;
 // private:
 // 	real _maxFireRate;
 // 	vector<Type> _nTypes;

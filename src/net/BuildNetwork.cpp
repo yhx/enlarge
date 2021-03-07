@@ -33,7 +33,7 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 
 	size_t n_type_num = _neurons.size();
 	size_t s_type_num = _synapses.size();
-	int delta_elay = _max_delay - _min_delay + 1;
+	// int delta_delay = _max_delay - _min_delay + 1;
 
 	GNetwork * ret = allocGNetwork(n_type_num, s_type_num);
 
@@ -58,9 +58,9 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 	}
 	assert(ret->pSynapseNums[n_type_num] == _synapse_num);
 
-	ret->ppConnection = (Connection **)malloc(sizeof(Connection*)*s_type_num); 
+	ret->ppConnections = (Connection **)malloc(sizeof(Connection*)*s_type_num); 
 	for (size_t i=0; i<s_type_num; i++) {
-		ret->ppConnection[i] = allocConnection(ret->pNeuronNums[n_type_num], ret->pSynapseNums[i+1] - ret->pSynapseNums[i], _max_delay, _min_delay);
+		ret->ppConnections[i] = allocConnection(ret->pNeuronNums[n_type_num], ret->pSynapseNums[i+1] - ret->pSynapseNums[i], _max_delay, _min_delay);
 	}
 
 	size_t *syn_idx = (size_t *)malloc(sizeof(size_t) * s_type_num); 
@@ -76,15 +76,15 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 				memset(count, 0, sizeof(size_t)*s_type_num);
 				for (auto s_iter = d_iter->second.begin(); s_iter != d_iter->second.end(); s_iter++) {
 					int idx = tp2idx[s_iter->type()];
-					Connection * c = ret->ppConnection[idx];
+					Connection * c = ret->ppConnections[idx];
 					c->pDelayStart[n_offset] = syn_idx[idx];
 					c->pSidMap[syn_idx[idx]] = s_iter->id();
 					syn_idx[idx]++;
 					count[idx]++;
 				}
-				assert(syn_idx[idx] - c->pDelayStart[n_offset] == count[idx]);
+				assert(syn_idx[idx] - ret->ppConnections[idx]->pDelayStart[n_offset] == count[idx]);
 				for (size_t s=0; s<s_type_num; s++) {
-					ret->ppConnection[s]->pDelayNum[n_offset] = count[idx];
+					ret->ppConnections[s]->pDelayNum[n_offset] = count[idx];
 				}
 
 			}

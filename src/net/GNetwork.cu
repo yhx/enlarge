@@ -43,7 +43,10 @@ GNetwork* copyGNetworkToGPU(GNetwork *pCpuNet)
 		tmp->ppSynapses[i] = cudaAllocType[pCpuNet->pSTypes[i]](pCpuNet->ppSynapses[i], pCpuNet->pSynapseNums[i+1]-pCpuNet->pSynapseNums[i]);
 	}
 
-	tmp->pConnection = cudaAllocConnection(pCpuNet->pConnection);
+	tmp->ppConnections = (Connection **)malloc(sizeof(Connection*)*sTypeNum);
+	for (size_t i=0; i<sTypeNum; i++) {
+		tmp->ppConnections[i] = cudaAllocConnection(pCpuNet->ppConnections[i]);
+	}
 
 	return tmp;
 }
@@ -83,7 +86,9 @@ int fetchGNetworkFromGPU(GNetwork *pCpuNet, GNetwork *pGpuNet)
 		cudaFetchType[pCpuNet->pSTypes[i]](pCpuNet->ppSynapses[i], pGpuNet->ppSynapses[i], pCpuNet->pSynapseNums[i+1]-pCpuNet->pSynapseNums[i]);
 	}
 
-	cudaFetchConnection(pCpuNet->pConnection, pGpuNet->pConnection);
+	for (size_t i=0; i<sTypeNum; i++) {
+		cudaFetchConnection(pCpuNet->ppConnections[i], pGpuNet->ppConnections[i]);
+	}
 	return 0;
 }
 
@@ -102,10 +107,13 @@ int freeGNetworkGPU(GNetwork *pGpuNet)
 		cudaFreeType[pTmp->pSTypes[i]](pTmp->ppSynapses[i]);
 	}
 
-	cudaFreeConnection(pTmp->pConnection);
+	for (size_t i=0; i<sTypeNum; i++) {
+		cudaFreeConnection(pTmp->ppConnections[i]);
+	}
 
 	free(pTmp->ppNeurons);
 	free(pTmp->ppSynapses);
+	free(pTmp->ppConnections);
 	free(pTmp);
 
 	return 0;

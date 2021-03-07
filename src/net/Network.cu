@@ -17,11 +17,11 @@ CrossThreadDataGPU* Network::arrangeCrossThreadDataGPU(int node_num)
 	checkCudaErrors(cudaMemset(cross_data->_firedNum, 0, sizeof(int)*node_num*node_num));
 
 
-	for (int i=0; i<_nodeNum; i++) {
-		for (int j=0; j<_nodeNum; j++) {
+	for (int i=0; i<_node_num; i++) {
+		for (int j=0; j<_node_num; j++) {
 			// i->j 
 			checkCudaErrors(cudaSetDevice(j));
-			int i2j = i * _nodeNum + j;
+			int i2j = i * _node_num + j;
 			cross_data->_firedNum[i2j] = 0;
 
 			int count = 0;

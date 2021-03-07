@@ -25,9 +25,9 @@ void updateStatic(Connection *connection, void *_data, real *currentE, real *cur
 				assert(sid < num);
 				real weight = data->pWeight[sid];
 				if (weight >= 0) {
-					currentE[data->pDst[sid]] += weight;
+					currentE[connection->dst[sid]] += weight;
 				} else {
-					currentI[data->pDst[sid]] += weight;
+					currentI[connection->dst[sid]] += weight;
 				}
 			}
 		}

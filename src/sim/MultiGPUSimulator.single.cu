@@ -27,7 +27,7 @@ int MultiGPUSimulator::run_single(real time)
 
 	checkCudaErrors(cudaSetDevice(0));
 
-	_network->setNodeNum(device_count);
+	_network->set_node_num(device_count);
 
 	SimInfo info(_dt);
 	DistriNetwork *node_nets = _network->buildNetworks(info);
@@ -78,13 +78,13 @@ int MultiGPUSimulator::run_single(real time)
 		int nTypeNum = c_pNetGPU[d]->nTypeNum;
 		int sTypeNum = c_pNetGPU[d]->sTypeNum;
 		int nodeNeuronNum = c_pNetGPU[d]->pNeuronNums[nTypeNum];
-		int allNeuronNum = c_pNetGPU[d]->pConnection->nNum;
+		int allNeuronNum = c_pNetGPU[d]->ppConnection[0]->nNum;
 		int nodeSynapseNum = c_pNetGPU[d]->pSynapseNums[sTypeNum];
 		printf("Thread %d NeuronTypeNum: %d, SynapseTypeNum: %d\n", node_nets[d]._nodeIdx, nTypeNum, sTypeNum);
 		printf("Thread %d NeuronNum: %d, SynapseNum: %d\n", node_nets[d]._nodeIdx, nodeNeuronNum, nodeSynapseNum);
 
-		int maxDelay = pNetCPU->pConnection->maxDelay;
-		int minDelay = pNetCPU->pConnection->minDelay;
+		int maxDelay = pNetCPU->ppConnection[0]->maxDelay;
+		int minDelay = pNetCPU->ppConnection[0]->minDelay;
 		printf("Thread %d MaxDelay: %d MinDelay: %d\n", node_nets[d]._nodeIdx, maxDelay,  minDelay);
 
 		buffers[d] = alloc_buffers(allNeuronNum, nodeSynapseNum, pNetCPU->pConnection->maxDelay, node_nets[d]._dt);

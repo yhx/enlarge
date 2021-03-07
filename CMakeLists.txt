@@ -28,20 +28,24 @@ MESSAGE(STATUS "CUDA Version: " ${CUDA_VERSION})
 MESSAGE(STATUS "MPI Library: ${MPI_LIBRARIES}")
 MESSAGE(STATUS "BLAS Libraries: ${BLAS_LIBRARIES}")
 
-
-# Download and unpack googletest at configure time
-# CONFIGURE_FILE(CMakeLists.gtest.txt googletest-download/CMakeLists.txt)
-EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-	RESULT_VARIABLE result
-	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
-IF(result)
-	MESSAGE(FATAL_ERROR "CMake step for googletest failed: ${result}")
+IF(NOT IS_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/googletest-src")
+	MESSAGE(STATUS "Download and unpack googletest at configure time")
+	CONFIGURE_FILE(CMakeLists.gtest.txt googletest-download/CMakeLists.txt)
+	EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+		RESULT_VARIABLE result
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
+	IF(result)
+		MESSAGE(FATAL_ERROR "CMake step for googletest failed: ${result}")
+	ENDIF()
 ENDIF()
-EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} --build .
-	RESULT_VARIABLE result
-	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
-IF(result)
-	MESSAGE(FATAL_ERROR "Build step for googletest failed: ${result}")
+IF(NOT EXISTS "${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/libgtest.a")
+	MESSAGE(STATUS "Build googletest")
+	EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} --build .
+		RESULT_VARIABLE result
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
+	IF(result)
+		MESSAGE(FATAL_ERROR "Build step for googletest failed: ${result}")
+	ENDIF()
 ENDIF()
 # Prevent overriding the parent project's compiler/linker
 # settings on Windows

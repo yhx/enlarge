@@ -19,18 +19,18 @@
 // 	uint64_t id;
 // };
 
-const int TYPE_BITS = 8;
-const int OFFSET_BITS = 8;
+const unsigned int TYPE_BITS = 8;
+const unsigned int OFFSET_BITS = 8;
 
-const int64_t TYPE_CAST     = 0xFF;
-const int64_t OFFSET_CAST   = 0xFF;
+const uint64_t TYPE_CAST     = 0xFF;
+const uint64_t OFFSET_CAST   = 0xFF;
 
-const int64_t TYPE_UNMASK    = 0xFF00000000000000;
-const int64_t OFFSET_UNMASK  = 0x00FF000000000000;
-const int64_t ID_UNMASK        = 0x0000FFFFFFFFFFFF;
+const uint64_t TYPE_UNMASK    = 0xFF00000000000000;
+const uint64_t OFFSET_UNMASK  = 0x00FF000000000000;
+const uint64_t ID_UNMASK        = 0x0000FFFFFFFFFFFF;
 
-const int64_t TYPE_MASK      = 0x00FFFFFFFFFFFFFF;
-const int64_t OFFSET_MASK    = 0xFF00FFFFFFFFFFFF;
+const uint64_t TYPE_MASK      = 0x00FFFFFFFFFFFFFF;
+const uint64_t OFFSET_MASK    = 0xFF00FFFFFFFFFFFF;
 
 class ID {
 public:
@@ -69,17 +69,17 @@ public:
 		return (_id & ID_UNMASK);
 	}
 
-	bool operator==(ID &t)
+	bool operator==(const ID &t) const
 	{
 		return _id == t._id;
 	}
 
-	bool operator!=(ID &t)
+	bool operator!=(const ID &t) const
 	{
 		return _id != t._id;
 	}
 
-	bool operator<(ID &t)
+	bool operator<(const ID &t) const
 	{
 		return _id < t._id;
 	}

@@ -29,7 +29,7 @@ public:
 	// 	return static_cast<int>(round(_delay/dt));
 	// }
 	
-	virtual int append(const Synapse *s, int num) = 0;
+	virtual int append(const Synapse *s, size_t num=0) = 0;
 
 protected:
 	// vector<real> _weight;

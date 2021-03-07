@@ -14,7 +14,7 @@ public:
 
 	virtual ~Neuron() = 0;
 
-	virtual int append(const Neuron *n, size_t num) = 0;
+	virtual int append(const Neuron *n, size_t num=0) = 0;
 };
 
 #endif /* NEURON_H */

@@ -30,9 +30,9 @@ GNetwork * deepcopyGNetwork(GNetwork * net) {
 	}
 	ret->pSynapseNums[net->sTypeNum] = net->pSynapseNums[net->sTypeNum];
 
-	ret->ppConnection = (Connection **)malloc(sizeof(Connection*)*sTypeNum);
+	ret->ppConnections = (Connection **)malloc(sizeof(Connection*)*(net->sTypeNum));
 	for (size_t i=0; i<net->sTypeNum; i++) {
-		ret->ppConnection[i] = allocConnection(net->ppConnection->nNum, net->ppConnection->sNum, net->ppConnection->maxDelay, net->ppConnection->minDelay);
+		ret->ppConnections[i] = allocConnection(net->ppConnections[i]->nNum, net->ppConnections[i]->sNum, net->ppConnections[i]->maxDelay, net->ppConnections[i]->minDelay);
 	}
 
 	return ret;
@@ -66,7 +66,7 @@ GNetwork * allocGNetwork(size_t nTypeNum, size_t sTypeNum) {
 	ret->ppSynapses = (void **)malloc(sizeof(void*)*sTypeNum);
 	assert(ret->ppSynapses != NULL);
 
-	ret->ppConnection = (Connection **)malloc(sizeof(Connection*)*sTypeNum);
+	ret->ppConnections = (Connection **)malloc(sizeof(Connection*)*sTypeNum);
 
 	return ret;
 }
@@ -85,9 +85,9 @@ void freeGNetwork(GNetwork * network)
 	free(network->ppSynapses);
 
 	for (size_t i=0; i<network->sTypeNum; i++) {
-		freeConnection(network->ppConnection[i]);
+		freeConnection(network->ppConnections[i]);
 	}
-	free(network->ppConnection);
+	free(network->ppConnections);
 
 	free(network->pNeuronNums);
 	free(network->pSynapseNums);
@@ -116,7 +116,7 @@ int saveGNetwork(GNetwork *net, FILE *f)
 	}
 
 	for (size_t i=0; i<net->sTypeNum; i++) {
-		saveConnection(net->ppConnection[i], f);
+		saveConnection(net->ppConnections[i], f);
 	}
 	return 0;
 }
@@ -145,9 +145,9 @@ GNetwork *loadGNetwork(FILE *f)
 		net->ppSynapses[i] = loadType[net->pSTypes[i]](net->pSynapseNums[i+1]-net->pSynapseNums[i], f);
 	}
 
-	ret->ppConnection = (Connection **)malloc(sizeof(Connection*)*sTypeNum);
+	net->ppConnections = (Connection **)malloc(sizeof(Connection*)*sTypeNum);
 	for (size_t i=0; i<net->sTypeNum; i++) {
-		net->ppConnection[i] = loadConnection(f);
+		net->ppConnections[i] = loadConnection(f);
 	}
 
 	return net;
@@ -233,10 +233,10 @@ int sendGNetwork(GNetwork *network, int dest, int tag, MPI_Comm comm)
 	}
 
 	for(size_t i=0; i<network->sTypeNum; i++) {
-		ret[i] = sendConnection(network->ppConnection, dest, tag_t, comm);
+		ret = sendConnection(network->ppConnections[i], dest, tag_t, comm);
 		tag_t += CONN_TAG;
+		assert(ret == MPI_SUCCESS);
 	}
-	assert(ret == MPI_SUCCESS);
 
 	return ret;
 }
@@ -278,9 +278,9 @@ GNetwork * recvGNetwork(int src, int tag, MPI_Comm comm)
 		tag_t += TYPE_TAG;
 	}
 
-	ret->ppConnection = (Connection **)malloc(sizeof(Connection*)*sTypeNum);
+	net->ppConnections = (Connection **)malloc(sizeof(Connection*)*(net->sTypeNum));
 	for(size_t i=0; i<net->sTypeNum; i++) {
-		net->ppConnection = recvConnection(src, tag_t, comm);
+		net->ppConnections[i] = recvConnection(src, tag_t, comm);
 		tag_t += CONN_TAG;
 	}
 	return net;
@@ -304,7 +304,7 @@ bool isEqualGNetwork(GNetwork *n1, GNetwork *n2)
 	}
 
 	for (size_t i=0; i<n2->sTypeNum; i++) {
-		ret = ret && isEqualConnection(n1->ppConnection[i], n2->ppConnection[i]);
+		ret = ret && isEqualConnection(n1->ppConnections[i], n2->ppConnections[i]);
 	}
 
 	return ret;

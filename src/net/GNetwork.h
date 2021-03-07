@@ -32,13 +32,13 @@ struct GNetwork {
 	void **ppSynapses;
 
 	//Neuron to Synapse Connection
-	Connection **ppConnection;
+	Connection **ppConnections;
 
 };
 
 
 // init and free
-// This func just set the content of ppConnection to NULL
+// This func just set the content of ppConnections to NULL
 GNetwork * allocGNetwork(size_t nTypeNum, size_t sTypeNum);
 GNetwork * deepcopyGNetwork(GNetwork *net);
 // TODO freeGNetwork

@@ -191,7 +191,7 @@ Connection *recvConnection(int src, int tag, MPI_Comm comm)
 
 	ret = MPI_Recv(conn->pSidMap, conn->sNum, MPI_SIZE_T, src, tag+3, comm, &status);
 	assert(ret==MPI_SUCCESS);
-	ret = MPI_Recv(conn->dst, conn->sNum, mpi_SIZE_T, src, tag+4, comm, &status);
+	ret = MPI_Recv(conn->dst, conn->sNum, MPI_SIZE_T, src, tag+4, comm, &status);
 	assert(ret==MPI_SUCCESS);
 
 	conn->pDelayStartRev = (size_t *)malloc(sizeof(size_t) * length);
