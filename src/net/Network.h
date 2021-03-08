@@ -88,8 +88,8 @@ private:
 
 public:
 	/** Cross Node Data **/
-	// map<ID, int> _nID2node;
-	// map<ID, int> _sID2node;
+	map<ID, unsigned int> _nid2node;
+	map<ID, unsigned int> _sid2node;
 	// Neurons that on this node and would issue spikes to others.
 	// Acessed by neurons = _crossnodeNeuronsSend[node]
 	vector<set<Neuron *> > _crossnodeNeuronsSend;
@@ -114,6 +114,9 @@ public:
 
 	map<ID, map<unsigned int, vector<ID>>> n2s_conn;
 	map<ID, ID> s2n_conn;
+
+	map<ID, map<unsigned int, vector<ID>>> n2s_conn_rev;
+	map<ID, ID> s2n_conn_rev;
 
 	unsigned int _max_delay;
 	unsigned int _min_delay;

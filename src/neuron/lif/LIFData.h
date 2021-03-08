@@ -42,6 +42,7 @@ void updateLIF(Connection *, void *, real *, real *, int *, int*, int, int, int,
 int saveLIF(void *pCPU, int num, FILE *f);
 void *loadLIF(int num, FILE *f);
 bool isEqualLIF(void *p1, void *p2, int num);
+int copyLIF(void *src, size_t s_off, void *dst, size_t d_off);
 
 void *cudaMallocLIF();
 void *cudaAllocLIF(void *pCPU, int num);

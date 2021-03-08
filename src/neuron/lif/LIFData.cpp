@@ -208,3 +208,11 @@ bool isEqualLIF(void *p1, void *p2, int num)
 	return ret;
 }
 
+int copyLIF(void *p_src, size_t s_off, void *p_dst, size_t d_off) 
+{
+	LIFData *src = static_cast<LIFData *>(p_src);
+	LIFData *dst = static_cast<LIFData *>(p_dst);
+
+	dst->pRefracTime[d_off] = src->pRefracTime[s_off];
+	return 0;
+}

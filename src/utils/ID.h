@@ -65,6 +65,10 @@ public:
 		return ((_id >> (64-TYPE_BITS-OFFSET_BITS)) & OFFSET_CAST);
 	}
 
+	ID mask_offset() {
+		return ID(_id & OFFSET_MASK);
+	}
+
 	uint64_t id() {
 		return (_id & ID_UNMASK);
 	}
@@ -82,6 +86,11 @@ public:
 	bool operator<(const ID &t) const
 	{
 		return _id < t._id;
+	}
+
+	bool operator>(const ID &t) const
+	{
+		return _id > t._id;
 	}
 
 private:
