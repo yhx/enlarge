@@ -80,8 +80,10 @@ private:
 	// bool checkIDtoIdx();
 	
 	void splitNetwork();
-	void updateStatus();
+	void update_status();
+	void update_status_nodes();
 
+	int arrangNet(DistriNetwork *net);
 	GNetwork* arrangeData(int node, const SimInfo &info);
 	Connection* arrangeConnect(size_t n_num, size_t s_num, int node_idx, const SimInfo &info);
 	CrossNodeMap* arrangeCrossNodeMap(size_t n_num, int node_idx, int node_num);
@@ -90,6 +92,8 @@ public:
 	/** Cross Node Data **/
 	map<ID, unsigned int> _nid2node;
 	map<ID, unsigned int> _sid2node;
+	map<unsigned int, map<Type, size_t>> _neuron_nums;
+	map<unsigned int, map<Type, size_t>> _synapse_nums;
 	// Neurons that on this node and would issue spikes to others.
 	// Acessed by neurons = _crossnodeNeuronsSend[node]
 	vector<set<Neuron *> > _crossnodeNeuronsSend;
@@ -125,7 +129,7 @@ public:
 	uint64_t _synapse_num;
 	map<Type, size_t> _neurons_offset;
 	map<Type, size_t> _synapses_offset;
-	int _node_num;
+	unsigned int _node_num;
 	real _dt;
 // private:
 // 	real _maxFireRate;

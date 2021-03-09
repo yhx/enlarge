@@ -82,9 +82,15 @@ void * StaticSynapse::packup()
 
 	p->num = _num;
 	p->pWeight = _weight.data();
-	// p->p_src[idx] = this->getSrc()->getID();
-	// p->pDst[idx] = this->getDst()->getID();
 
 	return p;
 }
 
+int StaticSynapse::packup(void *data, size_t dst, size_t src)
+{
+	StaticData *p = static_cast<StaticData *>(mallocStatic());
+
+	p->pWeight[dst] = _weight[src];
+
+	return 0;
+}

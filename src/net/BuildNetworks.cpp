@@ -6,6 +6,97 @@
 #include "Network.h"
 #include "Network.h"
 
+void Network::update_status_nodes()
+{
+	update_status();
+	for (auto t_iter = _neurons.begin(); t_iter != _neurons.end(); t_iter++) {
+		Type t = t_iter->first;
+		for (size_t i=0; i<t_iter->second.size(); i++) {
+			ID id(t, 0, i);
+			unsigned n_idx = _nid2node[id];
+			_neuron_nums[n_idx][t] += 1;
+			for (auto iter = n2s_conn[id].begin(); iter != n2s_conn[id].end(); iter++) {
+				for (auto siter = iter->second.begin(); siter != iter->second.end(); siter++) {
+					unsigned int s_idx = _sid2node[*siter];
+					_synapse_nums[s_idx][siter->type()] += 1;
+				}
+			}
+		}
+	}
+}
+
+int Network::arrangeNet(DistriNetwork *net) 
+{
+	map<unsigned int, map<Type, size_t>> type_offset;
+	map<unsigned int, map<Type, size_t>> neuron_offset;
+	map<unsigned int, map<Type, size_t>> synapse_offset;
+	map<unsigned int, map<Type, size_t>> neuron_count;
+	map<unsigned int, map<Type, size_t>> synapse_count;
+	map<unsigned int, map<Type, size_t>> n2s_count;
+
+	map<unsigned int, size_t> s_num;
+	map<unsigned int, size_t> n_num;
+
+
+	for (unsigned int i=0; i<_node_num; i++) {
+		net[i]._network = allocGNetwork(_neuron_nums[i].size(), _synapse_nums[i].size());
+		size_t offset = 0;
+		size_t e_offset = 0;
+		for (auto n=_neuron_nums[i].begin(); n!=_neuron_nums[i].end(); n++) {
+			net[i]._network->pNTypes[offset] = n->first;
+			net[i]._network->ppNeurons[offset] = allocType[n->first](n->second);
+			neuron_count[i][n->first] = 0;
+			type_offset[i][n->first] = offset;
+			neuron_offset[i][n->first] = e_offset;
+			offset++;
+			e_offset += n->second;
+		}
+		n_num[i] = e_offset;
+
+		offset = 0;
+		e_offset = 0;
+		for (auto s=_synapse_nums[i].begin(); s!=_synapse_nums[i].end(); s++) {
+			net[i]._network->pSTypes[offset] = s->first;
+			net[i]._network->ppSynapses[offset] = allocType[s->first](s->second);
+			synapse_count[i][s->first] = 0;
+			type_offset[i][s->first] = offset;
+			synapse_offset[i][s->first] = e_offset;
+			offset++;
+			e_offset += s->second;
+		}
+		s_num[i] = e_offset;
+	}
+
+	// TODO change d to outer loop
+	for (auto t_iter = _neurons.begin(); t_iter != _neurons.end(); t_iter++) {
+		Type t = t_iter->first;
+		for (size_t i=0; i<t_iter->second.size(); i++) {
+			ID id(t, 0, i);
+			unsigned n_node = _nid2node[id];
+			n2s_count[n_node][t] = 0;
+			_neurons[t]->packup(net[n_node]._network->ppNeurons[type_offset[n_node][t]], neuron_count[n_node][t], i);
+			for (auto iter = n2s_conn[id].begin(); iter != n2s_conn[id].end(); iter++) {
+				unsigned int d = iter->first;
+				size_t n_offset = (n_num[n_node]+_crossnodeNeuronsRecv[n_node].size())*(d-_min_delay)+neuron_offset[n_node][t]+neuron_count[n_node][t];
+				for (auto siter = iter->second.begin(); siter != iter->second.end(); siter++) {
+					unsigned int s_node = _sid2node[*siter];
+					if (s_node == n_node) {
+						Type s_t = iter->second.type();
+						unsigned int s_idx = type_offset[n_node][s_t];
+						_synapses[t]->packup(net[n_node]._network->ppSynapses[s_idx], synapse_count[n_node][s_t], iter->second.id());
+						Connection * c = net[n_node]._network->ppConnections[s_idx];
+						c->pDelayStart[n_offset] = n2s_count[n_node][t];
+						c->pSidMap[synapse_count[n_node][s_t]] = synapse_count[n_node][s_t];
+					}
+				}
+
+			}
+			neuron_count[n_node][t]++;
+		}
+	}
+	return 0;
+}
+
 GNetwork* Network::arrangeData(int nodeIdx, const SimInfo &info) {
 	int nTypeNum = _globalNTypeNum[nodeIdx].size();
 	int sTypeNum = _globalSTypeNum[nodeIdx].size();
@@ -16,7 +107,7 @@ GNetwork* Network::arrangeData(int nodeIdx, const SimInfo &info) {
 	int minDelaySteps = _min_delay;
 	int delayLength = maxDelaySteps - minDelaySteps + 1;
 
-	int index = 0;
+	int pindex = 0;
 	for (auto tIter = _globalNTypeNum[nodeIdx].begin(); tIter != _globalNTypeNum[nodeIdx].end(); tIter++) {
 		Type type = tIter->first;
 		net->pNTypes[index] = tIter->first;
@@ -243,17 +334,16 @@ CrossNodeMap* Network::arrangeCrossNodeMap(size_t n_num, int node_idx, int node_
 DistriNetwork* Network::buildNetworks(const SimInfo &info, bool auto_splited)
 {
 	print_mem("Before build");
+	printf("===================Update Status================================\n");
+	update_status_nodes();
 
 	assert(_node_num >= 1);
-	DistriNetwork * net = initDistriNet(_node_num, info.dt);
+	DistriNetwork * net = initDistriNet(_node_num, _dt);
 
 	printf("=====================Split Network=============================\n");
 	if (auto_splited && _node_num > 1) {
 		splitNetwork();
 	}
-
-	printf("=====================Count Type================================\n");
-	countTypeNum();
 
 	printf("=====================Arrange Connect===========================\n");
 	for (int nodeIdx =0; nodeIdx <_node_num; nodeIdx++) {

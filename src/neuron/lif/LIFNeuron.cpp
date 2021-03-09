@@ -34,6 +34,7 @@ LIFNeuron::LIFNeuron(real v_init, real v_rest, real v_reset, real cm, real tau_m
 	_Ce.insert(_Ce.end(), num, Ce);
 	_C_i.insert(_C_i.end(), num, C_i);
 	_C_e.insert(_C_e.end(), num, C_e);
+	_Cm.insert(_Cm.end(), num, Cm);
 	_v_tmp.insert(_v_tmp.end(), num, v_tmp);
 	_V_thresh.insert(_V_thresh.end(), num, v_thresh);
 	_V_reset.insert(_V_reset.end(), num, v_reset);
@@ -137,4 +138,27 @@ void * LIFNeuron::packup()
 	p->is_view = true;
 
 	return p;
+}
+
+void * LIFNeuron::packup(void *data, size_t dst, size_t src)
+{
+	LIFData *p = static_cast<LIFData*>(data);
+	p->pRefracTime[dst] = _refract_time[src];
+	p->pRefracStep[dst] = _refract_step[src];
+
+	p->pI_e[dst] = _i_e[src];
+	p->pI_i[dst] = _i_i[src];
+	p->pCe[dst] = _Ce[src];
+	p->pV_reset[dst] = _V_reset[src];
+	// p->pV_e = _v_[src];
+	p->pV_tmp[dst] = _v_tmp[src];
+	p->pI_i[dst] = _i_i[src];
+	p->pV_thresh[dst] = _V_thresh[src];
+	p->pCi[dst] = _Ci[src];
+	p->pV_m[dst] = _v[src];
+	p->pC_e[dst] = _C_e[src];
+	p->pC_m[dst] = _Cm[src];
+	p->pC_i[dst] = _C_i[src];
+
+	return 0;
 }

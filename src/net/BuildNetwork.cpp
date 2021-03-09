@@ -8,7 +8,7 @@
 #include "../utils/TypeFunc.h"
 #include "Network.h"
 
-void Network::updateStatus()
+void Network::update_status()
 {
 	_neuron_num = 0;
 	for (auto iter=_neurons.begin(); iter!=_neurons.end(); iter++) {
@@ -21,7 +21,7 @@ void Network::updateStatus()
 		_synapses_offset[iter->first] = _synapse_num;
 		_synapse_num += iter->second->size();
 	}
-};
+}
 
 GNetwork* Network::buildNetwork(const SimInfo &info)
 {
@@ -29,7 +29,7 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 	sysinfo(&sinfo);
 	printf("Before build, MEM used: %lfGB\n", static_cast<double>((sinfo.totalram - sinfo.freeram)/1024.0/1024.0/1024.0));
 
-	updateStatus();
+	update_status();
 
 	size_t n_type_num = _neurons.size();
 	size_t s_type_num = _synapses.size();
@@ -72,7 +72,7 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 			ID nid(t, 0, n);
 			for (auto d_iter = n2s_conn[nid].begin(); d_iter != n2s_conn[nid].end(); d_iter++) {
 				unsigned int d = d_iter->first;
-				size_t n_offset = _neuron_num*d+_neurons_offset[t]+n;
+				size_t n_offset = _neuron_num*(d-_min_delay)+_neurons_offset[t]+n;
 				memset(count, 0, sizeof(size_t)*s_type_num);
 				for (auto s_iter = d_iter->second.begin(); s_iter != d_iter->second.end(); s_iter++) {
 					int idx = tp2idx[s_iter->type()];
