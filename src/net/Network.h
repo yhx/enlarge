@@ -96,10 +96,10 @@ public:
 	map<unsigned int, map<Type, size_t>> _synapse_nums;
 	// Neurons that on this node and would issue spikes to others.
 	// Acessed by neurons = _crossnodeNeuronsSend[node]
-	vector<set<Neuron *> > _crossnodeNeuronsSend;
+	vector<set<ID> > _crossnodeNeuronsSend;
 	// Neurons that on other nodes and would issue spike to this node.
 	// Accessed by neurons = _crossnodeNeuronsRecv[node]
-	vector<set<Neuron *> > _crossnodeNeuronsRecv;
+	vector<set<ID> > _crossnodeNeuronsRecv;
 	// Get idx of shadow neuron on destination node, the idxs of shadow neurons are larger than that of real neurons.
 	// Accessed by idx = _crossnodeNeuron2idx[node][neuron]
 	vector<map<Neuron *, int> > _crossnodeNeuron2idx;

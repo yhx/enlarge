@@ -96,6 +96,27 @@ int Network::arrangeNet(DistriNetwork *net)
 			}
 		}
 	}
+
+	for (auto node = _neuron_nums.begin(); node != _neurons.end(); node++) {
+		for (auto t = node->second.begin(); t != node->second.end(); t++) {
+			assert(neuron_count[node][t] == t->second);
+		}
+	}
+
+	for (unsigned int node = 0; node < _node_num; node++) {
+		for (unsigned int d=0; d<_max_delay-_min_delay+1; d++) {
+			for (auto i_iter = _crossnodeNeuronsRecv[node].begin(); i_iter != _crossnodeNeuronsRecv[node].end(); i_iter++) {
+			unsigned int n_node = _nid2node[*i_iter];
+			Type t = i_iter->type();
+			size_t n_offset = (n_num[n_node]+_crossnodeNeuronsRecv[n_node].size())*d+neuron_offset[n_node][t]+neuron_count[n_node][t];
+			for (auto siter = n2s_conn[*i_iter][d].begin(); siter != n2s_conn[*i_iter][d].end(); siter++) {
+					unsigned int s_node = _sid2node[*siter];
+					if (s_node != node) {
+					}
+			}
+		}
+	}
+
 	return 0;
 }
 
