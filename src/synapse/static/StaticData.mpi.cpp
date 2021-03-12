@@ -11,8 +11,8 @@ int sendStatic(void *data_, int dest, int tag, MPI_Comm comm)
 	ret = MPI_Send(&(data->num), 1, MPI_INT, dest, tag, comm);
 	assert(ret == MPI_SUCCESS);
 
-	ret = MPI_Send(data->pDst, data->num, MPI_INT, dest, tag+1, comm);
-	assert(ret == MPI_SUCCESS);
+	// ret = MPI_Send(data->pDst, data->num, MPI_INT, dest, tag+1, comm);
+	// assert(ret == MPI_SUCCESS);
 
 	ret = MPI_Send(data->pWeight, data->num, MPI_U_REAL, dest, tag+2, comm);
 	assert(ret == MPI_SUCCESS);
@@ -30,8 +30,8 @@ void * recvStatic(int src, int tag, MPI_Comm comm)
 
 	allocStaticPara(net, net->num);
 
-	ret = MPI_Recv(net->pDst, net->num, MPI_INT, src, tag+1, comm, &status);
-	assert(ret==MPI_SUCCESS);
+	// ret = MPI_Recv(net->pDst, net->num, MPI_INT, src, tag+1, comm, &status);
+	// assert(ret==MPI_SUCCESS);
 
 	ret = MPI_Recv(net->pWeight, net->num, MPI_U_REAL, src, tag+2, comm, &status);
 	assert(ret==MPI_SUCCESS);

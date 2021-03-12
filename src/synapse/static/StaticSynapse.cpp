@@ -12,7 +12,7 @@
 StaticSynapse::StaticSynapse(real weight, real delay, real tau_syn, real dt, size_t num)
 	: Synapse(Static, num)
 {
-	int delay_steps = static_cast<int>(round(_delay/dt));
+	int delay_steps = static_cast<int>(round(delay/dt));
 	assert(fabs(tau_syn) > ZERO);
 	if (fabs(tau_syn) > ZERO) {
 		real c1 = exp(-(delay-dt*delay_steps)/tau_syn);

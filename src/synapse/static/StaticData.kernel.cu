@@ -89,9 +89,9 @@ __global__ void update_dense_static_hit(Connection *connection, StaticData *data
 					int sid = j+startLoc;
 					real weight = data->pWeight[sid];
 					if (weight >= 0) {
-						atomicAdd(&(currentE[data->pDst[sid]]), weight);
+						atomicAdd(&(currentE[connection->dst[connection->pSidMap[sid]]]), weight);
 					} else {
-						atomicAdd(&(currentI[data->pDst[sid]]), weight);
+						atomicAdd(&(currentI[connection->dst[connection->pSidMap[sid]]]), weight);
 					}
 				}
 			}

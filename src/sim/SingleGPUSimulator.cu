@@ -61,12 +61,12 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 	printf("NeuronTypeNum: %d, SynapseTypeNum: %d\n", nTypeNum, sTypeNum);
 	printf("NeuronNum: %d, SynapseNum: %d\n", totalNeuronNum, totalSynapseNum);
 
-	int maxDelay = pNetCPU->pConnection->maxDelay;
+	int maxDelay = pNetCPU->ppConnections[0]->maxDelay;
 	// int deltaDelay = pNetCPU->pConnection->maxDelay - pNetCPU->pConnection->minDelay + 1;
-	printf("maxDelay: %d minDelay: %d\n", pNetCPU->pConnection->maxDelay, pNetCPU->pConnection->minDelay);
+	printf("maxDelay: %d minDelay: %d\n", pNetCPU->ppConnections[0]->maxDelay, pNetCPU->ppConnections[0]->minDelay);
 
 
-	GBuffers *buffers = alloc_buffers(totalNeuronNum, totalSynapseNum, pNetCPU->pConnection->maxDelay, _dt);
+	GBuffers *buffers = alloc_buffers(totalNeuronNum, totalSynapseNum, pNetCPU->ppConnections[0]->maxDelay, _dt);
 
 	BlockSize *updateSize = getBlockSize(totalNeuronNum, totalSynapseNum);
 

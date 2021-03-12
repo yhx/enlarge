@@ -27,6 +27,7 @@ using std::set;
 
 typedef ModelView<Neuron> Population;
 typedef ModelView<Synapse> Projection;
+typedef map<unsigned int, map<Type, size_t>> CrossTypeInfo_t;
 
 class Network {
 public:
@@ -76,24 +77,32 @@ public:
 
 
 private:
-	void mapIDtoIdx(GNetwork *net);
+	// void mapIDtoIdx(GNetwork *net);
 	// bool checkIDtoIdx();
 	
 	void splitNetwork();
 	void update_status();
-	void update_status_nodes();
+	void update_status_splited();
 
 	int arrangNet(DistriNetwork *net);
-	GNetwork* arrangeData(int node, const SimInfo &info);
-	Connection* arrangeConnect(size_t n_num, size_t s_num, int node_idx, const SimInfo &info);
-	CrossNodeMap* arrangeCrossNodeMap(size_t n_num, int node_idx, int node_num);
+
+	int arrangeLocal(DistriNetwork *net, CrossTypeInfo_t & type_offset, CrossTypeInfo_t &neuron_offset, CrossTypeInfo_t & synapse_offset, CrossTypeInfo_t &neuron_count, CrossTypeInfo_t &synapse_count, CrossTypeInfo_t &n2s_count, map<unsigned int, size_t> &n_num);
+
+	int arrangeCross(DistriNetwork *net, CrossTypeInfo_t & type_offset, CrossTypeInfo_t &synapse_count, CrossTypeInfo_t &n2s_count, map<unsigned int, size_t> &n_num);
+
+	// GNetwork* arrangeData(int node, const SimInfo &info);
+	// Connection* arrangeConnect(size_t n_num, size_t s_num, int node_idx, const SimInfo &info);
+	// CrossNodeMap* arrangeCrossNodeMap(size_t n_num, int node_idx, int node_num);
 
 public:
 	/** Cross Node Data **/
 	map<ID, unsigned int> _nid2node;
 	map<ID, unsigned int> _sid2node;
-	map<unsigned int, map<Type, size_t>> _neuron_nums;
-	map<unsigned int, map<Type, size_t>> _synapse_nums;
+	CrossTypeInfo_t _neuron_nums;
+	CrossTypeInfo_t _synapse_nums;
+	// map<unsigned int, map<Type, size_t>> _neuron_nums;
+	// map<unsigned int, map<Type, size_t>> _synapse_nums;
+	map<ID, size_t> _id2node_idx;
 	// Neurons that on this node and would issue spikes to others.
 	// Acessed by neurons = _crossnodeNeuronsSend[node]
 	vector<set<ID> > _crossnodeNeuronsSend;

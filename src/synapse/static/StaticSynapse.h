@@ -17,6 +17,7 @@ public:
 	virtual int append(const Synapse *s, size_t num=0) override;
 
 	virtual void * packup() override;
+	virtual int packup(void *data, size_t dst, size_t src) override;
 
 protected:
 	vector<real> _weight;

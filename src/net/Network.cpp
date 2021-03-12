@@ -86,7 +86,7 @@ int Network::connect(ID src, ID dst, ID syn, unsigned int delay)
 	s2n_conn[syn] = dst;
 
 	n2s_conn_rev[dst.mask_offset()][delay].push_back(syn);
-	s2n_conn[syn]_rev = src;
+	s2n_conn_rev[syn] = src;
 	return 1;
 }
 
@@ -277,8 +277,8 @@ CrossThreadData* Network::arrangeCrossThreadData(int node_num)
 	CrossThreadData * cross_data = (CrossThreadData*)malloc(sizeof(CrossThreadData) * node_num * node_num);
 	assert(cross_data != NULL);
 
-	for (int i=0; i<_node_num; i++) {
-		for (int j=0; j<_node_num; j++) {
+	for (unsigned int i=0; i<_node_num; i++) {
+		for (unsigned int j=0; j<_node_num; j++) {
 			// i->j 
 			int i2j = j * _node_num + i;
 			cross_data[i2j]._firedNNum = 0;

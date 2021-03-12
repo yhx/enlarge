@@ -12,6 +12,7 @@ public:
 
 	virtual int append(const Neuron *n, size_t num=0) override;
 	virtual void * packup() override;
+	int packup(void *data, size_t dst, size_t src);
 
 	const static Type type;
 protected:

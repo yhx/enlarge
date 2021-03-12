@@ -78,16 +78,16 @@ int MultiGPUSimulator::run_single(real time)
 		int nTypeNum = c_pNetGPU[d]->nTypeNum;
 		int sTypeNum = c_pNetGPU[d]->sTypeNum;
 		int nodeNeuronNum = c_pNetGPU[d]->pNeuronNums[nTypeNum];
-		int allNeuronNum = c_pNetGPU[d]->ppConnection[0]->nNum;
+		int allNeuronNum = c_pNetGPU[d]->ppConnections[0]->nNum;
 		int nodeSynapseNum = c_pNetGPU[d]->pSynapseNums[sTypeNum];
 		printf("Thread %d NeuronTypeNum: %d, SynapseTypeNum: %d\n", node_nets[d]._nodeIdx, nTypeNum, sTypeNum);
 		printf("Thread %d NeuronNum: %d, SynapseNum: %d\n", node_nets[d]._nodeIdx, nodeNeuronNum, nodeSynapseNum);
 
-		int maxDelay = pNetCPU->ppConnection[0]->maxDelay;
-		int minDelay = pNetCPU->ppConnection[0]->minDelay;
+		int maxDelay = pNetCPU->ppConnections[0]->maxDelay;
+		int minDelay = pNetCPU->ppConnections[0]->minDelay;
 		printf("Thread %d MaxDelay: %d MinDelay: %d\n", node_nets[d]._nodeIdx, maxDelay,  minDelay);
 
-		buffers[d] = alloc_buffers(allNeuronNum, nodeSynapseNum, pNetCPU->pConnection->maxDelay, node_nets[d]._dt);
+		buffers[d] = alloc_buffers(allNeuronNum, nodeSynapseNum, pNetCPU->ppConnections[0]->maxDelay, node_nets[d]._dt);
 
 		updateSize[d] = getBlockSize(allNeuronNum, nodeSynapseNum);
 
@@ -111,10 +111,10 @@ int MultiGPUSimulator::run_single(real time)
 			cout << "Thread " << node_nets[d]._nodeIdx << " " << c_pNetGPU[d]->pSTypes[i] << ": <<<" << updateSize[d][c_pNetGPU[d]->pSTypes[i]].gridSize << ", " << updateSize[d][c_pNetGPU[d]->pSTypes[i]].blockSize << ">>>" << endl;
 		}
 
-		c_g_idx2index[d] = copyToGPU<int>(node_nets[d]._crossnodeMap->_idx2index, allNeuronNum);
-		c_g_cross_index2idx[d] = copyToGPU<int>(node_nets[d]._crossnodeMap->_crossnodeIndex2idx, node_nets[d]._crossnodeMap->_crossSize);
-		c_g_global_cross_data[d] = gpuMalloc<int>(allNeuronNum * node_nets[d]._nodeNum);
-		c_g_fired_n_num[d] = gpuMalloc<int>(node_nets[d]._nodeNum);
+		c_g_idx2index[d] = copyToGPU<size_t>(node_nets[d]._crossnodeMap->_idx2index, allNeuronNum);
+		c_g_cross_index2idx[d] = copyToGPU<size_t>(node_nets[d]._crossnodeMap->_crossnodeIndex2idx, node_nets[d]._crossnodeMap->_crossSize);
+		c_g_global_cross_data[d] = gpuMalloc<size_t>(allNeuronNum * node_nets[d]._nodeNum);
+		c_g_fired_n_num[d] = gpuMalloc<size_t>(node_nets[d]._nodeNum);
 	}
 
 

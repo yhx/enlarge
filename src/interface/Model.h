@@ -41,6 +41,7 @@ public:
 
 
 	virtual void * packup() = 0;
+	virtual int packup(void *data, size_t dst, size_t src) = 0;
 	
 protected:
 	size_t _num;

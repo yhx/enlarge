@@ -65,7 +65,7 @@ int MultiNodeSimulator::build_net()
 	info.save_mem = true;
 
 	if (!_node_nets) {
-		_network->setNodeNum(_node_num);
+		_network->set_node_num(_node_num);
 		_node_nets = _network->buildNetworks(info);
 		for (int i=0; i<_node_num; i++) {
 			_node_nets[i]._simCycle = 0;
@@ -114,6 +114,7 @@ int MultiNodeSimulator::save_net(const char *name)
 
 int MultiNodeSimulator::load_net(const char *name)
 {
+	return 0;
 }
 
 int MultiNodeSimulator::distribute(DistriNetwork **pp_net, CrossNodeData **pp_data, SimInfo &info, int sim_cycle)
@@ -246,13 +247,13 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 	int nTypeNum = pNetCPU->nTypeNum;
 	int sTypeNum = pNetCPU->sTypeNum;
 	int nodeNeuronNum = pNetCPU->pNeuronNums[nTypeNum];
-	int allNeuronNum = pNetCPU->pConnection->nNum;
+	int allNeuronNum = pNetCPU->ppConnections[0]->nNum;
 	int nodeSynapseNum = pNetCPU->pSynapseNums[sTypeNum];
 	printf("Thread %d NeuronTypeNum: %d, SynapseTypeNum: %d\n", network->_nodeIdx, nTypeNum, sTypeNum);
 	printf("Thread %d NeuronNum: %d, AllNeuronNum: %d, SynapseNum: %d\n", network->_nodeIdx, nodeNeuronNum, allNeuronNum, nodeSynapseNum);
 
-	int maxDelay = pNetCPU->pConnection->maxDelay;
-	int minDelay = pNetCPU->pConnection->minDelay;
+	int maxDelay = pNetCPU->ppConnections[0]->maxDelay;
+	int minDelay = pNetCPU->ppConnections[0]->minDelay;
 	assert(minDelay == cnd->_min_delay);
 
 	printf("Thread %d MaxDelay: %d MinDelay: %d\n", network->_nodeIdx, maxDelay,  minDelay);
@@ -311,7 +312,7 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 #endif
 
 		for (int i=0; i<nTypeNum; i++) {
-			updateType[pNetCPU->pNTypes[i]](pNetCPU->pConnection, pNetCPU->ppNeurons[i], c_gNeuronInput, c_gNeuronInput_I, c_gFiredTable, c_gFiredTableSizes, cFiredTableCap, pNetCPU->pNeuronNums[i+1]-pNetCPU->pNeuronNums[i], pNetCPU->pNeuronNums[i], time);
+			updateType[pNetCPU->pNTypes[i]](pNetCPU->ppConnections[i], pNetCPU->ppNeurons[i], c_gNeuronInput, c_gNeuronInput_I, c_gFiredTable, c_gFiredTableSizes, cFiredTableCap, pNetCPU->pNeuronNums[i+1]-pNetCPU->pNeuronNums[i], pNetCPU->pNeuronNums[i], time);
 		}
 
 #if 1

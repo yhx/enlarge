@@ -36,7 +36,7 @@ void Network::splitNetwork()
 	size_t neuron_count = 0;
 	for (auto t_iter = _neurons.begin(); t_iter != _neurons.end(); t_iter++) {
 		Type t = t_iter->first;
-		for (size_t i=0; i<t_iter->second.size(); i++) {
+		for (size_t i=0; i<t_iter->second->size(); i++) {
 			ID id(t, 0, i);
 			int node_idx = neuron_count % _node_num;
 			_nid2node[id] = node_idx;
@@ -72,27 +72,6 @@ void Network::splitNetwork()
 		}
 	}
 #endif
-
-	for (auto t_iter = _neurons.begin(); t_iter != _neurons.end(); t_iter++) {
-		Type t = t_iter->first;
-		for (size_t i=0; i<t_iter->second.size(); i++) {
-			bool cross_node = false;
-			ID id(t, 0, i);
-			unsigned int n_node = _nid2node[id];
-			for (auto iter = n2s_conn[id].begin(); iter != n2s_conn[id].end(); iter++) {
-				for (auto siter = iter->second.begin(); siter != iter->second.end(); siter++) {
-					unsigned int s_node = _sid2node[*siter];
-					if (n_node != s_node) {
-						cross_node = true;
-						_crossnodeNeuronsRecv[s_node].insert(id);
-					}
-				}
-			}
-			if (cross_node) {
-				_crossnodeNeuronsSend[n_node].insert(id);
-			}
-		}
-	}
 
 	return;
 }

@@ -140,7 +140,7 @@ void * LIFNeuron::packup()
 	return p;
 }
 
-void * LIFNeuron::packup(void *data, size_t dst, size_t src)
+int LIFNeuron::packup(void *data, size_t dst, size_t src)
 {
 	LIFData *p = static_cast<LIFData*>(data);
 	p->pRefracTime[dst] = _refract_time[src];

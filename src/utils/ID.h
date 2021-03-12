@@ -61,7 +61,7 @@ public:
 		_id = (_id & OFFSET_MASK) + ((t<<(64-TYPE_BITS-OFFSET_BITS)) & OFFSET_UNMASK);
 	}
 
-	int offset() {
+	unsigned int offset() {
 		return ((_id >> (64-TYPE_BITS-OFFSET_BITS)) & OFFSET_CAST);
 	}
 
@@ -69,7 +69,7 @@ public:
 		return ID(_id & OFFSET_MASK);
 	}
 
-	uint64_t id() {
+	size_t id() {
 		return (_id & ID_UNMASK);
 	}
 
