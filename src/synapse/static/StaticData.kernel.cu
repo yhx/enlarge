@@ -4,7 +4,7 @@
 #include "StaticData.h"
 
 
-__global__ void update_dense_static_hit(Connection *connection, StaticData *data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int num, int start_id, int time)
+__global__ void update_dense_static_hit(Connection *connection, StaticData *data, real *currentE, real *currentI, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTabelCap, size_t num, size_t start_id, int time)
 {
 #if 0
 	//int tid = blockIdx.x * blockDim.x + threadIdx.x;
@@ -101,11 +101,11 @@ __global__ void update_dense_static_hit(Connection *connection, StaticData *data
 #endif
 }
 
-void cudaUpdateStatic(Connection * connection, void *data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int num, int start_id, int time, BlockSize *pSize)
+void cudaUpdateStatic(Connection * connection, void *data, real *currentE, real *currentI, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t start_id, int time, BlockSize *pSize)
 {
 	//update_static_hit<<<pSize->gridSize, pSize->blockSize>>>((StaticData*)data, num, start_id);
 	//reset_active_synapse<<<1, 1>>>();
-	update_dense_static_hit<<<pSize->gridSize, pSize->blockSize>>>((Connection *)connection,  (StaticData *)data, currentE, currentI, firedTable, firedTableSizes, num, start_id, time);
+	update_dense_static_hit<<<pSize->gridSize, pSize->blockSize>>>((Connection *)connection,  (StaticData *)data, currentE, currentI, firedTable, firedTableSizes, firedTabelCap, num, start_id, time);
 
 }
 

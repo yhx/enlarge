@@ -10,7 +10,7 @@
 
 #include "../utils/utils.h"
 #include "../utils/TypeFunc.h"
-#include "../gpu_utils/mem_op.h"
+#include "../gpu_utils/helper_gpu.h"
 #include "../gpu_utils/runtime.h"
 #include "../gpu_utils/GBuffers.h"
 #include "../net/Network.h"
@@ -167,7 +167,7 @@ void * run_thread_gpu(void *para) {
 	//double barrier1_time = 0, gpu_cpy_time = 0, peer_cpy_time = 0, barrier2_time=0, copy_time = 0;
 	gettimeofday(&ts, NULL);
 	for (int time=0; time<network->_simCycle; time++) {
-		update_time<<<1, 1>>>(c_pNetGPU->ppConnections[0], time, buffers->c_gFiredTableSizes);
+		update_time<<<1, 1>>>(buffers->c_gFiredTableSizes, maxDelay, time);
 
 		for (int i=0; i<nTypeNum; i++) {
 			assert(c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i] > 0);
@@ -210,14 +210,14 @@ void * run_thread_gpu(void *para) {
 #ifdef LOG_DATA
 		int currentIdx = time%(maxDelay+1);
 
-		int copySize = 0;
-		copyFromGPU<int>(&copySize, buffers->c_gFiredTableSizes + currentIdx, 1);
+		uinteger_t copySize = 0;
+		copyFromGPU(&copySize, buffers->c_gFiredTableSizes + currentIdx, 1);
 		if (copySize > 0) {
-			copyFromGPU<int>(buffers->c_neuronsFired, buffers->c_gFiredTable + (allNeuronNum*currentIdx), copySize);
+			copyFromGPU(buffers->c_neuronsFired, buffers->c_gFiredTable + (allNeuronNum*currentIdx), copySize);
 		}
 
 		if (copy_idx >= 0 && (c_pNetGPU->pNeuronNums[copy_idx+1]-c_pNetGPU->pNeuronNums[copy_idx]) > 0) {
-			copyFromGPU<real>(c_vm, c_g_vm, c_pNetGPU->pNeuronNums[copy_idx+1]-c_pNetGPU->pNeuronNums[copy_idx]);
+			copyFromGPU(c_vm, c_g_vm, c_pNetGPU->pNeuronNums[copy_idx+1]-c_pNetGPU->pNeuronNums[copy_idx]);
 		}
 #endif
 

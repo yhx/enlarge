@@ -11,7 +11,7 @@
 #include "../../utils/BlockSize.h"
 
 struct StaticData {
-	int num;
+	size_t num;
 
 	// int *pDst;
 	real *pWeight;
@@ -20,24 +20,24 @@ struct StaticData {
 
 size_t getStaticSize();
 void *mallocStatic();
-void *allocStatic(int num);
-int allocStaticPara(void *pCPU, int num);
+void *allocStatic(size_t num);
+int allocStaticPara(void *pCPU, size_t num);
 int freeStatic(void *pCPU);
 int freeStaticPara(void *pCPU);
-void updateStatic(Connection *, void *, real *, real *, int *, int*, int, int, int, int);
-int saveStatic(void *pCPU, int num, FILE *f);
-void *loadStatic(int num, FILE *f);
-bool isEqualStatic(void *p1, void *p2, int num);
+void updateStatic(Connection *, void *, real *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int);
+int saveStatic(void *pCPU, size_t num, FILE *f);
+void *loadStatic(size_t num, FILE *f);
+bool isEqualStatic(void *p1, void *p2, size_t num);
 
 void *cudaMallocStatic();
-void *cudaAllocStatic(void *pCPU, int num);
-void *cudaAllocStaticPara(void *pCPU, int num);
+void *cudaAllocStatic(void *pCPU, size_t num);
+void *cudaAllocStaticPara(void *pCPU, size_t num);
 int cudaFreeStatic(void *pGPU);
 int cudaFreeStaticPara(void *pGPU);
-int cudaFetchStatic(void *pCPU, void *pGPU, int num);
-int cudaStaticParaToGPU(void *pCPU, void *pGPU, int num);
-int cudaStaticParaFromGPU(void *pCPU, void *pGPU, int num);
-void cudaUpdateStatic(Connection *conn, void *data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int num, int start_id, int t, BlockSize *pSize);
+int cudaFetchStatic(void *pCPU, void *pGPU, size_t num);
+int cudaStaticParaToGPU(void *pCPU, void *pGPU, size_t num);
+int cudaStaticParaFromGPU(void *pCPU, void *pGPU, size_t num);
+void cudaUpdateStatic(Connection *conn, void *data, real *currentE, real *currentI, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t start_id, int t, BlockSize *pSize);
 
 int sendStatic(void *data, int dest, int tag, MPI_Comm comm);
 void * recvStatic(int src, int tag, MPI_Comm comm);

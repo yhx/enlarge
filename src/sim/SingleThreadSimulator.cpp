@@ -9,7 +9,7 @@
 #include <string.h>
 
 #include "../utils/utils.h"
-#include "../utils/FileOp.h"
+#include "../utils/helper_c.h"
 #include "../utils/TypeFunc.h"
 #include "../neuron/lif/LIFData.h"
 
@@ -36,14 +36,14 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 
 	GNetwork *pNetCPU = _network->buildNetwork(info);
 
-	FILE *v_file = openFile("v.cpu.log", "w+");
-	FILE *log_file = openFile("sim.cpu.log", "w+");
-	FILE *fire_file = openFile("fire.cpu.log", "w+");
+	FILE *v_file = fopen_c("v.cpu.log", "w+");
+	FILE *log_file = fopen_c("sim.cpu.log", "w+");
+	FILE *fire_file = fopen_c("fire.cpu.log", "w+");
 #ifdef LOG_DATA
-	FILE *input_e_file = openFile("input_e.cpu.log", "w+");
-	FILE *input_i_file = openFile("input_i.cpu.log", "w+");
-	FILE *ie_file = openFile("ie.cpu.log", "w+");
-	FILE *ii_file = openFile("ii.cpu.log", "w+");
+	FILE *input_e_file = fopen_c("input_e.cpu.log", "w+");
+	FILE *input_i_file = fopen_c("input_i.cpu.log", "w+");
+	FILE *ie_file = fopen_c("ie.cpu.log", "w+");
+	FILE *ii_file = fopen_c("ii.cpu.log", "w+");
 #endif
 
 	int nTypeNum = pNetCPU->nTypeNum;
@@ -65,9 +65,8 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 	memset(c_gNeuronInput, 0, sizeof(real)*totalNeuronNum);
 	real *c_gNeuronInput_I = (real*)malloc(sizeof(real)*totalNeuronNum); 
 	memset(c_gNeuronInput_I, 0, sizeof(real)*totalNeuronNum);
-	int *c_gFiredTable = (int*)malloc(sizeof(int)*totalNeuronNum*(maxDelay+1));
-	memset(c_gFiredTable, 0, sizeof(int)*totalNeuronNum*(maxDelay+1));
-   	int *c_gFiredTableSizes = (int*)malloc(sizeof(int)*(maxDelay+1));
+	uinteger_t *c_gFiredTable = malloc_c<uinteger_t>(totalNeuronNum*(maxDelay+1));
+   	uinteger_t *c_gFiredTableSizes = malloc_c<uinteger_t>(maxDelay+1);
    	memset(c_gFiredTableSizes, 0, sizeof(int)*(maxDelay+1));
 
    	c_gFiredCount = (int*)malloc(sizeof(int)*(totalNeuronNum));

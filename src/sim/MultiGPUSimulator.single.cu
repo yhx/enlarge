@@ -7,7 +7,7 @@
 
 #include "../utils/utils.h"
 #include "../utils/TypeFunc.h"
-#include "../gpu_utils/mem_op.h"
+#include "../gpu_utils/helper_gpu.h"
 #include "../gpu_utils/runtime.h"
 #include "../gpu_utils/GBuffers.h"
 #include "../net/Network.h"
@@ -123,11 +123,11 @@ int MultiGPUSimulator::run_single(real time)
 	gettimeofday(&ts, NULL);
 	for (int time=0; time<node_nets[0]._simCycle; time++) {
 		for (int d=0; d<device_count; d++) {
-			update_time<<<1, 1>>>(c_pNetGPU[d]->pConnection, time, buffers[d]->c_gFiredTableSizes);
+			update_time<<<1, 1>>>(buffers[d]->c_gFiredTableSizes, maxDelay, time);
 
 			for (int i=0; i<c_pNetGPU[d]->nTypeNum; i++) {
 				assert(c_pNetGPU[d]->pNeuronNums[i+1]-c_pNetGPU[d]->pNeuronNums[i] > 0);
-				cudaUpdateType[c_pNetGPU[d]->pNTypes[i]](c_pNetGPU[d]->pConnection, c_pNetGPU[d]->ppNeurons[i], buffers[d]->c_gNeuronInput, buffers[d]->c_gNeuronInput_I, buffers[d]->c_gFiredTable, buffers[d]->c_gFiredTableSizes, c_pNetGPU[d]->pNeuronNums[i+1]-c_pNetGPU[d]->pNeuronNums[i], c_pNetGPU[d]->pNeuronNums[i], time, &updateSize[d][c_pNetGPU[d]->pNTypes[i]]);
+				cudaUpdateType[c_pNetGPU[d]->pNTypes[i]](c_pNetGPU[d]->ppConnections[0], c_pNetGPU[d]->ppNeurons[i], buffers[d]->c_gNeuronInput, buffers[d]->c_gNeuronInput_I, buffers[d]->c_gFiredTable, buffers[d]->c_gFiredTableSizes, c_pNetGPU[d]->pNeuronNums[i+1]-c_pNetGPU[d]->pNeuronNums[i], c_pNetGPU[d]->pNeuronNums[i], time, &updateSize[d][c_pNetGPU[d]->pNTypes[i]]);
 			}
 
 			cudaMemset(c_g_fired_n_num[d], 0, sizeof(int)*node_nets[d]._nodeNum);
@@ -177,7 +177,7 @@ int MultiGPUSimulator::run_single(real time)
 		for (int d=0; d<device_count; d++) {
 			for (int i=0; i<c_pNetGPU[d]->sTypeNum; i++) {
 				assert(c_pNetGPU[d]->pSynapseNums[i+1]-c_pNetGPU[d]->pSynapseNums[i] > 0);
-				cudaUpdateType[c_pNetGPU[d]->pSTypes[i]](c_pNetGPU[d]->pConnection, c_pNetGPU[d]->ppSynapses[i], buffers[d]->c_gNeuronInput, buffers[d]->c_gNeuronInput_I, buffers[d]->c_gFiredTable, buffers[d]->c_gFiredTableSizes, c_pNetGPU[d]->pSynapseNums[i+1]-c_pNetGPU[d]->pSynapseNums[i], c_pNetGPU[d]->pSynapseNums[i], time, &updateSize[d][c_pNetGPU[d]->pSTypes[i]]);
+				cudaUpdateType[c_pNetGPU[d]->pSTypes[i]](c_pNetGPU[d]->ppConnections[i], c_pNetGPU[d]->ppSynapses[i], buffers[d]->c_gNeuronInput, buffers[d]->c_gNeuronInput_I, buffers[d]->c_gFiredTable, buffers[d]->c_gFiredTableSizes, c_pNetGPU[d]->pSynapseNums[i+1]-c_pNetGPU[d]->pSynapseNums[i], c_pNetGPU[d]->pSynapseNums[i], time, &updateSize[d][c_pNetGPU[d]->pSTypes[i]]);
 			}
 		}		
 		cudaDeviceSynchronize();

@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-#include "../../third_party/cuda/helper_cuda.h"
+#include "../../gpu_utils/helper_cuda.h"
 #include "StaticData.h"
 
 void *cudaMallocStatic()
@@ -11,7 +11,7 @@ void *cudaMallocStatic()
 	return ret;
 }
 
-void *cudaAllocStatic(void *pCPU, int num)
+void *cudaAllocStatic(void *pCPU, size_t num)
 {
 	void *ret = cudaMallocStatic();
 	void *tmp = cudaAllocStaticPara(pCPU, num);
@@ -21,7 +21,7 @@ void *cudaAllocStatic(void *pCPU, int num)
 	return ret;
 }
 
-void *cudaAllocStaticPara(void *pCPU, int num)
+void *cudaAllocStaticPara(void *pCPU, size_t num)
 {
 	StaticData *p = (StaticData*)pCPU;
 	StaticData *ret = (StaticData*)malloc(sizeof(StaticData)*1);
@@ -38,7 +38,7 @@ void *cudaAllocStaticPara(void *pCPU, int num)
 	return ret;
 }
 
-int cudaFetchStatic(void *pCPU, void *pGPU, int num)
+int cudaFetchStatic(void *pCPU, void *pGPU, size_t num)
 {
 	StaticData *pTmp = (StaticData*)malloc(sizeof(StaticData)*1);
 	memset(pTmp, 0, sizeof(StaticData)*1);
@@ -48,7 +48,7 @@ int cudaFetchStatic(void *pCPU, void *pGPU, int num)
 	return 0;
 }
 
-int cudaStaticParaToGPU(void *pCPU, void *pGPU, int num)
+int cudaStaticParaToGPU(void *pCPU, void *pGPU, size_t num)
 {
 	StaticData *pC = (StaticData*)pCPU;
 	StaticData *pG = (StaticData*)pGPU;
@@ -60,7 +60,7 @@ int cudaStaticParaToGPU(void *pCPU, void *pGPU, int num)
 	return 0;
 }
 
-int cudaStaticParaFromGPU(void *pCPU, void *pGPU, int num)
+int cudaStaticParaFromGPU(void *pCPU, void *pGPU, size_t num)
 {
 	StaticData *pC = (StaticData*)pCPU;
 	StaticData *pG = (StaticData*)pGPU;

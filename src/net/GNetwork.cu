@@ -1,10 +1,9 @@
 #include <assert.h>
 
-#include "../third_party/cuda/helper_cuda.h"
 #include "../neuron/lif/LIFData.h"
 #include "../utils/TypeFunc.h"
 #include "../utils/macros.h"
-#include "../gpu_utils/mem_op.h"
+#include "../gpu_utils/helper_gpu.h"
 #include "GNetwork.h"
 
 GNetwork* copyGNetworkToGPU(GNetwork *pCpuNet)

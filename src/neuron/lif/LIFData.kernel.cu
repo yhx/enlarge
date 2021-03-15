@@ -159,7 +159,7 @@
 // 	//}
 // }
 
-__global__ void update_all_lif_neuron(Connection *connection, LIFData *data, real *currentE, real *currentI, uinteger_t *firedTable, uinteger_t *firedTableSizes, uinteger_t num, uinteger_t offset, int time)
+__global__ void update_all_lif_neuron(Connection *connection, LIFData *data, real *currentE, real *currentI, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t offset, int time)
 // __global__ void update_all_lif_neuron(LIFData *data, int num, int offset, int time)
 {
 	int currentIdx = time % (connection->maxDelay + 1);
@@ -172,8 +172,8 @@ __global__ void update_all_lif_neuron(Connection *connection, LIFData *data, rea
 
 	__syncthreads();
 
-	uinteger_t tid = blockIdx.x * blockDim.x + threadIdx.x;
-	for (uinteger_t idx = tid; idx < num; idx +=blockDim.x*gridDim.x) {
+	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	for (size_t idx = tid; idx < num; idx +=blockDim.x*gridDim.x) {
 		bool fired = false;
 		uinteger_t testLoc = 0;
 
@@ -310,10 +310,10 @@ __global__ void update_dense_lif_neuron(Connection *connection, LIFData *data, r
 	__syncthreads();
 }
 
-void cudaUpdateLIF(Connection *conn, void *data, real *currentE, real *currentI, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t num, int offset, int time, BlockSize *pSize)
+void cudaUpdateLIF(Connection *conn, void *data, real *currentE, real *currentI, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t offset, int time, BlockSize *pSize)
 {
 	// find_lif_neuron<<<pSize->gridSize, pSize->blockSize>>>((LIFData*)data, currentE, currentI, num, offset);
 	// update_lif_neuron<<<pSize->gridSize, pSize->blockSize>>>(conn, (LIFData*)data, currentE, currentI, firedTable, firedTableSizes, num, offset, time);
-	update_all_lif_neuron<<<pSize->gridSize, pSize->blockSize>>>(conn, (LIFData*)data, currentE, currentI, firedTable, firedTableSizes, num, offset, time);
+	update_all_lif_neuron<<<pSize->gridSize, pSize->blockSize>>>(conn, (LIFData*)data, currentE, currentI, firedTable, firedTableSizes, firedTableCap, num, offset, time);
 
 }

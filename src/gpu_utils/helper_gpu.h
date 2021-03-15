@@ -2,8 +2,8 @@
  * usually just for fun
  * Thu February 16 2017
  */
-#ifndef MEM_OP_H
-#define MEM_OP_H
+#ifndef HELPER_GPU_H
+#define HELPER_GPU_H
 
 #include "../third_party/cuda/helper_cuda.h"
 
@@ -68,5 +68,5 @@ void copyFromGPU(T* cpu, T* gpu, int size)
 	checkCudaErrors(cudaMemcpy(cpu, gpu, sizeof(T)*size, cudaMemcpyDeviceToHost));
 }
 
-#endif /* MEM_OP_H */
+#endif /* HELPER_GPU_H */
 

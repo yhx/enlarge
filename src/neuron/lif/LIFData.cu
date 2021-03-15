@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-#include "../../third_party/cuda/helper_cuda.h"
+#include "../../gpu_utils/helper_gpu.h"
 #include "LIFData.h"
 
 void *cudaMallocLIF()
@@ -11,7 +11,7 @@ void *cudaMallocLIF()
 	return ret;
 }
 
-void *cudaAllocLIF(void *pCPU, int num)
+void *cudaAllocLIF(void *pCPU, size_t num)
 {
 	void *ret = cudaMallocLIF();
 	void *tmp = cudaAllocLIFPara(pCPU, num);
@@ -21,7 +21,7 @@ void *cudaAllocLIF(void *pCPU, int num)
 	return ret;
 }
 
-void *cudaAllocLIFPara(void *pCPU, int num)
+void *cudaAllocLIFPara(void *pCPU, size_t num)
 {
 	LIFData *p = (LIFData*)pCPU;
 	LIFData *ret = (LIFData*)malloc(sizeof(LIFData)*1);
@@ -77,7 +77,7 @@ void *cudaAllocLIFPara(void *pCPU, int num)
 	return ret;
 }
 
-int cudaFetchLIF(void *pCPU, void *pGPU, int num)
+int cudaFetchLIF(void *pCPU, void *pGPU, size_t num)
 {
 	LIFData *pTmp = (LIFData*)malloc(sizeof(LIFData)*1);
 	memset(pTmp, 0, sizeof(LIFData)*1);
@@ -87,7 +87,7 @@ int cudaFetchLIF(void *pCPU, void *pGPU, int num)
 	return 0;
 }
 
-int cudaLIFParaToGPU(void *pCPU, void *pGPU, int num)
+int cudaLIFParaToGPU(void *pCPU, void *pGPU, size_t num)
 {
 	LIFData *pC = (LIFData*)pCPU;
 	LIFData *pG = (LIFData*)pGPU;
@@ -112,7 +112,7 @@ int cudaLIFParaToGPU(void *pCPU, void *pGPU, int num)
 	return 0;
 }
 
-int cudaLIFParaFromGPU(void *pCPU, void *pGPU, int num)
+int cudaLIFParaFromGPU(void *pCPU, void *pGPU, size_t num)
 {
 	LIFData *pC = (LIFData*)pCPU;
 	LIFData *pG = (LIFData*)pGPU;

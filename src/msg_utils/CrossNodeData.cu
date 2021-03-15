@@ -1,7 +1,7 @@
 
 #include <assert.h>
 
-#include "../third_party/cuda/helper_cuda.h"
+#include "../gpu_utils/helper_gpu.h"
 #include "../gpu_utils/runtime.h"
 #include "CrossNodeData.h"
 

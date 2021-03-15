@@ -1,5 +1,5 @@
 
-#include "../third_party/cuda/helper_cuda.h"
+#include "../gpu_utils/helper_gpu.h"
 #include "Network.h"
 
 //Alloc cross device gmem, will set device to 0 before return

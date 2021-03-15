@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "../gpu_utils/mem_op.h"
+#include "../gpu_utils/helper_gpu.h"
 #include "Connection.h"
 
 Connection * cudaAllocConnection(Connection * pCPU)

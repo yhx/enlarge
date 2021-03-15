@@ -21,7 +21,7 @@ void *mallocLIF()
 	return (void*)p;
 }
 
-int allocLIFPara(void *pCPU, int num)
+int allocLIFPara(void *pCPU, size_t num)
 {
 	LIFData *p = (LIFData*)pCPU;
 
@@ -64,7 +64,7 @@ int allocLIFPara(void *pCPU, int num)
 	return 0;
 }
 
-void *allocLIF(int num)
+void *allocLIF(size_t num)
 {
 	void *p = mallocLIF();
 	allocLIFPara(p, num);
@@ -124,7 +124,7 @@ int freeLIF(void *pCPU)
 	return 0;
 }
 
-int saveLIF(void *pCPU, int num, FILE *f)
+int saveLIF(void *pCPU, size_t num, FILE *f)
 {
 
 	LIFData *p = (LIFData*)pCPU;
@@ -132,7 +132,7 @@ int saveLIF(void *pCPU, int num, FILE *f)
 	if (num <= 0)
 		num = p->num;
 
-	fwrite(&num, sizeof(int), 1, f);
+	fwrite(&num, sizeof(size_t), 1, f);
 
 	fwrite(p->pRefracTime, sizeof(int), num, f);
 	fwrite(p->pRefracStep, sizeof(int), num, f);
@@ -154,11 +154,11 @@ int saveLIF(void *pCPU, int num, FILE *f)
 	return 0;
 }
 
-void *loadLIF(int num, FILE *f)
+void *loadLIF(size_t num, FILE *f)
 {
 	LIFData *p = (LIFData*)allocLIF(num);
 
-	fread_c(&(p->num), sizeof(int), 1, f);
+	fread_c(&(p->num), sizeof(size_t), 1, f);
 
 	assert(num == p->num);
 
@@ -182,7 +182,7 @@ void *loadLIF(int num, FILE *f)
 	return p;
 }
 
-bool isEqualLIF(void *p1, void *p2, int num)
+bool isEqualLIF(void *p1, void *p2, size_t num)
 {
 	LIFData *t1 = (LIFData*)p1;
 	LIFData *t2 = (LIFData*)p2;

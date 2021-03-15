@@ -7,7 +7,7 @@
 #include "StaticData.h"
 
 
-void updateStatic(Connection *connection, void *_data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int firedTableCap, int num, int start_id, int time)
+void updateStatic(Connection *connection, void *_data, real *currentE, real *currentI, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t start_id, int time)
 {
 	StaticData * data = (StaticData *)_data;
 	int delayLength = connection->maxDelay - connection->minDelay + 1;

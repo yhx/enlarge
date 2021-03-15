@@ -43,15 +43,15 @@ extern __constant__ real DT;
 // Neuron Tables
 // extern __device__ int *gFiredTable;
 // extern __device__ int *gFiredTableSizes;
-extern __device__ int *gActiveTable;
-extern __device__ int gActiveTableSize;
+// extern __device__ int *gActiveTable;
+// extern __device__ int gActiveTableSize;
 
 // Synapse Tables
 //extern __device__ int *gSynapsesActiveTable;
 //extern __device__ int *gSynapsesLogTable;
 
 // Log Arrays
-extern __device__ int *gLayerInput;
+extern __device__ uinteger_t *gLayerInput;
 extern __device__ real *gXInput;
 extern __device__ int *gFireCount;
 
@@ -61,7 +61,8 @@ extern __device__ int *gFireCount;
 
 __global__ void init_connection(Connection *pConnection);
 
-__global__ void update_time(Connection *conn, int time, int *firedTableSizes);
+// __global__ void update_time(Connection *conn, int time, int *firedTableSizes);
+__global__ void update_time(uinteger_t *firedTableSizes, int max_delay, int time);
 
 __global__ void curand_setup_kernel(curandState *state, int num);
 
