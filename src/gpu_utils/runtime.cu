@@ -37,7 +37,7 @@
 
 // __constant__ int MAX_DELAY;
 __constant__ int gTimeTableCap;
-__constant__ int gFiredTableCap;
+__constant__ size_t gFiredTableCap;
 // __constant__ int gSynapsesTableCap;
 __constant__ real DT;
 
@@ -88,15 +88,16 @@ __device__ real _clip(real a, real min, real max)
 	}
 }
 
-__device__ int commit2globalTable(int *shared_buf, volatile unsigned int size, int *global_buf, int * global_size, int offset) 
+template<typename T, typename SIZE>
+__device__ int commit2globalTable(T *shared_buf, volatile SIZE size, T *global_buf, SIZE * global_size, SIZE offset) 
 {
-	__shared__ volatile unsigned int start_loc;
+	__shared__ volatile SIZE start_loc;
 	if (threadIdx.x == 0) {
-		start_loc = atomicAdd(global_size, (int)size);
+		start_loc = atomicAdd(global_size, size);
 	}
 	__syncthreads();
 
-	for (int idx=threadIdx.x; idx<size; idx+=blockDim.x) {
+	for (SIZE idx=threadIdx.x; idx<size; idx+=blockDim.x) {
 		global_buf[offset + start_loc + idx] = shared_buf[idx];
 	}
 
@@ -168,10 +169,10 @@ __global__ void cudaAddCrossNeurons(Connection *connection, int *firedTable, int
 	}
 }
 
-__global__ void cudaDeliverNeurons(Connection *conn, int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, int *global_cross_data, int *fired_n_num, int node_num, int time)
+__global__ void cudaDeliverNeurons(uinteger_t *firedTable, size_t *firedTableSizes, size_t *idx2index, size_t *crossnode_index2idx, uinteger_t *global_cross_data, size_t *fired_n_num, int max_delay, int node_num, int time)
 {
-	__shared__ int cross_neuron_id[MAX_BLOCK_SIZE];
-	__shared__ volatile int cross_cnt;
+	__shared__ uinteger_t cross_neuron_id[MAX_BLOCK_SIZE];
+	__shared__ volatile size_t cross_cnt;
 
 	if (threadIdx.x == 0) {
 		cross_cnt = 0;
@@ -180,7 +181,8 @@ __global__ void cudaDeliverNeurons(Connection *conn, int *firedTable, int *fired
 
 	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	// int delayIdx = time % (conn->maxDelay-conn->minDelay+1);
-	int delayIdx = time % (conn->maxDelay+1);
+	int delayIdx = time % (max_delay+1);
+	// int delayIdx = time % (conn->maxDelay+1);
 	int fired_size = firedTableSizes[delayIdx];
 	for (int node = 0; node < node_num; node++) {
 		for (int idx = tid; idx < fired_size; idx += blockDim.x * gridDim.x) {

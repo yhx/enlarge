@@ -18,7 +18,7 @@ struct CrossNodeMap {
 	size_t _num;
 };
 
-CrossNodeMap * allocCND(size_t num, size_t cross_num);
+CrossNodeMap * allocCNM(size_t num, size_t cross_num, unsigned node_num);
 
 int saveCNM(CrossNodeMap *map, FILE *f);
 CrossNodeMap *loadCNM(FILE *f); 

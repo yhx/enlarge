@@ -74,7 +74,7 @@ __global__ void update_dense_static_hit(Connection *connection, StaticData *data
 			for (int idx = 0; idx < fired_size_block; idx++) {
 #ifdef DEBUG
 				if (nid_offset + idx > firedSize + time_idx * gFiredTableCap) {
-					printf("over flow %lld + %lld >= %lld, from (%d, %d)\n", nid_offset, idx, firedSize + time_idx * gFiredTableCap, blockIdx.x, threadIdx.x);
+					printf("over flow %d + %d >= %d, from (%d, %d)\n", nid_offset, idx, firedSize + time_idx * gFiredTableCap, blockIdx.x, threadIdx.x);
 					printf("%d %d %d %d %d %d %d\n", firedSize, gridDim.x, time_idx, gFiredTableCap, block_idx, npb_minus_1, full_offset);
 				}
 #endif

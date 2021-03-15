@@ -296,9 +296,9 @@ CrossThreadData* Network::arrangeCrossThreadData(int node_num)
 	}
 
 
-	for (int i=0; i<_node_num; i++) {
-		int idx = i*_node_num + i;
-		for (int j=0; j<_node_num; j++) {
+	for (unsigned int i=0; i<_node_num; i++) {
+		unsigned int idx = i*_node_num + i;
+		for (unsigned int j=0; j<_node_num; j++) {
 			if (j != i) {
 				cross_data[idx]._maxNNum += cross_data[i*_node_num+j]._maxNNum;
 			}
@@ -370,13 +370,5 @@ void printTypeNum(vector<map<Type, unsigned long long>> typeNum, const char *nam
 
 void Network::status()
 {
-	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end();  pIter++) {
-		Population *p = *pIter;
-		for (auto nIter = p->_items.begin(); nIter != p->_items.end(); nIter++) {
-			Neuron *n = *nIter;
-			printf("%d ", n->getNode());
-		}
-		printf("; ");
-	}
 }
 

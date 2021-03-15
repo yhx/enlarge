@@ -45,7 +45,7 @@ CrossNodeData * loadCND(FILE *f);
 CrossNodeData * copyCNDtoGPU(CrossNodeData * data);
 int freeCNDGPU(CrossNodeData *data);
 
-int generateCND(Connection *conn, int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, CrossNodeData *cnd, int node_num, int time, int gFiredTableCap, int min_delay, int delay);
+int generateCND(int *idx2index, int *crossnode_index2idx, CrossNodeData *cnd, int *firedTable, int *firedTableSizes, int gFiredTableCap, int max_delay, int min_delay, int node_num, int time);
 
 int msg_cnd(CrossNodeData *cnd, MPI_Request *request);
 

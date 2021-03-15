@@ -9,6 +9,9 @@
 #include <limits.h>
 #include "mpi.h"
 
+typedef unsigned long long uinteger_t;
+#define MPI_INTEGER_T MPI_UNSIGNED_LONG_LONG
+
 #ifndef USE_DOUBLE
 typedef float real;
 #else

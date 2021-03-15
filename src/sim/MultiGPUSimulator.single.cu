@@ -143,7 +143,7 @@ int MultiGPUSimulator::run_single(real time)
 		//}
 
 		for (int d=0; d<device_count; d++) {
-			cudaDeliverNeurons<<<(c_pNetGPU[d]->pConnection->nNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(c_pNetGPU[d]->pConnection, buffers[d]->c_gFiredTable, buffers[d]->c_gFiredTableSizes, c_g_idx2index[d], c_g_cross_index2idx[d], c_g_global_cross_data[d], c_g_fired_n_num[d], node_nets[d]._nodeNum, time);
+			cudaDeliverNeurons<<<(c_pNetGPU[d]->pConnection->nNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(buffers[d]->c_gFiredTable, buffers[d]->c_gFiredTableSizes, c_g_idx2index[d], c_g_cross_index2idx[d], c_g_global_cross_data[d], c_g_fired_n_num[d], maxDelay, node_nets[d]._nodeNum, time);
 
 			checkCudaErrors(cudaMemcpy(gCrossDataGPU->_firedNum + node_nets[d]._nodeIdx * node_nets[d]._nodeNum, c_g_fired_n_num[d], sizeof(int)*node_nets[d]._nodeNum, cudaMemcpyDeviceToHost));
 		}

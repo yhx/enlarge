@@ -18,7 +18,7 @@
 // Constant
 // extern __constant__ int MAX_DELAY;
 // extern __constant__ int gTimeTableCap;
-extern __constant__ int gFiredTableCap;
+extern __constant__ size_t gFiredTableCap;
 // extern __constant__ int gSynapsesTableCap;
 extern __constant__ real DT;
 
@@ -75,12 +75,12 @@ __global__ void cudaUpdateFTS(int * firedTableSizes, int num, int idx);
 
 __global__ void cudaAddCrossNeurons(Connection *conn, int *firedTable, int *firedTableSizes, int *ids, int num, int time);
 
-__global__ void cudaDeliverNeurons(Connection *conn, int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, int *global_cross_data, int *fired_n_num, int node_num, int time);
+__global__ void cudaDeliverNeurons(int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, int *global_cross_data, int *fired_n_num, int max_delay, int node_num, int time);
 
 __device__ real _clip(real a, real min, real max);
 
-__device__ int commit2globalTable(int *shared_buf, volatile unsigned int size, int *global_buf, int * global_size, int offset);
-
+template<typename T>
+__device__ int commit2globalTable(T *shared_buf, volatile size_t size, T *global_buf, T * global_size, size_t offset);
 
 BlockSize * getBlockSize(int nSize, int sSize);
 

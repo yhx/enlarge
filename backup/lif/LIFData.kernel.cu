@@ -6,16 +6,16 @@
 
 // __global__ void find_lif_neuron(LIFData *data, real * currentE, real * currentI, int num, int offset)
 // {
-// 	__shared__ uinteger_t tActiveTable[MAX_BLOCK_SIZE];
-// 	__shared__ volatile uinteger_t activeCnt;
+// 	__shared__ u_size_t tActiveTable[MAX_BLOCK_SIZE];
+// 	__shared__ volatile u_size_t activeCnt;
 // 
 // 	if (threadIdx.x == 0) {
 // 		activeCnt = 0;
 // 	}
 // 	__syncthreads();
 // 
-// 	uinteger_t tid = blockIdx.x * blockDim.x + threadIdx.x;
-// 	for (uinteger_t idx = tid; idx < num; idx += blockDim.x * gridDim.x) {
+// 	u_size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+// 	for (u_size_t idx = tid; idx < num; idx += blockDim.x * gridDim.x) {
 // 		//bool actived = false;
 // 		int testLoc = 0;
 // 		bool actived = data->pRefracStep[idx] <= 0;
@@ -159,12 +159,12 @@
 // 	//}
 // }
 
-__global__ void update_all_lif_neuron(Connection *connection, LIFData *data, real *currentE, real *currentI, uinteger_t *firedTable, uinteger_t *firedTableSizes, uinteger_t num, uinteger_t offset, int time)
+__global__ void update_all_lif_neuron(Connection *connection, LIFData *data, real *currentE, real *currentI, u_size_t *firedTable, u_size_t *firedTableSizes, u_size_t num, u_size_t offset, int time)
 // __global__ void update_all_lif_neuron(LIFData *data, int num, int offset, int time)
 {
 	int currentIdx = time % (connection->maxDelay + 1);
-	__shared__ uinteger_t fire_table_t[MAX_BLOCK_SIZE];
-	__shared__ volatile uinteger_t fire_cnt;
+	__shared__ u_size_t fire_table_t[MAX_BLOCK_SIZE];
+	__shared__ volatile u_size_t fire_cnt;
 
 	if (threadIdx.x == 0) {
 		fire_cnt = 0;
@@ -172,13 +172,13 @@ __global__ void update_all_lif_neuron(Connection *connection, LIFData *data, rea
 
 	__syncthreads();
 
-	uinteger_t tid = blockIdx.x * blockDim.x + threadIdx.x;
-	for (uinteger_t idx = tid; idx < num; idx +=blockDim.x*gridDim.x) {
+	u_size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	for (u_size_t idx = tid; idx < num; idx +=blockDim.x*gridDim.x) {
 		bool fired = false;
-		uinteger_t testLoc = 0;
+		u_size_t testLoc = 0;
 
-		uinteger_t nid = idx;
-		uinteger_t gnid = offset + idx; 
+		u_size_t nid = idx;
+		u_size_t gnid = offset + idx; 
 		bool actived = data->pRefracStep[idx] <= 0;
 
 		if (actived) {
@@ -218,7 +218,7 @@ __global__ void update_all_lif_neuron(Connection *connection, LIFData *data, rea
 			__syncthreads();
 
 			if (fired) {
-				testLoc = atomicAdd((uinteger_t*)&fire_cnt, 1);
+				testLoc = atomicAdd((u_size_t*)&fire_cnt, 1);
 				if (testLoc < MAX_BLOCK_SIZE) {
 					fire_table_t[testLoc] = gnid;
 					fired = false;
@@ -310,10 +310,10 @@ __global__ void update_dense_lif_neuron(Connection *connection, LIFData *data, r
 	__syncthreads();
 }
 
-void cudaUpdateLIF(Connection *conn, void *data, real *currentE, real *currentI, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t num, int offset, int time, BlockSize *pSize)
+void cudaUpdateLIF(Connection *conn, void *data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int num, int offset, int time, BlockSize *pSize)
 {
 	// find_lif_neuron<<<pSize->gridSize, pSize->blockSize>>>((LIFData*)data, currentE, currentI, num, offset);
 	// update_lif_neuron<<<pSize->gridSize, pSize->blockSize>>>(conn, (LIFData*)data, currentE, currentI, firedTable, firedTableSizes, num, offset, time);
-	update_all_lif_neuron<<<pSize->gridSize, pSize->blockSize>>>(conn, (LIFData*)data, currentE, currentI, firedTable, firedTableSizes, num, offset, time);
+	update_all_lif_neuron<<<pSize->gridSize, pSize->blockSize>>>((LIFData*)data, num, offset);
 
 }

@@ -5,7 +5,7 @@
 #include "../utils/utils.h"
 #include "CrossNodeMap.h"
 
-CrossNodeMap * allocCND(size_t num, size_t cross_num, unsigned node_num)
+CrossNodeMap * allocCNM(size_t num, size_t cross_num, unsigned node_num)
 {
 	CrossNodeMap* ret = (CrossNodeMap*)malloc(sizeof(CrossNodeMap));
 	assert(ret != NULL);

@@ -147,9 +147,10 @@ CrossNodeData * loadCND(FILE *f)
 	return cnd;
 }
 
-int generateCND(Connection *conn, int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, CrossNodeData *cnd, int node_num, int time, int gFiredTableCap, int min_delay, int delay)
+int generateCND(int *idx2index, int *crossnode_index2idx, CrossNodeData *cnd, int *firedTable, int *firedTableSizes, int gFiredTableCap, int max_delay, int min_delay, int node_num, int time)
 {
-	int delay_idx = time % (conn->maxDelay+1);
+	int delay_idx = time % (max_delay+1);
+	int curr_delay = time % min_delay;
 	int fired_size = firedTableSizes[delay_idx];
 	for (int node=0; node<node_num; node++) {
 		for (int idx=0; idx<fired_size; idx++) {
@@ -158,7 +159,7 @@ int generateCND(Connection *conn, int *firedTable, int *firedTableSizes, int *id
 			if (tmp >= 0) {
 				int map_nid = crossnode_index2idx[tmp*node_num+node];
 				if (map_nid >= 0) {
-					int idx_t = node * (min_delay+1) + delay + 1;
+					int idx_t = node * (min_delay+1) + curr_delay + 1;
 					cnd->_send_data[cnd->_send_offset[node] + cnd->_send_start[idx_t]]= map_nid;
 					cnd->_send_start[idx_t]++;
 				}

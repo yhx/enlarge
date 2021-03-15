@@ -322,7 +322,7 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 		comp_time += 1000000 * (t2.tv_sec - t1.tv_sec) + (t2.tv_usec - t1.tv_usec);
 #endif
 		int curr_delay = time % cnd->_min_delay;
-		generateCND(pNetCPU->pConnection, c_gFiredTable, c_gFiredTableSizes, network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, cnd, network->_nodeNum, time, cFiredTableCap, cnd->_min_delay, curr_delay);
+		generateCND(network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, cnd, c_gFiredTable, c_gFiredTableSizes, cFiredTableCap, maxDelay, cnd->_min_delay, network->_nodeNum, time);
 
 
 		MPI_Request request_t;
@@ -550,7 +550,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 		comp_time += t2-t1;
 #endif
 		int curr_delay = time % cnd->_min_delay;
-		cudaGenerateCND(c_pNetGPU->pConnection, buffers->c_gFiredTable, buffers->c_gFiredTableSizes, c_g_idx2index, c_g_cross_index2idx, cnd_gpu, node_num, time, curr_delay, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
+		cudaGenerateCND(c_g_idx2index, c_g_cross_index2idx, cnd_gpu, buffers->c_gFiredTable, buffers->c_gFiredTableSizes, max_delay, cnd_gpu->min_delay, node_num, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
 
 		// checkCudaErrors(cudaMemcpy(gCrossDataGPU->_firedNum + network->_nodeIdx * node_num, c_g_fired_n_num, sizeof(int)*node_num, cudaMemcpyDeviceToHost));
 		MPI_Request request_t;

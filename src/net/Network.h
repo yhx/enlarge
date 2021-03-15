@@ -67,6 +67,7 @@ public:
 	GNetwork* buildNetwork(const SimInfo &info);
 
 
+
 	DistriNetwork * buildNetworks(const SimInfo &info, bool auto_splited = true);
 
 	CrossThreadData * arrangeCrossThreadData(int node_num);
@@ -84,7 +85,7 @@ private:
 	void update_status();
 	void update_status_splited();
 
-	int arrangNet(DistriNetwork *net);
+	int arrangeNet(DistriNetwork *net);
 
 	int arrangeLocal(DistriNetwork *net, CrossTypeInfo_t & type_offset, CrossTypeInfo_t &neuron_offset, CrossTypeInfo_t & synapse_offset, CrossTypeInfo_t &neuron_count, CrossTypeInfo_t &synapse_count, CrossTypeInfo_t &n2s_count, map<unsigned int, size_t> &n_num);
 
