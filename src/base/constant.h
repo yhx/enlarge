@@ -9,8 +9,17 @@
 #include <limits.h>
 #include "mpi.h"
 
-typedef unsigned long long uinteger_t;
-#define MPI_INTEGER_T MPI_UNSIGNED_LONG_LONG
+// typedef unsigned long long uinteger_t;
+// #define UINTEGER_T_MAX ULL_MAX;
+// #define MPI_UINTEGER_T MPI_UNSIGNED_LONG_LONG
+
+typedef unsigned int uinteger_t;
+#define UINTEGER_T_MAX UINT_MAX;
+#define MPI_UINTEGER_T MPI_UNSIGNED
+
+typedef int integer_t;
+#define INTEGER_T_MAX INT_MAX;
+#define MPI_INTEGER_T MPI_INT;
 
 #ifndef USE_DOUBLE
 typedef float real;

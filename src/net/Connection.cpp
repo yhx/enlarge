@@ -3,9 +3,8 @@
 #include <assert.h>
 #include <string.h>
 
+#include "../utils/helper_c.h"
 #include "../utils/utils.h"
-#include "../utils/FileOp.h"
-
 #include "Connection.h"
 
 Connection * allocConnection(size_t nNum, size_t sNum, unsigned int maxDelay, unsigned int minDelay)

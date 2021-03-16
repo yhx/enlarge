@@ -5,8 +5,7 @@
 #ifndef GNETWORK_H
 #define GNETWORK_H
 
-#include "../utils/type.h"
-
+#include "../base/type.h"
 #include "Connection.h"
 
 struct GNetwork {

@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "../utils/FileOp.h"
+#include "../utils/helper_c.h"
 #include "GNetwork.h"
 #include "DistriNetwork.h"
 

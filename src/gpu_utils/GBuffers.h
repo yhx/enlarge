@@ -1,5 +1,5 @@
 
-#include "../utils/constant.h"
+#include "../base/constant.h"
 
 struct GBuffers {
 	// Neuron Arrays

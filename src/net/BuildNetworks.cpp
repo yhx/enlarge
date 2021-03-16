@@ -1,5 +1,5 @@
 
-#include "../utils/TypeFunc.h"
+#include "../base/TypeFunc.h"
 #include "../utils/proc_info.h"
 #include "../utils/utils.h"
 #include "../../include/Synapses.h"

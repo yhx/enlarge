@@ -9,8 +9,8 @@
 #include <vector>
 #include <map>
 
-#include "type.h"
-#include "../utils/ID.h"
+#include "../base/type.h"
+#include "../base/ID.h"
 
 using std::map;
 using std::string;

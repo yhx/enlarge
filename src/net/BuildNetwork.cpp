@@ -5,7 +5,7 @@
 #include <sys/sysinfo.h>
 
 #include "../utils/utils.h"
-#include "../utils/TypeFunc.h"
+#include "../base/TypeFunc.h"
 #include "Network.h"
 
 void Network::update_status()

@@ -1,5 +1,5 @@
 
-#include "constant.h"
+#include "../base/constant.h"
 
 extern int *c_gFiredCount;
 

@@ -8,7 +8,7 @@
 #include <chrono>
 #include <sys/sysinfo.h>
 
-#include "../utils/TypeFunc.h"
+#include "../base/TypeFunc.h"
 #include "../utils/proc_info.h"
 #include "../utils/utils.h"
 #include "../../include/Synapses.h"
@@ -272,44 +272,44 @@ int Network::reset(const SimInfo &info)
 void Network::logMap() {
 }
 
-CrossThreadData* Network::arrangeCrossThreadData(int node_num)
-{
-	CrossThreadData * cross_data = (CrossThreadData*)malloc(sizeof(CrossThreadData) * node_num * node_num);
-	assert(cross_data != NULL);
-
-	for (unsigned int i=0; i<_node_num; i++) {
-		for (unsigned int j=0; j<_node_num; j++) {
-			// i->j 
-			int i2j = j * _node_num + i;
-			cross_data[i2j]._firedNNum = 0;
-
-			int count = 0;
-			for (auto iter = _crossnodeNeuronsSend[i].begin(); iter != _crossnodeNeuronsSend[i].end(); iter++) {
-				if (_crossnodeNeuronsRecv[j].find(*iter) != _crossnodeNeuronsRecv[j].end()) {
-					count++;
-				}
-			}
-			cross_data[i2j]._maxNNum = count;
-			cross_data[i2j]._firedNIdxs = (int*)malloc(sizeof(int)*count);
-			assert(cross_data[i2j]._firedNIdxs != NULL || count == 0);
-		}
-	}
-
-
-	for (unsigned int i=0; i<_node_num; i++) {
-		unsigned int idx = i*_node_num + i;
-		for (unsigned int j=0; j<_node_num; j++) {
-			if (j != i) {
-				cross_data[idx]._maxNNum += cross_data[i*_node_num+j]._maxNNum;
-			}
-		}
-
-		cross_data[idx]._firedNIdxs = (int*)malloc(sizeof(int)*cross_data[idx]._maxNNum);
-		assert(cross_data[idx]._firedNIdxs != NULL || cross_data[idx]._maxNNum == 0);
-	}
-
-	return cross_data;
-}
+// CrossThreadData* Network::arrangeCrossThreadData(int node_num)
+// {
+// 	CrossThreadData * cross_data = (CrossThreadData*)malloc(sizeof(CrossThreadData) * node_num * node_num);
+// 	assert(cross_data != NULL);
+// 
+// 	for (unsigned int i=0; i<_node_num; i++) {
+// 		for (unsigned int j=0; j<_node_num; j++) {
+// 			// i->j 
+// 			int i2j = j * _node_num + i;
+// 			cross_data[i2j]._firedNNum = 0;
+// 
+// 			int count = 0;
+// 			for (auto iter = _crossnodeNeuronsSend[i].begin(); iter != _crossnodeNeuronsSend[i].end(); iter++) {
+// 				if (_crossnodeNeuronsRecv[j].find(*iter) != _crossnodeNeuronsRecv[j].end()) {
+// 					count++;
+// 				}
+// 			}
+// 			cross_data[i2j]._maxNNum = count;
+// 			cross_data[i2j]._firedNIdxs = (int*)malloc(sizeof(int)*count);
+// 			assert(cross_data[i2j]._firedNIdxs != NULL || count == 0);
+// 		}
+// 	}
+// 
+// 
+// 	for (unsigned int i=0; i<_node_num; i++) {
+// 		unsigned int idx = i*_node_num + i;
+// 		for (unsigned int j=0; j<_node_num; j++) {
+// 			if (j != i) {
+// 				cross_data[idx]._maxNNum += cross_data[i*_node_num+j]._maxNNum;
+// 			}
+// 		}
+// 
+// 		cross_data[idx]._firedNIdxs = (int*)malloc(sizeof(int)*cross_data[idx]._maxNNum);
+// 		assert(cross_data[idx]._firedNIdxs != NULL || cross_data[idx]._maxNNum == 0);
+// 	}
+// 
+// 	return cross_data;
+// }
 
 CrossNodeData* Network::arrangeCrossNodeData(int node_num, const SimInfo &info)
 {

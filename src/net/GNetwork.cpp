@@ -8,8 +8,8 @@
 #include <iostream>
 
 #include "../utils/utils.h"
-#include "../utils/TypeFunc.h"
-#include "../utils/FileOp.h"
+#include "../base/TypeFunc.h"
+#include "../utils/helper_c.h"
 
 #include "GNetwork.h"
 

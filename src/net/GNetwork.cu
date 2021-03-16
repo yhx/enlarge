@@ -1,7 +1,7 @@
 #include <assert.h>
 
 #include "../neuron/lif/LIFData.h"
-#include "../utils/TypeFunc.h"
+#include "../base/TypeFunc.h"
 #include "../utils/macros.h"
 #include "../gpu_utils/helper_gpu.h"
 #include "GNetwork.h"

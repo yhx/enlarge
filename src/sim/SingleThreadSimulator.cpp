@@ -10,7 +10,7 @@
 
 #include "../utils/utils.h"
 #include "../utils/helper_c.h"
-#include "../utils/TypeFunc.h"
+#include "../base/TypeFunc.h"
 #include "../neuron/lif/LIFData.h"
 
 #include "SingleThreadSimulator.h"
@@ -42,8 +42,8 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 #ifdef LOG_DATA
 	FILE *input_e_file = fopen_c("input_e.cpu.log", "w+");
 	FILE *input_i_file = fopen_c("input_i.cpu.log", "w+");
-	FILE *ie_file = fopen_c("ie.cpu.log", "w+");
-	FILE *ii_file = fopen_c("ii.cpu.log", "w+");
+	// FILE *ie_file = fopen_c("ie.cpu.log", "w+");
+	// FILE *ii_file = fopen_c("ii.cpu.log", "w+");
 #endif
 
 	int nTypeNum = pNetCPU->nTypeNum;

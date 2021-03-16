@@ -7,7 +7,7 @@
 
 #include "../../net/Connection.h"
 
-#include "../../utils/type.h"
+#include "../../base/type.h"
 #include "../../utils/BlockSize.h"
 
 struct StaticData {

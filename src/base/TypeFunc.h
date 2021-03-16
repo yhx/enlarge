@@ -10,7 +10,7 @@
 
 #include "type.h"
 #include "../net/Connection.h"
-#include "BlockSize.h"
+#include "../utils/BlockSize.h"
 
 extern size_t (*getTypeSize[TYPESIZE])();
 extern void* (*mallocType[TYPESIZE])();

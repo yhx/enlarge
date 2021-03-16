@@ -9,8 +9,8 @@
 #include "curand.h"
 
 
-#include "../utils/type.h"
-#include "../utils/constant.h"
+#include "../base/type.h"
+#include "../base/constant.h"
 #include "../utils/BlockSize.h"
 #include "../net/GNetwork.h"
 #include "../net/Connection.h"

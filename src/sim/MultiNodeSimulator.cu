@@ -11,8 +11,8 @@
 #include <mpi.h>
 
 #include "../utils/utils.h"
-#include "../utils/FileOp.h"
-#include "../utils/TypeFunc.h"
+#include "../utils/helper_c.h"
+#include "../base/TypeFunc.h"
 #include "../gpu_utils/helper_gpu.h"
 #include "../gpu_utils/runtime.h"
 #include "../gpu_utils/GBuffers.h"

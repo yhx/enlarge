@@ -112,8 +112,8 @@ SET(CPU_LIB bsim)
 SET(GPU_LIB bsim_gpu)
 
 # SET(AUTO_TIMESTAMP "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/.timestamp")
-SET(AUTO_CPU_SRC "${PROJECT_SOURCE_DIR}/src/utils/TypeFunc.cpp")
-SET(AUTO_GPU_SRC "${PROJECT_SOURCE_DIR}/src/utils/TypeFunc.cu")
+SET(AUTO_CPU_SRC "${PROJECT_SOURCE_DIR}/src/base/TypeFunc.cpp")
+SET(AUTO_GPU_SRC "${PROJECT_SOURCE_DIR}/src/base/TypeFunc.cu")
 
 SET(GEN_TYPE_FUNC_SCRIPT "${PROJECT_SOURCE_DIR}/script/generate_type_functions.py")
 # SET(GEN_DATA_FUNC_SCRIPT "${PROJECT_SOURCE_DIR}/bsim/data_generator.py")
@@ -143,8 +143,8 @@ FILE(COPY ${PROJECT_SOURCE_DIR}/CLEAN_ALL.cmake DESTINATION ${CMAKE_BINARY_DIR})
 ADD_CUSTOM_COMMAND(OUTPUT ${AUTO_CPU_SRC} ${AUTO_GPU_SRC}
 	COMMAND echo "Generating ${AUTO_CPU_SRC} and ${AUTO_GPU_SRC}"
 	COMMAND python ${GEN_TYPE_FUNC_SCRIPT}
-	MAIN_DEPENDENCY src/utils/TypeFunc.h
-	DEPENDS src/utils/type.h # ${GEN_TYPE_FUNC_SCRIPT}
+	MAIN_DEPENDENCY src/base/TypeFunc.h
+	DEPENDS src/base/type.h # ${GEN_TYPE_FUNC_SCRIPT}
 	COMMENT "Generate type func"
 	)
 

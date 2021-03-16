@@ -10,7 +10,7 @@
 #include <typeinfo>
 
 #include "../third_party/json/json.h"
-#include "type.h"
+#include "../base/type.h"
 
 static bool rand_seed_inited = false;
 
@@ -89,38 +89,39 @@ bool isEqualArray(T const & a, T const & b, size_t size)
 }
 
 template<typename T>
-void log_array(FILE *f, T *array, size_t size)
+void log_array_noendl(FILE *f, T *array, size_t size)
 {
 	for (size_t i=0; i<size; i++) {
-		if (typeid(T) == typeid(int)) {
+		if (typeid(T).hash_code() == typeid(int).hash_code()) {
 			fprintf(f, "%d ", array[i]);
-		} else if (typeid(T) == typeid(float)) {
+		} else if (typeid(T).hash_code() == typeid(unsigned int).hash_code()) {
+			fprintf(f, "%u ", array[i]);
+		} else if (typeid(T).hash_code() == typeid(long).hash_code()) {
+			fprintf(f, "%ld ", array[i]);
+		} else if (typeid(T).hash_code() == typeid(unsigned long).hash_code()) {
+			fprintf(f, "%lu ", array[i]);
+		} else if (typeid(T).hash_code() == typeid(long long).hash_code()) {
+			fprintf(f, "%lld ", array[i]);
+		} else if (typeid(T).hash_code() == typeid(unsigned long long).hash_code()) {
+			fprintf(f, "%llu ", array[i]);
+		} else if (typeid(T).hash_code() == typeid(float).hash_code()) {
 			fprintf(f, "%.10lf \t", array[i]);
-		} else if (typeid(T) == typeid(double)) {
+		} else if (typeid(T).hash_code() == typeid(double).hash_code()) {
 			fprintf(f, "%.10lf \t", array[i]);
 		} else {
 			fprintf(f, "Unsupported type\n");
 			break;
 		}
 	}
-	fprintf(f, "\n");
 }
 
 template<typename T>
-void log_array_noendl(FILE *f, T *array, size_t size)
+void log_array(FILE *f, T *array, size_t size)
 {
-	for (size_t i=0; i<size; i++) {
-		if (typeid(T) == typeid(int)) {
-			fprintf(f, "%d ", array[i]);
-		} else if (typeid(T) == typeid(float)) {
-			fprintf(f, "%.10lf \t", array[i]);
-		} else if (typeid(T) == typeid(double)) {
-			fprintf(f, "%.10lf \t", array[i]);
-		} else {
-			fprintf(f, "Unsupported type\n");
-		}
-	}
+	log_array_noendl(f, array, size);
+	fprintf(f, "\n");
 }
+
 
 template<typename T>
 void del_content_vec(T &vec)

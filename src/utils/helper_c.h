@@ -23,20 +23,22 @@ inline int fclose_c(FILE *file)
 	return fclose(file);
 }
 
-inline void fread_c(void *ptr, size_t size, size_t memb, FILE *stream) 
+template<typename T>
+void fread_c(T *ptr, size_t memb, FILE *stream) 
 {
-	size_t ret = fread(ptr, size, memb, stream);
-	assert(ret == memb);
-}
-
-inline void fwrite_c(const void *ptr, size_t size, size_t memb, FILE *stream) 
-{
-	size_t ret = fwrite(ptr, size, memb, stream);
+	size_t ret = fread(ptr, sizeof(T), memb, stream);
 	assert(ret == memb);
 }
 
 template<typename T>
-T * malloc_c(size_t size)
+void fwrite_c(const T *ptr, size_t memb, FILE *stream) 
+{
+	size_t ret = fwrite(ptr, sizeof(T), memb, stream);
+	assert(ret == memb);
+}
+
+template<typename T>
+T * malloc_c(size_t size = 1)
 {
 	T *ret = NULL;
 	ret = static_cast<T*>(malloc(sizeof(T) * (size)));

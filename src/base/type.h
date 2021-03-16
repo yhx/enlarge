@@ -5,7 +5,7 @@
 #ifndef TYPE_H
 #define TYPE_H
 
-#include "../utils/constant.h"
+#include "constant.h"
 
 enum Type { 
 	// Constant = 0, 
