@@ -123,6 +123,7 @@ int MultiGPUSimulator::run_single(real time)
 	gettimeofday(&ts, NULL);
 	for (int time=0; time<node_nets[0]._simCycle; time++) {
 		for (int d=0; d<device_count; d++) {
+			int maxDelay = node_nets[d]._network->ppConnections[0]->maxDelay;
 			update_time<<<1, 1>>>(buffers[d]->c_gFiredTableSizes, maxDelay, time);
 
 			for (int i=0; i<c_pNetGPU[d]->nTypeNum; i++) {

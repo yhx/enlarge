@@ -245,7 +245,7 @@ void * run_thread_gpu(void *para) {
 		for (int i=0; i< network->_nodeNum; i++) {
 			int i2idx = network->_nodeIdx + network->_nodeNum * i;
 			if (gCrossDataGPU->_firedNum[i2idx] > 0) {
-				int num = gCrossDataGPU->_firedNum[i2idx];
+				size_t num = gCrossDataGPU->_firedNum[i2idx];
 				cudaAddCrossNeurons<<<(num+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(c_pNetGPU->ppConnections[i], buffers->c_gFiredTable, buffers->c_gFiredTableSizes, gCrossDataGPU->_firedArrays[i2idx], gCrossDataGPU->_firedNum[i2idx], time);
 			}
 		}

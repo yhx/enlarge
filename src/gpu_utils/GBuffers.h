@@ -13,7 +13,7 @@ struct GBuffers {
 	// int *c_gSynapsesActiveTable;
 	// int *c_gSynapsesLogTable;
 
-	// int *c_neuronsFired;
+	uinteger_t *c_neuronsFired;
 	// int *c_synapsesFired;
 
 	uinteger_t *c_gLayerInput;
@@ -23,5 +23,5 @@ struct GBuffers {
 };
 
 // void init_buffers(GBuffers * buf);
-GBuffers* alloc_buffers(int neuron_num, int synapse_num, int maxDelay, real dt);
+GBuffers* alloc_buffers(size_t neuron_num, size_t synapse_num, int maxDelay, real dt);
 int free_buffers(GBuffers *buf);

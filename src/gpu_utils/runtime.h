@@ -74,7 +74,7 @@ __global__ void reset_active_synapse();
 
 __global__ void cudaUpdateFTS(int * firedTableSizes, int num, int idx);
 
-__global__ void cudaAddCrossNeurons(Connection *conn, int *firedTable, int *firedTableSizes, int *ids, int num, int time);
+__global__ void cudaAddCrossNeurons(Connection *conn, uinteger_t *firedTable, uinteger_t *firedTableSizes, uinteger_t *ids, size_t num, int time);
 
 // __global__ void cudaDeliverNeurons(int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, int *global_cross_data, int *fired_n_num, int max_delay, int node_num, int time);
 __global__ void cudaDeliverNeurons(uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t *idx2index, size_t *crossnode_index2idx, size_t *global_cross_data, size_t *fired_n_num, int max_delay, int node_num, int time);

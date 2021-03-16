@@ -265,10 +265,10 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 	memset(c_gNeuronInput, 0, sizeof(real)*allNeuronNum);
 	real *c_gNeuronInput_I = (real*)malloc(sizeof(real)*allNeuronNum); 
 	memset(c_gNeuronInput_I, 0, sizeof(real)*allNeuronNum);
-	int *c_gFiredTable = (int*)malloc(sizeof(int)*allNeuronNum*(maxDelay+1));
-	memset(c_gFiredTable, 0, sizeof(int)*allNeuronNum*(maxDelay+1));
-   	int *c_gFiredTableSizes = (int*)malloc(sizeof(int)*(maxDelay+1));
-   	memset(c_gFiredTableSizes, 0, sizeof(int)*(maxDelay+1));
+	size_t *c_gFiredTable = (size_t*)malloc(sizeof(size_t)*allNeuronNum*(maxDelay+1));
+	memset(c_gFiredTable, 0, sizeof(size_t)*allNeuronNum*(maxDelay+1));
+   	size_t *c_gFiredTableSizes = (size_t*)malloc(sizeof(size_t)*(maxDelay+1));
+   	memset(c_gFiredTableSizes, 0, sizeof(size_t)*(maxDelay+1));
 
    	c_gFiredCount = (int*)malloc(sizeof(int)*(allNeuronNum));
    	memset(c_gFiredCount, 0, sizeof(int)*(allNeuronNum));

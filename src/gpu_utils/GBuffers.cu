@@ -9,7 +9,6 @@ __global__ void init_buffers(/*int *c_gTimeTable, real *c_gNeuronInput, real *c_
 	if ((threadIdx.x == 0) && (blockIdx.x == 0)) {
 		// gActiveTable = c_gActiveTable;
 		// gActiveTableSize = 0;
-
 		// gCurrentIdx = 0;
 		// gCurrentCycle = 0;
 		// gTimeTable = c_gTimeTable;
@@ -53,8 +52,13 @@ GBuffers* alloc_buffers(int neuron_num, int synapse_num, int maxDelay, real dt)
 	ret->c_gFiredTable = gpuMalloc<uinteger_t>(neuron_num * (maxDelay+1));
 	ret->c_gFiredTableSizes = gpuMalloc<uinteger_t>(maxDelay+1);
 
+	ret->c_gLayerInput = gpuMalloc<uinteger_t>(neuron_num);
+	ret->c_gXInput = gpuMalloc<real>(neuron_num);
+	ret->c_gFireCount = gpuMalloc<int>(neuron_num);
+	ret->c_neuronsFired = hostMalloc<uinteger_t>(neuron_num);
 
 
+	// checkCudaErrors(cudaMallocHost((void**)(&ret->c_neuronsFired), sizeof(int)*(neuron_num)));
 
 	// checkCudaErrors(cudaMalloc((void**)&(ret->c_gActiveTable), sizeof(int)*(neuron_num)));
 	// checkCudaErrors(cudaMemset(ret->c_gActiveTable, 0, sizeof(int)*(neuron_num)));
@@ -65,9 +69,6 @@ GBuffers* alloc_buffers(int neuron_num, int synapse_num, int maxDelay, real dt)
 	// checkCudaErrors(cudaMalloc((void**)&(ret->c_gSynapsesLogTable), sizeof(int)*(synapse_num)));
 	// checkCudaErrors(cudaMemset(ret->c_gSynapsesLogTable, 0, sizeof(int)*(synapse_num)));
 
-	ret->c_gLayerInput = gpuMalloc<uinteger_t>(neuron_num);
-	ret->c_gXInput = gpuMalloc<real>(neuron_num);
-	ret->c_gFireCount = gpuMalloc<int>(neuron_num);
 
 	//checkCudaErrors(cudaMalloc((void**)&ret->c_gTimeTable, sizeof(int)*(deltaDelay+1)));
 	//checkCudaErrors(cudaMemset(ret->c_gTimeTable, 0, sizeof(int)*(deltaDelay+1)));
@@ -95,10 +96,10 @@ int free_buffers(GBuffers *buf)
 	gpuFree(buf->c_gNeuronInput_I);
 	gpuFree(buf->c_gFiredTable);
 	gpuFree(buf->c_gFiredTableSizes);
+	hostFree(buf->c_neuronsFired);
 	// checkCudaErrors(cudaFree(buf->c_gActiveTable));
 	// checkCudaErrors(cudaFree(buf->c_gSynapsesActiveTable));
 	// checkCudaErrors(cudaFree(buf->c_gSynapsesLogTable));
-	// hostFree(buf->c_neuronsFired);
 	// hostFree(buf->c_synapsesFired);
 
 	return 0;
