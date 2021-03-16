@@ -87,21 +87,6 @@ __device__ real _clip(real a, real min, real max)
 	}
 }
 
-template<typename T, typename SIZE>
-__device__ int commit2globalTable(T *shared_buf, volatile SIZE size, T *global_buf, T * global_size, SIZE offset) 
-{
-	__shared__ volatile SIZE start_loc;
-	if (threadIdx.x == 0) {
-		start_loc = atomicAdd(global_size, size);
-	}
-	__syncthreads();
-
-	for (SIZE idx=threadIdx.x; idx<size; idx+=blockDim.x) {
-		global_buf[offset + start_loc + idx] = shared_buf[idx];
-	}
-
-	return 0;
-}
 
 __global__ void update_time(uinteger_t *firedTableSizes, int max_delay, int time)
 {
@@ -168,7 +153,7 @@ __global__ void cudaAddCrossNeurons(Connection *connection, int *firedTable, int
 	}
 }
 
-__global__ void cudaDeliverNeurons(uinteger_t *firedTable, uinteger_t *firedTableSizes, uinteger_t *idx2index, uinteger_t *crossnode_index2idx, uinteger_t *global_cross_data, uinteger_t *fired_n_num, int max_delay, int node_num, int time)
+__global__ void cudaDeliverNeurons(uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t *idx2index, size_t *crossnode_index2idx, size_t *global_cross_data, size_t *fired_n_num, int max_delay, int node_num, int time)
 {
 	__shared__ uinteger_t cross_neuron_id[MAX_BLOCK_SIZE];
 	__shared__ volatile uinteger_t cross_cnt;

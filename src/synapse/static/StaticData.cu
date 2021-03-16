@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-#include "../../gpu_utils/helper_cuda.h"
+#include "../../gpu_utils/helper_gpu.h"
 #include "StaticData.h"
 
 void *cudaMallocStatic()

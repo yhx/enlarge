@@ -52,10 +52,10 @@ int MultiGPUSimulator::run_single(real time)
 	GBuffers **buffers = (GBuffers **)malloc(sizeof(GBuffers*)*device_count);
 
 	BlockSize **updateSize = (BlockSize **)malloc(sizeof(BlockSize*)*device_count);
-	int **c_g_idx2index = (int **)malloc(sizeof(int*)*device_count);
-	int **c_g_cross_index2idx = (int **)malloc(sizeof(int*)*device_count);
-	int **c_g_global_cross_data = (int **)malloc(sizeof(int*)*device_count);
-	int **c_g_fired_n_num = (int **)malloc(sizeof(int*)*device_count);
+	size_t **c_g_idx2index = (size_t **)malloc(sizeof(size_t*)*device_count);
+	size_t **c_g_cross_index2idx = (size_t **)malloc(sizeof(size_t*)*device_count);
+	size_t **c_g_global_cross_data = (size_t **)malloc(sizeof(size_t*)*device_count);
+	size_t **c_g_fired_n_num = (size_t **)malloc(sizeof(size_t*)*device_count);
 
 	real **c_vm = (real **)malloc(sizeof(real*)*device_count);
 	real **c_g_vm = (real **)malloc(sizeof(real*)*device_count);

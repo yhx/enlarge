@@ -10,7 +10,7 @@
 #include "../utils/utils.h"
 #include "../utils/FileOp.h"
 #include "../utils/TypeFunc.h"
-#include "../gpu_utils/mem_op.h"
+#include "../gpu_utils/helper_gpu.h"
 // #include "../gpu_utils/gpu_utils.h"
 #include "../gpu_utils/GBuffers.h"
 #include "../gpu_utils/runtime.h"
@@ -121,7 +121,7 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 		fprintf(input_i_file, "\n");
 #endif
 
-		update_time<<<1, 1>>>(c_pNetGPU->pConnection, time, buffers->c_gFiredTableSizes);
+		update_time<<<1, 1>>>(buffers->c_gFiredTableSizes, maxDelay, time);
 
 		for (int i=0; i<nTypeNum; i++) {
 			cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->pConnection, c_pNetGPU->ppNeurons[i], buffers->c_gNeuronInput, buffers->c_gNeuronInput_I, buffers->c_gFiredTable, buffers->c_gFiredTableSizes, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i],time, &updateSize[c_pNetGPU->pNTypes[i]]);

@@ -76,14 +76,28 @@ __global__ void cudaUpdateFTS(int * firedTableSizes, int num, int idx);
 
 __global__ void cudaAddCrossNeurons(Connection *conn, int *firedTable, int *firedTableSizes, int *ids, int num, int time);
 
-__global__ void cudaDeliverNeurons(int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, int *global_cross_data, int *fired_n_num, int max_delay, int node_num, int time);
+// __global__ void cudaDeliverNeurons(int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, int *global_cross_data, int *fired_n_num, int max_delay, int node_num, int time);
+__global__ void cudaDeliverNeurons(uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t *idx2index, size_t *crossnode_index2idx, size_t *global_cross_data, size_t *fired_n_num, int max_delay, int node_num, int time);
 
 __device__ real _clip(real a, real min, real max);
 
-template<typename T>
-__device__ int commit2globalTable(T *shared_buf, volatile size_t size, T *global_buf, T * global_size, size_t offset);
-
 BlockSize * getBlockSize(int nSize, int sSize);
+
+template<typename T1, typename T2>
+__device__ int commit2globalTable(T1 *shared_buf, const T2 size, T1 *global_buf, T2 * global_size, const T1 offset) 
+{
+	__shared__ volatile T1 start_loc;
+	if (threadIdx.x == 0) {
+		start_loc = atomicAdd(global_size, size);
+	}
+	__syncthreads();
+
+	for (size_t idx=threadIdx.x; idx<size; idx+=blockDim.x) {
+		global_buf[offset + start_loc + idx] = shared_buf[idx];
+	}
+
+	return 0;
+}
 
 
 #endif /* RUNTIME_H */
