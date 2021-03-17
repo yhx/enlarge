@@ -11,6 +11,7 @@
 #include "../base/TypeFunc.h"
 #include "../utils/proc_info.h"
 #include "../utils/utils.h"
+#include "../utils/helper_c.h"
 #include "../../include/Synapses.h"
 #include "Network.h"
 
@@ -141,6 +142,67 @@ int Network::connect(Population *p_src, Population *p_dst, real *weight, real *d
 			size_t s_offset = offset + s*dst_size + d;
 			connect(ID(p_src->type(), 0, p_src->offset()+s), 
 					ID(p_dst->type(), sp[s*dst_size+d], p_dst->offset()+d),
+				   ID(type, 0, s_offset),
+				   _synapses[type]->get_delay()[s_offset]);
+			count++;
+		}
+	}
+
+	return count;
+}
+
+int Network::connect(Population *p_src, Population *p_dst, real *weight, real *delay, real tau, SpikeType sp, size_t size) {
+	size_t dst_size = p_dst->size();
+	size_t src_size = p_src->size();
+	assert(size == (src_size * dst_size)); 
+
+	Type type = Static;
+	size_t offset = 0;
+	if (_synapses.find(type) == _synapses.end()) {
+		_synapses[type] = new StaticSynapse(weight, delay, tau, _dt, size);
+	} else {
+		offset = _synapses.size();
+		StaticSynapse t(weight, delay, tau, _dt, size);
+		_synapses[type]->append(&t, size);
+	}
+
+	int count = 0;
+	for (size_t s=0; s<src_size; s++) {
+		for (size_t d=0; d<dst_size; d++) {
+			size_t s_offset = offset + s*dst_size + d;
+			connect(ID(p_src->type(), 0, p_src->offset()+s), 
+					ID(p_dst->type(), sp, p_dst->offset()+d),
+				   ID(type, 0, s_offset),
+				   _synapses[type]->get_delay()[s_offset]);
+			count++;
+		}
+	}
+
+	return count;
+}
+
+int Network::connect(Population *p_src, Population *p_dst, real *weight, real *delay, SpikeType *sp, size_t size) {
+	size_t dst_size = p_dst->size();
+	size_t src_size = p_src->size();
+	assert(size == (src_size * dst_size)); 
+
+	Type type = Static;
+	size_t offset = 0;
+	if (_synapses.find(type) == _synapses.end()) {
+		_synapses[type] = new StaticSynapse(weight, delay, 0.0, _dt, size);
+	} else {
+		offset = _synapses.size();
+		StaticSynapse t(weight, delay, 0.0, _dt, size);
+		_synapses[type]->append(&t, size);
+	}
+
+	int count = 0;
+	for (size_t s=0; s<src_size; s++) {
+		for (size_t d=0; d<dst_size; d++) {
+			size_t s_offset = offset + s*dst_size + d;
+			SpikeType sp_t = sp ? sp[s*dst_size+d] : Exc;
+			connect(ID(p_src->type(), 0, p_src->offset()+s), 
+					ID(p_dst->type(), sp_t, p_dst->offset()+d),
 				   ID(type, 0, s_offset),
 				   _synapses[type]->get_delay()[s_offset]);
 			count++;
@@ -311,19 +373,19 @@ void Network::logMap() {
 // 	return cross_data;
 // }
 
-CrossNodeData* Network::arrangeCrossNodeData(int node_num, const SimInfo &info)
+CrossNodeData* Network::arrangeCrossNodeData(const SimInfo &info)
 {
-	CrossNodeData * cross_data = (CrossNodeData*)malloc(sizeof(CrossNodeData) * node_num);
+	CrossNodeData * cross_data = malloc_c<CrossNodeData>(_node_num);
 	assert(cross_data != NULL);
 
 	int delay_t = _min_delay;
-	for (int i=0; i<node_num; i++) {
-		allocParaCND(&(cross_data[i]), node_num, delay_t);
+	for (unsigned int i=0; i<_node_num; i++) {
+		allocParaCND(&(cross_data[i]), _node_num, delay_t);
 	}
 
-	for (int i=0; i<node_num; i++) {
+	for (unsigned int i=0; i<_node_num; i++) {
 		cross_data[i]._send_offset[0] = 0;
-		for (int j=0; j<node_num; j++) {
+		for (unsigned int j=0; j<_node_num; j++) {
 
 			int count = 0;
 			for (auto iter = _crossnodeNeuronsSend[i].begin(); iter != _crossnodeNeuronsSend[i].end(); iter++) {
@@ -338,10 +400,10 @@ CrossNodeData* Network::arrangeCrossNodeData(int node_num, const SimInfo &info)
 	}
 
 
-	for (int i=0; i<node_num; i++) {
+	for (unsigned int i=0; i<_node_num; i++) {
 		cross_data[i]._recv_offset[0] = 0;
 		assert(0 ==  cross_data[i]._send_offset[i+1] - cross_data[i]._send_offset[i]); 
-		for (int j=0; j<node_num; j++) {
+		for (unsigned int j=0; j<_node_num; j++) {
 			int count_t = cross_data[j]._send_offset[i+1] - cross_data[j]._send_offset[i]; 
 			cross_data[i]._recv_offset[j+1] = cross_data[i]._recv_offset[j] + count_t;
 		}
@@ -352,7 +414,7 @@ CrossNodeData* Network::arrangeCrossNodeData(int node_num, const SimInfo &info)
 	return cross_data;
 }
 
-void printTypeNum(vector<map<Type, unsigned long long>> typeNum, const char *name) {
+void printTypeNum(vector<map<Type, unsigned long long>> &typeNum, const char *name) {
 	printf("The %s number: ", name);
 	for (size_t i=0; i<typeNum.size(); i++) {
 		unsigned long long  total = 0;

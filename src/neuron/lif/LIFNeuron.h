@@ -14,7 +14,6 @@ public:
 	virtual void * packup() override;
 	int packup(void *data, size_t dst, size_t src);
 
-	const static Type type;
 protected:
 	vector<int> _refract_step;
 	vector<int> _refract_time;

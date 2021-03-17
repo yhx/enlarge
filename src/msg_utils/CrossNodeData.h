@@ -14,20 +14,20 @@ struct CrossNodeData {
 
 	// int _recv_size; _recv_offset[_node_num];
 	// cap _node_num + 1
-	uinteger_t *_recv_offset;
+	integer_t *_recv_offset;
 	// cap _node_num * (delay+1)
-	uinteger_t *_recv_start;
+	integer_t *_recv_start;
 	// cap _node_num
-    uinteger_t *_recv_num;
+    integer_t *_recv_num;
 	uinteger_t *_recv_data;
 
 	// int send_size;
 	// cap _node_num + 1
-	uinteger_t *_send_offset;
+	integer_t *_send_offset;
 	// cap _node_num * (delay+1)
-	uinteger_t *_send_start;
+	integer_t *_send_start;
 	// cap _node_num * delay
-	uinteger_t *_send_num;
+	integer_t *_send_num;
 	uinteger_t *_send_data;
 };
 
@@ -46,7 +46,7 @@ CrossNodeData * loadCND(FILE *f);
 CrossNodeData * copyCNDtoGPU(CrossNodeData * data);
 int freeCNDGPU(CrossNodeData *data);
 
-int generateCND(uinteger_t *idx2index, uinteger_t *crossnode_index2idx, CrossNodeData *cnd, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t gFiredTableCap, int max_delay, int min_delay, int node_num, int time);
+int generateCND(integer_t *idx2index, integer_t *crossnode_index2idx, CrossNodeData *cnd, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t gFiredTableCap, int max_delay, int min_delay, int node_num, int time);
 
 int msg_cnd(CrossNodeData *cnd, MPI_Request *request);
 

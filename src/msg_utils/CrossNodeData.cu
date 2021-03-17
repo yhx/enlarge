@@ -1,6 +1,7 @@
 
 #include <assert.h>
 
+#include "../utils/helper_c.h"
 #include "../gpu_utils/helper_gpu.h"
 #include "../gpu_utils/runtime.h"
 #include "CrossNodeData.h"
@@ -18,15 +19,15 @@ CrossNodeData * copyCNDtoGPU(CrossNodeData *data)
 	int size = data->_node_num * data->_min_delay;
 	int num_p_1 = data->_node_num + 1;
 
-    gpu->_recv_offset = copyToGPU<uinteger_t>(data->_recv_offset, num_p_1);
-    gpu->_recv_start = copyToGPU<uinteger_t>(data->_recv_start, size+num);
-    gpu->_recv_num = gpuMalloc<uinteger_t>(num);
+    gpu->_recv_offset = copyToGPU<integer_t>(data->_recv_offset, num_p_1);
+    gpu->_recv_start = copyToGPU<integer_t>(data->_recv_start, size+num);
+    gpu->_recv_num = gpuMalloc<integer_t>(num);
 
     gpu->_recv_data = gpuMalloc<uinteger_t>(data->_recv_offset[num]);
 
-    gpu->_send_offset = copyToGPU<uinteger_t>(data->_send_offset, num_p_1);
-    gpu->_send_start = copyToGPU<uinteger_t>(data->_send_start, size+num);
-    gpu->_send_num = gpuMalloc<uinteger_t>(num);
+    gpu->_send_offset = copyToGPU<integer_t>(data->_send_offset, num_p_1);
+    gpu->_send_start = copyToGPU<integer_t>(data->_send_start, size+num);
+    gpu->_send_num = gpuMalloc<integer_t>(num);
 
     gpu->_send_data = gpuMalloc<uinteger_t>(data->_send_offset[num]);
 
@@ -143,10 +144,10 @@ int reset_cnd_gpu(CrossNodeData *gpu, CrossNodeData *cpu)
 {
 	int node_num = cpu->_node_num;
 	int size = cpu->_min_delay * cpu->_node_num;
-	cudaMemset(gpu->_recv_start, 0, sizeof(uinteger_t)*(size+node_num));
-	cudaMemset(gpu->_send_start, 0, sizeof(uinteger_t) * (size+node_num));
+	gpuMemset(gpu->_recv_start, 0, size+node_num);
+	gpuMemset(gpu->_send_start, 0, size+node_num);
 
-	memset(cpu->_recv_num, 0, sizeof(uinteger_t) * node_num);
-	memset(cpu->_send_num, 0, sizeof(uinteger_t) * node_num);
+	memset_c(cpu->_recv_num, 0, node_num);
+	memset_c(cpu->_send_num, 0, node_num);
 	return 0;
 }

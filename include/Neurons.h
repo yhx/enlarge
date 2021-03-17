@@ -18,8 +18,6 @@
 // #include "../src/neuron/decide/DecideNeuron.h"
 // #include "../src/neuron/fft/FFTNeuron.h"
 
-#include "../src/interface/CompositeNeuron.h"
-
 #include "Synapses.h"
 
 // #include "../src/neuron/constant/GConstantNeurons.h"
@@ -47,7 +45,7 @@
 // typedef CompositeNeuron<ArrayNeuron, StaticSynapse> Array_spikes;
 
 // typedef CompositeNeuron<MaxNeuron, StaticSynapse> Max_pooling;
-typedef CompositeNeuron<LIFNeuron, StaticSynapse> LIF_curr_exp;
+// typedef CompositeNeuron<LIFNeuron, StaticSynapse> LIF_curr_exp;
 // typedef CompositeNeuron<LIFNeuron, StaticSynapse> LIF_brian;
 // typedef CompositeNeuron<TJNeuron, StaticSynapse> TJ_curr_static;
 

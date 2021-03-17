@@ -75,10 +75,10 @@ DistriNetwork *recvDistriNet(int src, int tag, MPI_Comm comm)
 
 int saveDistriNet(DistriNetwork *net, FILE * f)
 {
-	fwrite_c(&(net->_simCycle), sizeof(int), 1, f);
-	fwrite_c(&(net->_nodeIdx), sizeof(int), 1, f);
-	fwrite_c(&(net->_nodeNum), sizeof(int), 1, f);
-	fwrite_c(&(net->_dt), sizeof(real), 1, f);
+	fwrite_c(&(net->_simCycle), 1, f);
+	fwrite_c(&(net->_nodeIdx), 1, f);
+	fwrite_c(&(net->_nodeNum), 1, f);
+	fwrite_c(&(net->_dt), 1, f);
 	saveGNetwork(net->_network, f);
 	saveCNM(net->_crossnodeMap, f);
 
@@ -87,10 +87,10 @@ int saveDistriNet(DistriNetwork *net, FILE * f)
 
 DistriNetwork * loadDistriNet(FILE *f) {
 	DistriNetwork *net = (DistriNetwork*)malloc(sizeof(DistriNetwork));
-	fread_c(&(net->_simCycle), sizeof(int), 1, f);
-	fread_c(&(net->_nodeIdx), sizeof(int), 1, f);
-	fread_c(&(net->_nodeNum), sizeof(int), 1, f);
-	fread_c(&(net->_dt), sizeof(real), 1, f);
+	fread_c(&(net->_simCycle), 1, f);
+	fread_c(&(net->_nodeIdx), 1, f);
+	fread_c(&(net->_nodeNum), 1, f);
+	fread_c(&(net->_dt), 1, f);
 	net->_network = loadGNetwork(f);
 	net->_crossnodeMap = loadCNM(f);
 	return net;

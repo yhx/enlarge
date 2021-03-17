@@ -65,7 +65,7 @@ int MultiGPUSimulator::run(real time, FireInfo &log)
 	SimInfo info(_dt);
 	DistriNetwork *node_nets = _network->buildNetworks(info);
 	assert(node_nets != NULL);
-	gCrossDataGPU = _network->arrangeCrossThreadDataGPU(device_count);
+	gCrossDataGPU = _network->arrangeCrossGPUData();
 	assert(gCrossDataGPU != NULL);
 
 	pthread_t *thread_ids = (pthread_t *)malloc(sizeof(pthread_t) * device_count);
@@ -156,10 +156,10 @@ void * run_thread_gpu(void *para) {
 
 	//int * c_g_cross_id = gpuMalloc<int>(global_cross_data[dataIdx]._max_n_num); 
 
-	size_t * c_g_idx2index = copyToGPU<size_t>(network->_crossnodeMap->_idx2index, allNeuronNum);
-	size_t * c_g_cross_index2idx = copyToGPU<size_t>(network->_crossnodeMap->_crossnodeIndex2idx, network->_crossnodeMap->_crossSize);
-	size_t * c_g_global_cross_data = gpuMalloc<size_t>(allNeuronNum * network->_nodeNum);
-	size_t * c_g_fired_n_num = gpuMalloc<size_t>(network->_nodeNum);
+	integer_t * c_g_idx2index = copyToGPU(network->_crossnodeMap->_idx2index, allNeuronNum);
+	integer_t * c_g_cross_index2idx = copyToGPU(network->_crossnodeMap->_crossnodeIndex2idx, network->_crossnodeMap->_crossSize);
+	uinteger_t * c_g_global_cross_data = gpuMalloc<uinteger_t>(allNeuronNum * network->_nodeNum);
+	uinteger_t * c_g_fired_n_num = gpuMalloc<uinteger_t>(network->_nodeNum);
 
 	vector<int> firedInfo;
 	struct timeval ts, te;
@@ -192,6 +192,7 @@ void * run_thread_gpu(void *para) {
 
 		cudaDeliverNeurons<<<(allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(buffers->c_gFiredTable, buffers->c_gFiredTableSizes, c_g_idx2index, c_g_cross_index2idx, c_g_global_cross_data, c_g_fired_n_num, maxDelay, network->_nodeNum, time);
 
+		copyFromGPU(gCrossDataGPU->_firedNum + network->_nodeIdx * network->_nodeNum, c_g_fired_n_num, sizeof(int)*network->_nodeNum);
 		checkCudaErrors(cudaMemcpy(gCrossDataGPU->_firedNum + network->_nodeIdx * network->_nodeNum, c_g_fired_n_num, sizeof(int)*network->_nodeNum, cudaMemcpyDeviceToHost));
 		//gettimeofday(&t3, NULL);
 
@@ -199,7 +200,7 @@ void * run_thread_gpu(void *para) {
 			int idx2i = network->_nodeIdx * network->_nodeNum + i;
 			assert(gCrossDataGPU->_firedNum[idx2i] <= gCrossDataGPU->_maxNum[idx2i]);
 			if (gCrossDataGPU->_firedNum[idx2i] > 0) {
-				checkCudaErrors(cudaMemcpyPeer(gCrossDataGPU->_firedArrays[idx2i], i, c_g_global_cross_data + allNeuronNum * i, network->_nodeIdx, gCrossDataGPU->_firedNum[idx2i] * sizeof(int)));
+				gpuMemcpyPeer(gCrossDataGPU->_firedArrays[idx2i], i, c_g_global_cross_data + allNeuronNum * i, network->_nodeIdx, gCrossDataGPU->_firedNum[idx2i]);
 			}
 		}
 		//gettimeofday(&t7, NULL);
@@ -246,7 +247,7 @@ void * run_thread_gpu(void *para) {
 			int i2idx = network->_nodeIdx + network->_nodeNum * i;
 			if (gCrossDataGPU->_firedNum[i2idx] > 0) {
 				size_t num = gCrossDataGPU->_firedNum[i2idx];
-				cudaAddCrossNeurons<<<(num+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(c_pNetGPU->ppConnections[i], buffers->c_gFiredTable, buffers->c_gFiredTableSizes, gCrossDataGPU->_firedArrays[i2idx], gCrossDataGPU->_firedNum[i2idx], time);
+				cudaAddCrossNeurons<<<(num+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(buffers->c_gFiredTable, buffers->c_gFiredTableSizes, gCrossDataGPU->_firedArrays[i2idx], gCrossDataGPU->_firedNum[i2idx], maxDelay, time);
 			}
 		}
 		

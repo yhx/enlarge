@@ -45,7 +45,7 @@ CrossNodeMap * recvMap(int src, int tag, MPI_Comm comm)
 	ret = MPI_Recv(net, sizeof(CrossNodeMap), MPI_UNSIGNED_CHAR, src, tag, comm, &status);
 	assert(ret==MPI_SUCCESS);
 	net->_idx2index = malloc_c<integer_t>(net->_num);
-	ret = MPI_Recv(net->_idx2index, net->_num, MPI_INTERGER_T, src, tag+1, comm, &status);
+	ret = MPI_Recv(net->_idx2index, net->_num, MPI_INTEGER_T, src, tag+1, comm, &status);
 	assert(ret==MPI_SUCCESS);
 	net->_crossnodeIndex2idx = malloc_c<integer_t>(net->_crossSize);
 	ret = MPI_Recv(net->_crossnodeIndex2idx, net->_crossSize, MPI_INTEGER_T, src, tag+2, comm, &status);

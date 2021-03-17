@@ -138,11 +138,11 @@ __global__ void cudaUpdateFTS(int *firedTableSizes, int num, int idx)
 	}
 }
 
-__global__ void cudaAddCrossNeurons(Connection *connection, uinteger_t *firedTable, uinteger_t *firedTableSizes, int *ids, int num, int time)
+__global__ void cudaAddCrossNeurons(uinteger_t *firedTable, uinteger_t *firedTableSizes, int *ids, int num, int max_delay, int time)
 {
 	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	// int delayIdx = time % (connection->maxDelay-connection->minDelay+1);
-	int delayIdx = time % (connection->maxDelay+1);
+	int delayIdx = time % (max_delay+1);
 	if (tid < num) {
 		firedTable[gFiredTableCap*delayIdx + firedTableSizes[delayIdx] + tid] = ids[tid];
 	}
@@ -153,7 +153,7 @@ __global__ void cudaAddCrossNeurons(Connection *connection, uinteger_t *firedTab
 	}
 }
 
-__global__ void cudaDeliverNeurons(uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t *idx2index, size_t *crossnode_index2idx, uinteger_t *global_cross_data, uinteger_t *fired_n_num, int max_delay, int node_num, int time)
+__global__ void cudaDeliverNeurons(uinteger_t *firedTable, uinteger_t *firedTableSizes, integer_t *idx2index, integer_t *crossnode_index2idx, uinteger_t *global_cross_data, uinteger_t *fired_n_num, int max_delay, int node_num, int time)
 {
 	__shared__ uinteger_t cross_neuron_id[MAX_BLOCK_SIZE];
 	__shared__ volatile uinteger_t cross_cnt;
@@ -167,13 +167,13 @@ __global__ void cudaDeliverNeurons(uinteger_t *firedTable, uinteger_t *firedTabl
 	// int delayIdx = time % (conn->maxDelay-conn->minDelay+1);
 	int delayIdx = time % (max_delay+1);
 	// int delayIdx = time % (conn->maxDelay+1);
-	int fired_size = firedTableSizes[delayIdx];
+	uinteger_t fired_size = firedTableSizes[delayIdx];
 	for (int node = 0; node < node_num; node++) {
-		for (int idx = tid; idx < fired_size; idx += blockDim.x * gridDim.x) {
-			int nid = firedTable[gFiredTableCap*delayIdx + idx];
-			int tmp = idx2index[nid];
+		for (uinteger_t idx = tid; idx < fired_size; idx += blockDim.x * gridDim.x) {
+			uinteger_t nid = firedTable[gFiredTableCap*delayIdx + idx];
+			integer_t tmp = idx2index[nid];
 			if (tmp >= 0) {
-				int map_nid = crossnode_index2idx[tmp*node_num + node];
+				integer_t map_nid = crossnode_index2idx[tmp*node_num + node];
 				if (map_nid >= 0) {
 					size_t test_loc = atomicAdd((uinteger_t *)&cross_cnt, 1);
 					if (test_loc < MAX_BLOCK_SIZE) {

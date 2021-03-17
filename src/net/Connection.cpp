@@ -61,21 +61,21 @@ int freeConnection(Connection *pCPU)
 
 int saveConnection(Connection *conn, FILE *f)
 {
-	fwrite_c(&(conn->nNum), sizeof(size_t), 1, f);
-	fwrite_c(&(conn->sNum), sizeof(size_t), 1, f);
-	fwrite_c(&(conn->maxDelay), sizeof(unsigned int), 1, f);
-	fwrite_c(&(conn->minDelay), sizeof(unsigned int), 1, f);
+	fwrite_c(&(conn->nNum), 1, f);
+	fwrite_c(&(conn->sNum), 1, f);
+	fwrite_c(&(conn->maxDelay), 1, f);
+	fwrite_c(&(conn->minDelay), 1, f);
 
 	size_t length = (conn->maxDelay - conn->minDelay + 1) * conn->nNum;
 
-	fwrite_c(conn->pDelayStart, sizeof(size_t), length, f);
-	fwrite_c(conn->pDelayNum, sizeof(size_t), length, f);
-	fwrite_c(conn->pSidMap, sizeof(size_t), conn->sNum, f);
-	fwrite_c(conn->dst, sizeof(size_t), conn->sNum, f);
+	fwrite_c(conn->pDelayStart, length, f);
+	fwrite_c(conn->pDelayNum, length, f);
+	fwrite_c(conn->pSidMap, conn->sNum, f);
+	fwrite_c(conn->dst, conn->sNum, f);
 
-	fwrite_c(conn->pDelayStartRev, sizeof(size_t), length, f);
-	fwrite_c(conn->pDelayNumRev, sizeof(size_t), length, f);
-	fwrite_c(conn->pSidMapRev, sizeof(size_t), conn->sNum, f);
+	fwrite_c(conn->pDelayStartRev, length, f);
+	fwrite_c(conn->pDelayNumRev, length, f);
+	fwrite_c(conn->pSidMapRev, conn->sNum, f);
 
 	return 0;
 }
@@ -84,10 +84,10 @@ Connection * loadConnection(FILE *f)
 {
 	Connection *conn = (Connection *)malloc(sizeof(Connection));
 
-	fread_c(&(conn->nNum), sizeof(size_t), 1, f);
-	fread_c(&(conn->sNum), sizeof(size_t), 1, f);
-	fread_c(&(conn->maxDelay), sizeof(unsigned int), 1, f);
-	fread_c(&(conn->minDelay), sizeof(unsigned int), 1, f);
+	fread_c(&(conn->nNum), 1, f);
+	fread_c(&(conn->sNum), 1, f);
+	fread_c(&(conn->maxDelay), 1, f);
+	fread_c(&(conn->minDelay), 1, f);
 
 	unsigned int length = (conn->maxDelay - conn->minDelay + 1) * conn->nNum;
 
@@ -100,14 +100,14 @@ Connection * loadConnection(FILE *f)
 	conn->pDelayNumRev = (size_t*)malloc(sizeof(size_t)*length);
 	conn->pSidMapRev = (size_t*)malloc(sizeof(size_t)*conn->sNum);
 
-	fread_c(conn->pDelayStart, sizeof(size_t), length, f);
-	fread_c(conn->pDelayNum, sizeof(size_t), length, f);
-	fread_c(conn->pSidMap, sizeof(size_t), conn->sNum, f);
-	fread_c(conn->dst, sizeof(size_t), conn->sNum, f);
+	fread_c(conn->pDelayStart, length, f);
+	fread_c(conn->pDelayNum, length, f);
+	fread_c(conn->pSidMap, conn->sNum, f);
+	fread_c(conn->dst, conn->sNum, f);
 
-	fread_c(conn->pDelayStartRev, sizeof(size_t), length, f);
-	fread_c(conn->pDelayNumRev, sizeof(size_t), length, f);
-	fread_c(conn->pSidMapRev, sizeof(size_t), conn->sNum, f);
+	fread_c(conn->pDelayStartRev, length, f);
+	fread_c(conn->pDelayNumRev, length, f);
+	fread_c(conn->pSidMapRev, conn->sNum, f);
 
 	return conn;
 }

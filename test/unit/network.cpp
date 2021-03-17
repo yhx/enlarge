@@ -7,7 +7,7 @@
 #include "gtest/gtest.h"
 
 #include "../../include/BSim.h"
-#include "../../src/utils/FileOp.h"
+#include "../../src/utils/helper_c.h"
 #include "../../src/net/GNetwork.h"
 
 using std::vector;

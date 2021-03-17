@@ -98,15 +98,15 @@ void freeGNetwork(GNetwork * network)
 
 int saveGNetwork(GNetwork *net, FILE *f)
 {
-	fwrite_c(&(net->nTypeNum), sizeof(size_t), 1, f);
-	fwrite_c(&(net->sTypeNum), sizeof(size_t), 1, f);
-	// fwrite(&(net->maxDelay), sizeof(size_t), 1, f);
-	// fwrite(&(net->minDelay), sizeof(size_t), 1, f);
+	fwrite_c(&(net->nTypeNum), 1, f);
+	fwrite_c(&(net->sTypeNum), 1, f);
+	// fwrite_c(&(net->maxDelay), 1, f);
+	// fwrite_c(&(net->minDelay), 1, f);
 
-	fwrite_c(net->pNTypes, sizeof(Type), net->nTypeNum, f);
-	fwrite_c(net->pSTypes, sizeof(Type), net->sTypeNum, f);
-	fwrite_c(net->pNeuronNums, sizeof(size_t), net->nTypeNum+1, f);
-	fwrite_c(net->pSynapseNums, sizeof(size_t), net->sTypeNum+1, f);
+	fwrite_c(net->pNTypes, net->nTypeNum, f);
+	fwrite_c(net->pSTypes, net->sTypeNum, f);
+	fwrite_c(net->pNeuronNums, net->nTypeNum+1, f);
+	fwrite_c(net->pSynapseNums, net->sTypeNum+1, f);
 
 	for (size_t i=0; i<net->nTypeNum; i++) {
 		saveType[net->pNTypes[i]](net->ppNeurons[i], net->pNeuronNums[i+1]-net->pNeuronNums[i], f);
@@ -125,18 +125,18 @@ GNetwork *loadGNetwork(FILE *f)
 {
 	size_t nTypeNum = 0, sTypeNum = 0;
 
-	fread_c(&nTypeNum, sizeof(size_t), 1, f);
-	fread_c(&sTypeNum, sizeof(size_t), 1, f);
+	fread_c(&nTypeNum, 1, f);
+	fread_c(&sTypeNum, 1, f);
 
 	GNetwork * net = allocGNetwork(nTypeNum, sTypeNum);
 
 	// fread(&(net->maxDelay), sizeof(size_t), 1, f);
 	// fread(&(net->minDelay), sizeof(size_t), 1, f);
 
-	fread_c(net->pNTypes, sizeof(Type), net->nTypeNum, f);
-	fread_c(net->pSTypes, sizeof(Type), net->sTypeNum, f);
-	fread_c(net->pNeuronNums, sizeof(size_t), net->nTypeNum+1, f);
-	fread_c(net->pSynapseNums, sizeof(size_t), net->sTypeNum+1, f);
+	fread_c(net->pNTypes, net->nTypeNum, f);
+	fread_c(net->pSTypes, net->sTypeNum, f);
+	fread_c(net->pNeuronNums, net->nTypeNum+1, f);
+	fread_c(net->pSynapseNums, net->sTypeNum+1, f);
 
 	for (size_t i=0; i<net->nTypeNum; i++) {
 		net->ppNeurons[i] = loadType[net->pNTypes[i]](net->pNeuronNums[i+1]-net->pNeuronNums[i], f);
@@ -145,7 +145,7 @@ GNetwork *loadGNetwork(FILE *f)
 		net->ppSynapses[i] = loadType[net->pSTypes[i]](net->pSynapseNums[i+1]-net->pSynapseNums[i], f);
 	}
 
-	net->ppConnections = (Connection **)malloc(sizeof(Connection*)*sTypeNum);
+	net->ppConnections = malloc_c<Connection*>(sTypeNum);
 	for (size_t i=0; i<net->sTypeNum; i++) {
 		net->ppConnections[i] = loadConnection(f);
 	}

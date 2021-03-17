@@ -3,6 +3,7 @@
 #define HELPER_C_H
 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <iostream>
 #include <assert.h>
@@ -45,6 +46,12 @@ T * malloc_c(size_t size = 1)
 	assert(ret != NULL);
 	memset(ret, 0, sizeof(T) * (size));
 	return ret;
+}
+
+template<typename T>
+void  memset_c(T *array, int c, size_t size = 1)
+{
+	memset(array, c, sizeof(T) * (size));
 }
 
 #endif // HELPER_C_H

@@ -21,14 +21,14 @@ void allocParaCND(CrossNodeData *data, int node_num, int delay)
 	int size = delay * node_num;
 	int num_p_1 = node_num + 1;
 
-	data->_recv_offset = malloc_c<uinteger_t>(num_p_1);
-	data->_recv_start = malloc_c<uinteger_t>(size+node_num);
-	data->_recv_num =   malloc_c<uinteger_t>(node_num);
+	data->_recv_offset = malloc_c<integer_t>(num_p_1);
+	data->_recv_start = malloc_c<integer_t>(size+node_num);
+	data->_recv_num =   malloc_c<integer_t>(node_num);
 	data->_recv_data = NULL;
 	
-	data->_send_offset = malloc_c<uinteger_t>(num_p_1);
-	data->_send_start = malloc_c<uinteger_t>((size+node_num));
-	data->_send_num = malloc_c<uinteger_t>(node_num);
+	data->_send_offset = malloc_c<integer_t>(num_p_1);
+	data->_send_start = malloc_c<integer_t>((size+node_num));
+	data->_send_num = malloc_c<integer_t>(node_num);
 	data->_send_data = NULL;
 
 	resetCND(data);
@@ -38,11 +38,11 @@ void resetCND(CrossNodeData *data)
 {
 	int node_num = data->_node_num;
 	int size = data->_min_delay * data->_node_num;
-	memset(data->_recv_start, 0, sizeof(uinteger_t) * (size + node_num));
-	memset(data->_recv_num, 0, sizeof(uinteger_t) * node_num);
+	memset_c(data->_recv_start, 0, size + node_num);
+	memset_c(data->_recv_num, 0, node_num);
 
-	memset(data->_send_start, 0, sizeof(uinteger_t) * (size + node_num));
-	memset(data->_send_num, 0, sizeof(uinteger_t) * (node_num));
+	memset_c(data->_send_start, 0, size + node_num);
+	memset_c(data->_send_num, 0, node_num);
 }
 
 void allocDataCND(CrossNodeData *data)
@@ -91,9 +91,9 @@ int sendCND(CrossNodeData *cnd, int dst, int tag, MPI_Comm comm)
 
 	// int size = cnd->_min_delay * cnd->_node_num;
 	int num_p_1 = cnd->_node_num + 1;
-	ret = MPI_Send(cnd->_recv_offset, num_p_1, MPI_UINTEGER_T, dst, tag+2, comm);
+	ret = MPI_Send(cnd->_recv_offset, num_p_1, MPI_INTEGER_T, dst, tag+2, comm);
 	assert(ret == MPI_SUCCESS);
-	ret = MPI_Send(cnd->_send_offset, num_p_1, MPI_UINTEGER_T, dst, tag+3, comm);
+	ret = MPI_Send(cnd->_send_offset, num_p_1, MPI_INTEGER_T, dst, tag+3, comm);
 	assert(ret == MPI_SUCCESS);
 	return ret;
 }
@@ -110,18 +110,18 @@ CrossNodeData * recvCND(int src, int tag, MPI_Comm comm)
 
 	int size = cnd->_min_delay * cnd->_node_num;
 	int num_p_1 = cnd->_node_num + 1;
-	cnd->_recv_offset = malloc_c<uinteger_t>(num_p_1);
-	ret = MPI_Recv(cnd->_recv_offset, num_p_1, MPI_UINTEGER_T, src, tag+2, comm, &status);
+	cnd->_recv_offset = malloc_c<integer_t>(num_p_1);
+	ret = MPI_Recv(cnd->_recv_offset, num_p_1, MPI_INTEGER_T, src, tag+2, comm, &status);
 	assert(ret==MPI_SUCCESS);
-	cnd->_send_offset = malloc_c<uinteger_t>(num_p_1);
-	ret = MPI_Recv(cnd->_send_offset, num_p_1, MPI_UINTEGER_T, src, tag+3, comm, &status);
+	cnd->_send_offset = malloc_c<integer_t>(num_p_1);
+	ret = MPI_Recv(cnd->_send_offset, num_p_1, MPI_INTEGER_T, src, tag+3, comm, &status);
 	assert(ret==MPI_SUCCESS);
 
-	cnd->_recv_start = malloc_c<uinteger_t>(size + cnd->_node_num);
-	cnd->_recv_num =   malloc_c<uinteger_t>(cnd->_node_num);
+	cnd->_recv_start = malloc_c<integer_t>(size + cnd->_node_num);
+	cnd->_recv_num =   malloc_c<integer_t>(cnd->_node_num);
 
-	cnd->_send_start = malloc_c<uinteger_t>(size + cnd->_node_num);
-	cnd->_send_num =   malloc_c<uinteger_t>(cnd->_node_num);
+	cnd->_send_start = malloc_c<integer_t>(size + cnd->_node_num);
+	cnd->_send_num =   malloc_c<integer_t>(cnd->_node_num);
 
 	// resetCND(cnd);
 	allocDataCND(cnd);
@@ -142,7 +142,7 @@ CrossNodeData * loadCND(FILE *f)
 	return cnd;
 }
 
-int generateCND(uinteger_t *idx2index, uinteger_t *crossnode_index2idx, CrossNodeData *cnd, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t gFiredTableCap, int max_delay, int min_delay, int node_num, int time)
+int generateCND(integer_t *idx2index, integer_t *crossnode_index2idx, CrossNodeData *cnd, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t gFiredTableCap, int max_delay, int min_delay, int node_num, int time)
 {
 	int delay_idx = time % (max_delay+1);
 	int curr_delay = time % min_delay;
@@ -178,7 +178,7 @@ int msg_cnd(CrossNodeData *cnd, MPI_Request *request)
 	// print_mpi_x32(cnd->_send_num, num_size, "Send Num");
 	// print_mpi_x32(cnd->_recv_num, num_size, "To Recv Num");
 
-	MPI_Alltoall(cnd->_send_start, delay+1, MPI_UINTEGER_T, cnd->_recv_start, delay+1, MPI_UINTEGER_T, MPI_COMM_WORLD);
+	MPI_Alltoall(cnd->_send_start, delay+1, MPI_INTEGER_T, cnd->_recv_start, delay+1, MPI_INTEGER_T, MPI_COMM_WORLD);
 
 	// print_mpi_x32(cnd->_recv_num, num_size, "Recv Num");
 
@@ -215,8 +215,8 @@ int log_cnd(CrossNodeData *cnd, int time, FILE *sfile, FILE *rfile)
 	fprintf(sfile, "%d: \n", time);
 	for (int n=0; n<cnd->_node_num; n++) {
 		for (int d=0; d<cnd->_min_delay; d++) {
-			uinteger_t start = cnd->_send_start[n*(cnd->_min_delay+1)+d];
-			uinteger_t end = cnd->_send_start[n*(cnd->_min_delay+1)+d+1];
+			integer_t start = cnd->_send_start[n*(cnd->_min_delay+1)+d];
+			integer_t end = cnd->_send_start[n*(cnd->_min_delay+1)+d+1];
 			log_array_noendl(sfile, cnd->_send_data + cnd->_send_offset[n]+start, end-start);
 			fprintf(sfile, "\t");
 		}
@@ -228,8 +228,8 @@ int log_cnd(CrossNodeData *cnd, int time, FILE *sfile, FILE *rfile)
 	fprintf(rfile, "%d: \n", time);
 	for (int n=0; n<cnd->_node_num; n++) {
 		for (int d=0; d<cnd->_min_delay; d++) {
-			uinteger_t start = cnd->_recv_start[n*(cnd->_min_delay+1)+d];
-			uinteger_t end = cnd->_recv_start[n*(cnd->_min_delay+1)+d+1];
+			integer_t start = cnd->_recv_start[n*(cnd->_min_delay+1)+d];
+			integer_t end = cnd->_recv_start[n*(cnd->_min_delay+1)+d+1];
 			log_array_noendl(rfile, cnd->_recv_data + cnd->_recv_offset[n]+start, end-start);
 			fprintf(rfile, "\t");
 		}

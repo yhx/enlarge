@@ -9,9 +9,9 @@ CrossThreadDataGPU* Network::arrangeCrossGPUData()
 	CrossThreadDataGPU * cross_data = malloc_c<CrossThreadDataGPU>();
 	
 	unsigned node_sq = _node_num * _node_num;
-	cross_data->_maxNum = malloc_c<size_t>(node_sq);
+	cross_data->_maxNum = malloc_c<uinteger_t>(node_sq);
 	cross_data->_firedArrays = malloc_c<uinteger_t*>(node_sq);
-	cross_data->_firedNum = hostMalloc<size_t>(node_sq);
+	cross_data->_firedNum = hostMalloc<uinteger_t>(node_sq);
 
 	for (unsigned int i=0; i<_node_num; i++) {
 		for (unsigned int j=0; j<_node_num; j++) {

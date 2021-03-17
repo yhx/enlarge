@@ -55,6 +55,9 @@ public:
 	int connect(Population *p_src, Population *p_dst, real *weight, real *delay, real *tau, SpikeType *type, size_t size);
 	int connect(Population *p_src, size_t src, Population *p_dst, size_t dst, real weight, real delay, real tau, SpikeType=Exc);
 
+	int connect(Population *p_src, Population *p_dst, real *weight, real *delay, real tau, SpikeType type, size_t size);
+	int connect(Population *p_src, Population *p_dst, real *weight, real *delay, SpikeType *sp, size_t size);
+
 	// int connectOne2One(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t size);
 	// int connectConv(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t height, size_t width, size_t k_height, size_t k_width);
 	// int connectPooling(Population *pSrc, Population *pDst, real weight, size_t height, size_t width, size_t p_height, size_t p_width);
@@ -162,7 +165,7 @@ Population * Network::createPopulation(size_t num, N templ)
 	//ID id = totalNeuronNum;
 	Population *pp1 = NULL;
 
-	Type type = templ.get_type();
+	Type type = templ.type();
 
 	if (_neurons.find(type) == _neurons.end()) {
 		N *neuron = new N(templ, num);
