@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/sysinfo.h>
+#include <algorithm>
 
 #include "../utils/utils.h"
 #include "../base/TypeFunc.h"
@@ -20,7 +21,18 @@ void Network::update_status()
 	for (auto iter=_synapses.begin(); iter!=_synapses.end(); iter++) {
 		_synapses_offset[iter->first] = _synapse_num;
 		_synapse_num += iter->second->size();
+
+		auto t = minmax_element(iter->second->delay().begin(), iter->second->delay().end());
+		unsigned int max = *(t.second);
+		unsigned int min = *(t.first);
+		if (_max_delay < max) {
+			_max_delay = max;
+		}
+		if (_min_delay > min) {
+			_min_delay = min;
+		}
 	}
+	assert(_min_delay <= _max_delay);
 }
 
 GNetwork* Network::buildNetwork(const SimInfo &info)

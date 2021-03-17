@@ -33,7 +33,7 @@ __global__ void init_log_buffers(uinteger_t *layer_input, real *x_input, int *fi
 }
 
 
-GBuffers* alloc_buffers(int neuron_num, int synapse_num, int maxDelay, real dt) 
+GBuffers* alloc_buffers(size_t neuron_num, size_t synapse_num, int maxDelay, real dt) 
 {
 	// int timeTableCap = deltaDelay+1;
 	// checkCudaErrors(cudaMemcpyToSymbol(MAX_DELAY, &maxDelay, sizeof(int)));

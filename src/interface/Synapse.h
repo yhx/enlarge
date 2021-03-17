@@ -13,11 +13,9 @@
 class Synapse: public Model {
 public:
 	Synapse(Type type, int num, int offset=0) : Model(type, num, offset) {}
-	virtual ~Synapse() { 
-		_delay.clear(); 
-	};
+	virtual ~Synapse() = 0;
 
-	vector<unsigned int> & get_delay() {
+	const vector<unsigned int> & delay() {
 		return _delay;
 	}
 

@@ -53,10 +53,10 @@ int main(int argc, char **argv)
 	const real run_time=1000e-3;
 	const real dt=1e-4;
 
-	Network c;
+	Network c(dt);
 
 	Population *p0 = c.createPopulation(0, n0, 
-			LIF_curr_exp(LIFNeuron(
+			LIFNeuron(
 					fv,
 					v_rest,
 					freset, 
@@ -65,11 +65,10 @@ int main(int argc, char **argv)
 					frefractory,
 					tau_syn_e,tau_syn_i, 
 					fthreshold,
-					i_offset),  
-				tau_syn_e, tau_syn_i));
+					i_offset, dt));  
 
 	Population *p1 = c.createPopulation(0, n0, 
-			LIF_curr_exp(LIFNeuron(
+			LIFNeuron(
 					fv,
 					v_rest,
 					freset, 
@@ -78,14 +77,13 @@ int main(int argc, char **argv)
 					frefractory,
 					tau_syn_e,tau_syn_i, 
 					fthreshold,
-					0),  
-				tau_syn_e, tau_syn_i));
+					0, dt));  
 
 	real * weight01 = getConstArray((real)(1e-9)*w1/n0, n0*n1);
 	real * weight10 = getConstArray((real)(1e-9)*w2/n1, n0*n1);
 	real * delay = getConstArray((real)(delay_step * 0.1e-3), n0*n1);
 
-	enum SpikeType type=Inhibitory;
+	enum SpikeType type=Inh;
 	SpikeType *ii = getConstArray(type, n0*n1);
 
 	c.connect(p0, p1, weight01, delay, NULL, n0*n1);

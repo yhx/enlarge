@@ -138,7 +138,7 @@ __global__ void cudaUpdateFTS(int *firedTableSizes, int num, int idx)
 	}
 }
 
-__global__ void cudaAddCrossNeurons(uinteger_t *firedTable, uinteger_t *firedTableSizes, int *ids, int num, int max_delay, int time)
+__global__ void cudaAddCrossNeurons(uinteger_t *firedTable, uinteger_t *firedTableSizes, uinteger_t *ids, size_t num, int max_delay, int time)
 {
 	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	// int delayIdx = time % (connection->maxDelay-connection->minDelay+1);

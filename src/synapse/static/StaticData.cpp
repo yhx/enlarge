@@ -3,6 +3,7 @@
 #include <assert.h>
 
 #include "../../utils/utils.h"
+#include "../../utils/helper_c.h"
 
 
 #include "StaticData.h"
@@ -24,18 +25,14 @@ int allocStaticPara(void *pCPU, size_t num)
 	StaticData *p = (StaticData*)pCPU;
 
 	p->num = num;
-
-	// p->pDst = (int*)malloc(num*sizeof(int));
-	// memset(p->pDst, 0, num*sizeof(int));
-
-	p->pWeight = (real*)malloc(num*sizeof(real));
-	memset(p->pWeight, 0, num*sizeof(real));
+	p->pWeight = malloc_c<real>(num);
 
 	return 0;
 }
 
 void *allocStatic(size_t num)
 {
+	assert(num > 0);
 	void *p = mallocStatic();
 	allocStaticPara(p, num);
 	return p;

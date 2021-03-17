@@ -53,7 +53,6 @@ StaticSynapse::StaticSynapse(const real *weight, const real *delay, const real t
 
 	for (size_t i=0; i<num; i++) {
 		int delay_steps = static_cast<int>(round(_delay[i]/dt));
-		assert(fabs(tau_syn) > ZERO);
 		real w = weight[i];
 		if (fabs(tau_syn) > ZERO) {
 			real c1 = exp(-(delay[i]-dt*delay_steps)/tau_syn);
@@ -109,7 +108,7 @@ void * StaticSynapse::packup()
 
 int StaticSynapse::packup(void *data, size_t dst, size_t src)
 {
-	StaticData *p = static_cast<StaticData *>(mallocStatic());
+	StaticData *p = static_cast<StaticData *>(data);
 
 	p->pWeight[dst] = _weight[src];
 

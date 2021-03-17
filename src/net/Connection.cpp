@@ -19,28 +19,14 @@ Connection * allocConnection(size_t nNum, size_t sNum, unsigned int maxDelay, un
 
     size_t length = (maxDelay - minDelay + 1) * nNum;
 
-	ret->pDelayStart = (size_t*)malloc(sizeof(size_t)*length);
-	assert(ret->pDelayStart != NULL);
-	memset(ret->pDelayStart, 0, sizeof(size_t)*length);
-	ret->pDelayNum = (size_t*)malloc(sizeof(size_t)*length);
-	assert(ret->pDelayNum != NULL);
-	memset(ret->pDelayNum, 0, sizeof(size_t)*length);
-	ret->pSidMap = (size_t*)malloc(sizeof(size_t)*sNum);
-	assert(ret->pSidMap != NULL);
-	memset(ret->pSidMap, 0, sizeof(size_t)*sNum);
-	ret->dst = (size_t *)malloc(sizeof(size_t)*sNum);
-	assert(ret->dst != NULL);
-	memset(ret->dst , 0, sizeof(size_t)*sNum);
+	ret->pDelayStart = malloc_c<size_t>(length);
+	ret->pDelayNum = malloc_c<size_t>(length);
+	ret->pSidMap = malloc_c<size_t>(sNum);
+	ret->dst = malloc_c<size_t>(sNum);
 
-	ret->pDelayStartRev = (size_t*)malloc(sizeof(size_t)*length);
-	assert(ret->pDelayStartRev != NULL);
-	memset(ret->pDelayStartRev, 0, sizeof(size_t)*length);
-	ret->pDelayNumRev = (size_t*)malloc(sizeof(size_t)*length);
-	assert(ret->pDelayNumRev != NULL);
-	memset(ret->pDelayNumRev, 0, sizeof(size_t)*length);
-	ret->pSidMapRev = (size_t*)malloc(sizeof(size_t)*sNum);
-	assert(ret->pSidMapRev != NULL);
-	memset(ret->pSidMapRev, 0, sizeof(size_t)*sNum);
+	ret->pDelayStartRev = malloc_c<size_t>(length);
+	ret->pDelayNumRev = malloc_c<size_t>(length);
+	ret->pSidMapRev = malloc_c<size_t>(sNum);
 
 	return ret;
 }
@@ -89,16 +75,17 @@ Connection * loadConnection(FILE *f)
 	fread_c(&(conn->maxDelay), 1, f);
 	fread_c(&(conn->minDelay), 1, f);
 
-	unsigned int length = (conn->maxDelay - conn->minDelay + 1) * conn->nNum;
+	size_t length = (conn->maxDelay - conn->minDelay + 1) * conn->nNum;
+	size_t sNum = conn->sNum;
 
-	conn->pDelayStart = (size_t*)malloc(sizeof(size_t)*length);
-	conn->pDelayNum = (size_t*)malloc(sizeof(size_t)*length);
-	conn->pSidMap = (size_t*)malloc(sizeof(size_t)*conn->sNum);
-	conn->dst = (size_t*)malloc(sizeof(size_t)*conn->sNum);
+	conn->pDelayStart = malloc_c<size_t>(length);
+	conn->pDelayNum = malloc_c<size_t>(length);
+	conn->pSidMap = malloc_c<size_t>(sNum);
+	conn->dst = malloc_c<size_t>(sNum);
 
-	conn->pDelayStartRev = (size_t*)malloc(sizeof(size_t)*length);
-	conn->pDelayNumRev = (size_t*)malloc(sizeof(size_t)*length);
-	conn->pSidMapRev = (size_t*)malloc(sizeof(size_t)*conn->sNum);
+	conn->pDelayStartRev = malloc_c<size_t>(length);
+	conn->pDelayNumRev = malloc_c<size_t>(length);
+	conn->pSidMapRev = malloc_c<size_t>(sNum);
 
 	fread_c(conn->pDelayStart, length, f);
 	fread_c(conn->pDelayNum, length, f);
@@ -121,7 +108,7 @@ bool isEqualConnection(Connection *c1, Connection *c2)
 	ret = ret && (c1->maxDelay == c2->maxDelay);
 	ret = ret && (c1->minDelay == c2->minDelay);
 
-	unsigned int length = (c1->maxDelay - c1->minDelay + 1) * c1->nNum;
+	size_t length = (c1->maxDelay - c1->minDelay + 1) * c1->nNum;
 
 	ret = ret && isEqualArray(c1->pDelayStart, c2->pDelayStart, length);
 	ret = ret && isEqualArray(c1->pDelayNum, c2->pDelayNum, length);

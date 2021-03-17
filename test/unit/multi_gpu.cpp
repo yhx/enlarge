@@ -59,10 +59,12 @@ int main(int argc, char **argv)
 	}
 
 	const int N = 5;
-	Network c;
-	Population *pn0 = c.createPopulation(N, LIF_curr_exp(LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.0, 1.0, 1.0, 15.0e-3, 0e-1), 1.0, 1.0));
-	Population *pn1 = c.createPopulation(N, LIF_curr_exp(LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.0, 1.0, 1.0, 15.0e-3, 10e-1), 1.0, 1.0));
-	Population *pn2 = c.createPopulation(N, LIF_curr_exp(LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.0, 1.0, 1.0, 15.0e-3, 0.0e-3), 1.0, 1.0));
+	real dt = 1e-3;
+
+	Network c(dt);
+	Population *pn0 = c.createPopulation(N, LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.0, 1.0, 1.0, 15.0e-3, 0e-1, dt));
+	Population *pn1 = c.createPopulation(N, LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.0, 1.0, 1.0, 15.0e-3, 10e-1, dt));
+	Population *pn2 = c.createPopulation(N, LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.0, 1.0, 1.0, 15.0e-3, 0.0e-3, dt));
 
 	real * weight0 = NULL;
 	real * weight1 = NULL;
@@ -85,9 +87,9 @@ int main(int argc, char **argv)
 	c.connect(pn0, pn1, weight0, delay, NULL, N*N);
 	c.connect(pn1, pn2, weight1, delay, NULL, N*N);
 
-	STSim st(&c, 1.0e-3);
+	STSim st(&c, dt);
 	st.run(0.1);
-	MGSim mg(&c, 1.0e-3);
+	MGSim mg(&c, dt);
 	mg.run(0.1);
 
 	if (!load) {

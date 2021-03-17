@@ -113,7 +113,7 @@ int Network::connect(Population *p_src, Population *p_dst, real weight, real del
 			connect(ID(p_src->type(), 0, p_src->offset()+s), 
 					ID(p_dst->type(), sp, p_dst->offset()+d),
 				   ID(type, 0, s_offset),
-				   _synapses[type]->get_delay()[s_offset]);
+				   _synapses[type]->delay()[s_offset]);
 			count++;
 		}
 	}
@@ -143,7 +143,7 @@ int Network::connect(Population *p_src, Population *p_dst, real *weight, real *d
 			connect(ID(p_src->type(), 0, p_src->offset()+s), 
 					ID(p_dst->type(), sp[s*dst_size+d], p_dst->offset()+d),
 				   ID(type, 0, s_offset),
-				   _synapses[type]->get_delay()[s_offset]);
+				   _synapses[type]->delay()[s_offset]);
 			count++;
 		}
 	}
@@ -173,7 +173,7 @@ int Network::connect(Population *p_src, Population *p_dst, real *weight, real *d
 			connect(ID(p_src->type(), 0, p_src->offset()+s), 
 					ID(p_dst->type(), sp, p_dst->offset()+d),
 				   ID(type, 0, s_offset),
-				   _synapses[type]->get_delay()[s_offset]);
+				   _synapses[type]->delay()[s_offset]);
 			count++;
 		}
 	}
@@ -204,7 +204,7 @@ int Network::connect(Population *p_src, Population *p_dst, real *weight, real *d
 			connect(ID(p_src->type(), 0, p_src->offset()+s), 
 					ID(p_dst->type(), sp_t, p_dst->offset()+d),
 				   ID(type, 0, s_offset),
-				   _synapses[type]->get_delay()[s_offset]);
+				   _synapses[type]->delay()[s_offset]);
 			count++;
 		}
 	}
@@ -228,7 +228,7 @@ int Network::connect(Population *p_src, size_t src, Population *p_dst, size_t ds
 	connect(ID(p_src->type(), 0, p_src->offset()+src), 
 			ID(p_dst->type(), sp, p_dst->offset()+dst),
 			ID(type, 0, s_offset),
-			_synapses[type]->get_delay()[s_offset]);
+			_synapses[type]->delay()[s_offset]);
 
 	return 1;
 }

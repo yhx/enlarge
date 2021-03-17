@@ -66,6 +66,7 @@ int allocLIFPara(void *pCPU, size_t num)
 
 void *allocLIF(size_t num)
 {
+	assert(num > 0);
 	void *p = mallocLIF();
 	allocLIFPara(p, num);
 	return p;

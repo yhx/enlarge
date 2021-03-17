@@ -30,7 +30,7 @@ GNetwork * deepcopyGNetwork(GNetwork * net) {
 	}
 	ret->pSynapseNums[net->sTypeNum] = net->pSynapseNums[net->sTypeNum];
 
-	ret->ppConnections = (Connection **)malloc(sizeof(Connection*)*(net->sTypeNum));
+	ret->ppConnections = malloc_c<Connection*>(net->sTypeNum);
 	for (size_t i=0; i<net->sTypeNum; i++) {
 		ret->ppConnections[i] = allocConnection(net->ppConnections[i]->nNum, net->ppConnections[i]->sNum, net->ppConnections[i]->maxDelay, net->ppConnections[i]->minDelay);
 	}
@@ -66,7 +66,7 @@ GNetwork * allocGNetwork(size_t nTypeNum, size_t sTypeNum) {
 	ret->ppSynapses = (void **)malloc(sizeof(void*)*sTypeNum);
 	assert(ret->ppSynapses != NULL);
 
-	ret->ppConnections = (Connection **)malloc(sizeof(Connection*)*sTypeNum);
+	ret->ppConnections = malloc_c<Connection*>(sTypeNum);
 
 	return ret;
 }

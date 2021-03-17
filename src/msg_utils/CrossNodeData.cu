@@ -54,11 +54,10 @@ int freeCNDGPU(CrossNodeData *data)
 	return 0;
 }
 
-template<typename T1, typename T2>
-__global__ void cuda_gen_cnd(T1 *idx2index, T1 *crossnode_index2idx, T2 *send_data, T1 *send_offset, T1 *send_start, T2 *firedTable, T2 *firedTableSizes, size_t firedTableCap, int max_delay, int min_delay, int node_num, int time)
+__global__ void cuda_gen_cnd(integer_t *idx2index, integer_t *crossnode_index2idx, uinteger_t *send_data, integer_t *send_offset, integer_t *send_start, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, int max_delay, int min_delay, int node_num, int time)
 {
-	__shared__ T1 cross_neuron_id[MAX_BLOCK_SIZE];
-	__shared__ volatile unsigned int cross_cnt;
+	__shared__ uinteger_t cross_neuron_id[MAX_BLOCK_SIZE];
+	__shared__ volatile integer_t cross_cnt;
 
 	if (threadIdx.x == 0) {
 		cross_cnt = 0;
@@ -69,14 +68,14 @@ __global__ void cuda_gen_cnd(T1 *idx2index, T1 *crossnode_index2idx, T2 *send_da
 	// int delayIdx = time % (conn->maxDelay-conn->minDelay+1);
 	int delayIdx = time % (max_delay+1);
 	int curr_delay = time % min_delay;
-	T2 fired_size = firedTableSizes[delayIdx];
+	uinteger_t fired_size = firedTableSizes[delayIdx];
 	for (int node = 0; node < node_num; node++) {
 		for (size_t idx = tid; idx < fired_size; idx += blockDim.x * gridDim.x) {
 			size_t nid = firedTable[gFiredTableCap*delayIdx + idx];
-			T1 tmp = idx2index[nid];
+			integer_t tmp = idx2index[nid];
 			
 			if (tmp >= 0) {
-				T1 map_nid = crossnode_index2idx[tmp*node_num + node];
+				integer_t map_nid = crossnode_index2idx[tmp*node_num + node];
 				if (map_nid >= 0) {
 					unsigned int test_loc = atomicAdd((unsigned int*)&cross_cnt, 1);
 					if (test_loc < MAX_BLOCK_SIZE) {
@@ -88,7 +87,7 @@ __global__ void cuda_gen_cnd(T1 *idx2index, T1 *crossnode_index2idx, T2 *send_da
 
 			if (cross_cnt > 0) {
 				size_t idx_t = node * (min_delay+1) + curr_delay + 1;
-				commit2globalTable(cross_neuron_id, cross_cnt, send_data, &(send_start[idx_t]), send_offset[node]);
+				commit2globalTable(cross_neuron_id, static_cast<integer_t>(cross_cnt), send_data, &(send_start[idx_t]), send_offset[node]);
 				if (threadIdx.x == 0) {
 					cross_cnt = 0;
 				}
@@ -108,8 +107,7 @@ __global__ void update_cnd_start(T *start, int node, int min_delay, int curr_del
 }
 
 
-template<typename T1, typename T2>
-void cudaGenerateCND(T1 *idx2index, T1 *crossnode_index2idx, CrossNodeData *cnd, T2 *firedTable, T2 *firedTableSizes, size_t firedTableCap, int max_delay, int min_delay, int node_num, int time, int gridSize, int blockSize) 
+void cudaGenerateCND(integer_t *idx2index, integer_t *crossnode_index2idx, CrossNodeData *cnd, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, int max_delay, int min_delay, int node_num, int time, int gridSize, int blockSize) 
 {
 	cuda_gen_cnd<<<gridSize, blockSize>>>(idx2index, crossnode_index2idx, cnd->_send_data, cnd->_send_offset, cnd->_send_start, firedTable, firedTableSizes, firedTableCap, max_delay, min_delay, node_num, time);
 }

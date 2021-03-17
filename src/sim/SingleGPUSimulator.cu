@@ -56,8 +56,8 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 
 	int nTypeNum = c_pNetGPU->nTypeNum;
 	int sTypeNum = c_pNetGPU->sTypeNum;
-	int totalNeuronNum = c_pNetGPU->pNeuronNums[nTypeNum];
-	int totalSynapseNum = c_pNetGPU->pSynapseNums[sTypeNum];
+	unsigned int totalNeuronNum = c_pNetGPU->pNeuronNums[nTypeNum];
+	unsigned int totalSynapseNum = c_pNetGPU->pSynapseNums[sTypeNum];
 	printf("NeuronTypeNum: %d, SynapseTypeNum: %d\n", nTypeNum, sTypeNum);
 	printf("NeuronNum: %d, SynapseNum: %d\n", totalNeuronNum, totalSynapseNum);
 

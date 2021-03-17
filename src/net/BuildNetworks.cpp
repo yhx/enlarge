@@ -50,7 +50,7 @@ int Network::arrangeLocal(DistriNetwork *net, CrossTypeInfo_t & type_offset, Cro
 						Type s_t = siter->type();
 						unsigned int s_idx = type_offset[s_node][s_t];
 						_id2node_idx[*siter] = synapse_count[s_node][s_t];
-						_synapses[t]->packup(net[s_node]._network->ppSynapses[s_idx], synapse_count[s_node][s_t], siter->id());
+						_synapses[s_t]->packup(net[s_node]._network->ppSynapses[s_idx], synapse_count[s_node][s_t], siter->id());
 						Connection * c = net[s_node]._network->ppConnections[s_idx];
 						c->pDelayStart[n_offset] = n2s_count[s_node][s_t];
 						c->pSidMap[synapse_count[s_node][s_t]] = synapse_count[s_node][s_t];
@@ -184,6 +184,7 @@ DistriNetwork* Network::buildNetworks(const SimInfo &info, bool auto_splited)
 		for (auto s=_synapse_nums[i].begin(); s!=_synapse_nums[i].end(); s++) {
 			net[i]._network->pSTypes[offset] = s->first;
 			net[i]._network->ppSynapses[offset] = allocType[s->first](s->second);
+			net[i]._network->ppConnections[offset] = allocConnection(n_num[i], s->second, _max_delay, _min_delay);
 			synapse_count[i][s->first] = 0;
 			type_offset[i][s->first] = offset;
 			synapse_offset[i][s->first] = e_offset;
@@ -202,7 +203,6 @@ DistriNetwork* Network::buildNetworks(const SimInfo &info, bool auto_splited)
 	arrangeCross(net, type_offset, synapse_count, n2s_count, n_num);
 
 	print_mem("Finish build");
-
 
 	return net;
 }

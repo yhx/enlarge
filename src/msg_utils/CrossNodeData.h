@@ -54,8 +54,7 @@ int update_cnd(CrossNodeData *cnd, int curr_delay, MPI_Request *request);
 
 int log_cnd(CrossNodeData *cnd, int time, FILE *sfile, FILE *rfile);
 
-template<typename T1, typename T2>
-void cudaGenerateCND(T1 *idx2index, T1 *crossnode_index2idx, CrossNodeData *cnd, T2 *firedTable, T2 *firedTableSizes, size_t firedTableCap, int max_delay, int min_delay, int node_num, int time, int gridSize, int blockSize);
+void cudaGenerateCND(integer_t *idx2index, integer_t *crossnode_index2idx, CrossNodeData *cnd, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, int max_delay, int min_delay, int node_num, int time, int gridSize, int blockSize); 
 
 int update_cnd_gpu(CrossNodeData *gpu, CrossNodeData *cpu, int curr_delay, MPI_Request *request);
 

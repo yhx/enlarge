@@ -104,16 +104,17 @@ TEST(MPITEST, MSGTest) {
 int main(int argc, char **argv)
 {
 	MPI_Init(&argc, &argv);
-	Network c;
+	real dt = 1e-4;
+	Network c(dt);
 
 	MPI_Comm_rank(MPI_COMM_WORLD, &node_id);
 
 
 	if (node_id == 0) {
-		Population *pn0 = c.createPopulation(N, LIF_curr_exp(LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.0, 1.0, 1.0, 15.0e-3, 100.0e-1), 1.0, 1.0));
-		Population *pn1 = c.createPopulation(N, LIF_curr_exp(LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.0, 1.0, 1.0, 15.0e-3, 0.0e-3), 1.0, 1.0));
-		Population *pn2 = c.createPopulation(N, LIF_curr_exp(LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.0, 1.0, 1.0, 15.0e-3, 0.0e-3), 1.0, 1.0));
-		Population *pn3 = c.createPopulation(N, LIF_curr_exp(LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.0, 1.0, 1.0, 15.0e-3, 0.0e-3), 1.0, 1.0));
+		Population *pn0 = c.createPopulation(N, LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.0, 1.0, 1.0, 15.0e-3, 100.0e-1, dt));
+		Population *pn1 = c.createPopulation(N, LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.0, 1.0, 1.0, 15.0e-3, 0.0e-3, dt));
+		Population *pn2 = c.createPopulation(N, LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.0, 1.0, 1.0, 15.0e-3, 0.0e-3, dt));
+		Population *pn3 = c.createPopulation(N, LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.0, 1.0, 1.0, 15.0e-3, 0.0e-3, dt));
 
 		real * weight0 = NULL;
 		real * weight1 = NULL;
@@ -150,18 +151,19 @@ int main(int argc, char **argv)
 
 	sg.distribute(&network, &data, info, sim_cycle);
 
-	int fire_tbl[12] = {0, 1, 2, 3, 2, 3, 0, 0, 3, 1, 0, 0};
-	int fire_tbl_size[3] = {4, 2, 3};
+	uinteger_t fire_tbl[12] = {0, 1, 2, 3, 2, 3, 0, 0, 3, 1, 0, 0};
+	uinteger_t fire_tbl_size[3] = {4, 2, 3};
 
-	int fire_tbl1[12] = {2, 3, 0, 0, 0, 1, 2, 3, 2, 0, 0, 0};
-	int fire_tbl_size1[3] = {2, 4, 1};
+	uinteger_t fire_tbl1[12] = {2, 3, 0, 0, 0, 1, 2, 3, 2, 0, 0, 0};
+	uinteger_t fire_tbl_size1[3] = {2, 4, 1};
 
 	for (int time = 0; time<DELAY; time++) {
 		int curr_delay = time % data->_min_delay;
+		int max_delay = network->_network->ppConnections[0]->maxDelay;
 		if (node_id == 0) {
-			generateCND(network->_network->pConnection, fire_tbl, fire_tbl_size, network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, data, NODE_NUM, time, N*2, data->_min_delay, curr_delay);
+			generateCND(network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, data, fire_tbl, fire_tbl_size, N*2, max_delay, data->_min_delay, NODE_NUM, time);
 		} else {
-			generateCND(network->_network->pConnection, fire_tbl1, fire_tbl_size1, network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, data, NODE_NUM, time, N*2, data->_min_delay, curr_delay);
+			generateCND(network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, data, fire_tbl1, fire_tbl_size1, N*2, data->_min_delay, curr_delay, NODE_NUM, time);
 		}
 		MPI_Barrier(MPI_COMM_WORLD);
 

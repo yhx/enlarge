@@ -173,7 +173,7 @@ Population * Network::createPopulation(size_t num, N templ)
 		pp1 = new Population(neuron, 0, num);
 	} else {
 		size_t num_t = _neurons[type]->size();
-		N *neuron = _neurons[type];
+		N *neuron = dynamic_cast<N*>(_neurons[type]);
 		neuron->append(&templ, num);
 		pp1 = new Population(neuron, num_t, num);
 	}
@@ -203,7 +203,7 @@ int Network::connect(Population *p_src, Population *p_dst, S templ, SpikeType sp
 	for (size_t s=0; s<src_size; s++) {
 		for (size_t d =0; d<dst_size; d++) {
 			size_t s_offset = offset + s * dst_size + d;
-			connect(ID(p_src->type(), 0, p_src->offset()+s), ID(p_dst->type(), sp, p_dst->offset()+d), ID(type, 0, s_offset), _synapses[type]->get_delay()[s_offset]);
+			connect(ID(p_src->type(), 0, p_src->offset()+s), ID(p_dst->type(), sp, p_dst->offset()+d), ID(type, 0, s_offset), _synapses[type]->delay()[s_offset]);
 			count++;
 		}
 	}
@@ -224,7 +224,7 @@ int Network::connect(Population *p_src, size_t src, Population *p_dst, size_t ds
 		_synapses[type]->append(&templ);
 	}
 
-	connect(ID(p_src->type(), 0, p_src->offset()+src), ID(p_dst->type(), sp, p_dst->offset()+dst), ID(type, 0, offset), _synapses[type]->get_delay()[offset]);
+	connect(ID(p_src->type(), 0, p_src->offset()+src), ID(p_dst->type(), sp, p_dst->offset()+dst), ID(type, 0, offset), _synapses[type]->delay()[offset]);
 
 	return 1;
 }

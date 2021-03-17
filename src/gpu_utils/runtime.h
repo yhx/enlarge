@@ -84,15 +84,15 @@ __device__ real _clip(real a, real min, real max);
 BlockSize * getBlockSize(int nSize, int sSize);
 
 template<typename T1, typename T2>
-__device__ int commit2globalTable(T1 *shared_buf, const T2 size, T1 *global_buf, T2 * global_size, const T1 offset) 
+__device__ int commit2globalTable(T1 *shared_buf, const T2 size, T1 *global_buf, T2 * global_size, const T2 offset) 
 {
-	__shared__ volatile T1 start_loc;
+	__shared__ volatile T2 start_loc;
 	if (threadIdx.x == 0) {
 		start_loc = atomicAdd(global_size, size);
 	}
 	__syncthreads();
 
-	for (size_t idx=threadIdx.x; idx<size; idx+=blockDim.x) {
+	for (T2 idx=threadIdx.x; idx<size; idx+=blockDim.x) {
 		global_buf[offset + start_loc + idx] = shared_buf[idx];
 	}
 
