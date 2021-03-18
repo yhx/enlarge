@@ -11,8 +11,7 @@ C_TYPE_SORT = {
     'unsigned int' : 5,
     'float' : 6,
     'long' : 7,
-    '
-    nsigned long': 8,
+    'unsigned long': 8,
     'long long' : 9,
     'unsigned long long': 10,
     'double' : 11,

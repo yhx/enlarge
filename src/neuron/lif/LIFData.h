@@ -16,7 +16,7 @@ struct LIFData {
 	int *pRefracStep;
 
 	real *pI_e;
-	real *pV_i;
+	// real *pV_i;
 	real *pCe;
 	real *pV_reset;
 	real *pV_tmp;

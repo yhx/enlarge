@@ -34,8 +34,8 @@ int allocLIFPara(void *pCPU, size_t num)
 
 	p->pI_e = (real*)malloc(num*sizeof(real));
 	memset(p->pI_e, 0, num*sizeof(real));
-	p->pV_i = (real*)malloc(num*sizeof(real));
-	memset(p->pV_i, 0, num*sizeof(real));
+	// p->pV_i = (real*)malloc(num*sizeof(real));
+	// memset(p->pV_i, 0, num*sizeof(real));
 	p->pCe = (real*)malloc(num*sizeof(real));
 	memset(p->pCe, 0, num*sizeof(real));
 	p->pV_reset = (real*)malloc(num*sizeof(real));
@@ -86,8 +86,8 @@ int freeLIFPara(void *pCPU)
 
 		free(p->pI_e);
 		p->pI_e = NULL;
-		free(p->pV_i);
-		p->pV_i = NULL;
+		// free(p->pV_i);
+		// p->pV_i = NULL;
 		free(p->pCe);
 		p->pCe = NULL;
 		free(p->pV_reset);
@@ -139,7 +139,7 @@ int saveLIF(void *pCPU, size_t num, FILE *f)
 	fwrite(p->pRefracStep, sizeof(int), num, f);
 
 	fwrite(p->pI_e, sizeof(real), num, f);
-	fwrite(p->pV_i, sizeof(real), num, f);
+	// fwrite(p->pV_i, sizeof(real), num, f);
 	fwrite(p->pCe, sizeof(real), num, f);
 	fwrite(p->pV_reset, sizeof(real), num, f);
 	// fwrite(p->pV_e, sizeof(real), num, f);
@@ -167,7 +167,7 @@ void *loadLIF(size_t num, FILE *f)
 	fread_c(p->pRefracStep, num, f);
 
 	fread_c(p->pI_e, num, f);
-	fread_c(p->pV_i, num, f);
+	// fread_c(p->pV_i, num, f);
 	fread_c(p->pCe, num, f);
 	fread_c(p->pV_reset, num, f);
 	// fread_c(p->pV_e, sizeof(real), num, f);
@@ -193,7 +193,7 @@ bool isEqualLIF(void *p1, void *p2, size_t num)
 	ret = ret && isEqualArray(t1->pRefracStep, t2->pRefracStep, num);
 
 	ret = ret && isEqualArray(t1->pI_e, t2->pI_e, num);
-	ret = ret && isEqualArray(t1->pV_i, t2->pV_i, num);
+	// ret = ret && isEqualArray(t1->pV_i, t2->pV_i, num);
 	ret = ret && isEqualArray(t1->pCe, t2->pCe, num);
 	ret = ret && isEqualArray(t1->pV_reset, t2->pV_reset, num);
 	// ret = ret && isEqualArray(t1->pV_e, t2->pV_e, num);

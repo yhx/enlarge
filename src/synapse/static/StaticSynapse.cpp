@@ -31,7 +31,7 @@ StaticSynapse::StaticSynapse(const real *weight, const real *delay, const real *
 	_delay.resize(num);
 
 	for (size_t i=0; i<num; i++) {
-		int delay_steps = static_cast<int>(round(_delay[i]/dt));
+		int delay_steps = static_cast<int>(round(delay[i]/dt));
 		assert(fabs(tau_syn[i]) > ZERO);
 		real w = weight[i];
 		if (fabs(tau_syn[i]) > ZERO) {
@@ -52,7 +52,7 @@ StaticSynapse::StaticSynapse(const real *weight, const real *delay, const real t
 	_delay.resize(num);
 
 	for (size_t i=0; i<num; i++) {
-		int delay_steps = static_cast<int>(round(_delay[i]/dt));
+		int delay_steps = static_cast<int>(round(delay[i]/dt));
 		real w = weight[i];
 		if (fabs(tau_syn) > ZERO) {
 			real c1 = exp(-(delay[i]-dt*delay_steps)/tau_syn);

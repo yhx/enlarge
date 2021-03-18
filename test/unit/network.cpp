@@ -87,10 +87,10 @@ TEST(NetworkTest, NeuronTest) {
 			vector<real>(n->pC_e, n->pC_e + net->pNeuronNums[net->nTypeNum]), 
 			ElementsAreArray({7.6514014e-05, 7.6514014e-05, 4.3661741e-05, 4.3661741e-05, 4.3661741e-05, 2.9845702e-05})
 			);
-	ASSERT_THAT(
-			vector<real>(n->pV_i, n->pV_i + net->pNeuronNums[net->nTypeNum]), 
-			ElementsAreArray({0, 0, 0, 0, 0, 0})
-			);
+	// ASSERT_THAT(
+	// 		vector<real>(n->pV_i, n->pV_i + net->pNeuronNums[net->nTypeNum]), 
+	// 		ElementsAreArray({0, 0, 0, 0, 0, 0})
+	// 		);
 }
 
 TEST(NetworkTest, SynapseTest) {
@@ -107,8 +107,12 @@ TEST(NetworkTest, SynapseTest) {
 	StaticData *s = (StaticData*)net->ppSynapses[0];
 	ASSERT_THAT(
 			vector<real>(s->pWeight, s->pWeight + 9), 
-			ElementsAreArray({1.0, 1.2, 1.1, 1.4, 1.3, 1.5, 2.0, 2.1, 2.2})
+			ElementsAreArray({1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 2.0, 2.1, 2.2})
 			);
+	// ASSERT_THAT(
+	// 		vector<real>(s->pWeight, s->pWeight + 9), 
+	// 		ElementsAreArray({1.0, 1.2, 1.1, 1.4, 1.3, 1.5, 2.0, 2.1, 2.2})
+	// 		);
 	// ASSERT_THAT(
 	// 		vector<int>(s->pDst, s->pDst + 9), 
 	// 		ElementsAreArray({2, 4, 3, 3, 2, 4, 5, 5, 5})
@@ -124,12 +128,13 @@ TEST(NetworkTest, ConnectionTest) {
 	ASSERT_EQ(c->minDelay, 1);
 
 	ASSERT_THAT(
-			vector<int>(c->pDelayNum, c->pDelayNum + c->nNum * (c->maxDelay-c->minDelay+1)), 
-			ElementsAreArray({2, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0})
-			);
-	ASSERT_THAT(
 			vector<int>(c->pDelayStart, c->pDelayStart + c->nNum * (c->maxDelay-c->minDelay+1)), 
 			ElementsAreArray({0, 2, 3, 3, 4, 5, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9})
+			);
+
+	ASSERT_THAT(
+			vector<int>(c->pDelayNum, c->pDelayNum + c->nNum * (c->maxDelay-c->minDelay+1)), 
+			ElementsAreArray({2, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0})
 			);
 }
 
@@ -252,10 +257,10 @@ TEST(NetworkTest, BuildTest2) {
 			vector<real>(n0_->pC_e, n0_->pC_e + n0->pNeuronNums[n0->nTypeNum]), 
 			ElementsAreArray({7.6514014e-05, 7.6514014e-05, 4.3661741e-05, 4.3661741e-05, 4.3661741e-05})
 			);
-	ASSERT_THAT(
-			vector<real>(n0_->pV_i, n0_->pV_i + n0->pNeuronNums[n0->nTypeNum]), 
-			ElementsAreArray({0, 0, 0, 0, 0})
-			);
+	// ASSERT_THAT(
+	// 		vector<real>(n0_->pV_i, n0_->pV_i + n0->pNeuronNums[n0->nTypeNum]), 
+	// 		ElementsAreArray({0, 0, 0, 0, 0})
+	// 		);
 
 	LIFData *n1_ = (LIFData*)n1->ppNeurons[0];
 
@@ -315,10 +320,10 @@ TEST(NetworkTest, BuildTest2) {
 			vector<real>(n1_->pC_e, n1_->pC_e + n1->pNeuronNums[n1->nTypeNum]), 
 			ElementsAreArray({2.9845702e-05})
 			);
-	ASSERT_THAT(
-			vector<real>(n1_->pV_i, n1_->pV_i + n1->pNeuronNums[n1->nTypeNum]), 
-			ElementsAreArray({0})
-			);
+	// ASSERT_THAT(
+	// 		vector<real>(n1_->pV_i, n1_->pV_i + n1->pNeuronNums[n1->nTypeNum]), 
+	// 		ElementsAreArray({0})
+	// 		);
 
 	StaticData *s0 = (StaticData*)n0->ppSynapses[0];
 	ASSERT_THAT(

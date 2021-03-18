@@ -11,6 +11,7 @@
 
 #include "../third_party/json/json.h"
 #include "../base/type.h"
+#include "helper_c.h"
 
 static bool rand_seed_inited = false;
 
@@ -145,6 +146,25 @@ void del_content_map(T &map)
 		delete (iter->second);
 	}
 	map.clear();
+}
+
+template<typename T1, typename T2>
+T1 *shuffle(T1 *array, T2 *idx, size_t size)
+{
+	T1 *ret = malloc_c<T1>(size);
+	for (size_t i=0; i<size; i++) {
+		ret[i] = array[idx[i]];
+	}
+	
+	return ret;
+}
+
+template<typename T1, typename T2>
+void shuffle(T1 * res, T1 *array, T2 *idx, size_t size)
+{
+	for (size_t i=0; i<size; i++) {
+		res[i] = array[idx[i]];
+	}
 }
 
 #endif /* UTILS_H */

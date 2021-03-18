@@ -5,6 +5,7 @@
 #include <sys/sysinfo.h>
 #include <algorithm>
 
+#include "../utils/helper_c.h"
 #include "../utils/utils.h"
 #include "../base/TypeFunc.h"
 #include "Network.h"
@@ -70,14 +71,13 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 	}
 	assert(ret->pSynapseNums[n_type_num] == _synapse_num);
 
-	ret->ppConnections = (Connection **)malloc(sizeof(Connection*)*s_type_num); 
+	ret->ppConnections = malloc_c<Connection*>(s_type_num); 
 	for (size_t i=0; i<s_type_num; i++) {
 		ret->ppConnections[i] = allocConnection(ret->pNeuronNums[n_type_num], ret->pSynapseNums[i+1] - ret->pSynapseNums[i], _max_delay, _min_delay);
 	}
 
-	size_t *syn_idx = (size_t *)malloc(sizeof(size_t) * s_type_num); 
-	size_t *count = (size_t *)malloc(sizeof(size_t) * s_type_num); 
-	memset(syn_idx, 0, sizeof(size_t)*s_type_num);
+	size_t *syn_idx = malloc_c<size_t>(s_type_num); 
+	size_t *start = malloc_c<size_t>(s_type_num); 
 	for (size_t i=0; i<n_type_num; i++) {
 		Type t = ret->pNTypes[i];
 		for (size_t n=0; n<ret->pNeuronNums[i+1]-ret->pNeuronNums[i]; n++) {
@@ -85,18 +85,16 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 			for (auto d_iter = n2s_conn[nid].begin(); d_iter != n2s_conn[nid].end(); d_iter++) {
 				unsigned int d = d_iter->first;
 				size_t n_offset = _neuron_num*(d-_min_delay)+_neurons_offset[t]+n;
-				memset(count, 0, sizeof(size_t)*s_type_num);
 				for (auto s_iter = d_iter->second.begin(); s_iter != d_iter->second.end(); s_iter++) {
 					int idx = tp2idx[s_iter->type()];
 					Connection * c = ret->ppConnections[idx];
-					c->pDelayStart[n_offset] = syn_idx[idx];
+					c->pDelayStart[n_offset] = start[idx];
 					c->pSidMap[syn_idx[idx]] = s_iter->id();
 					syn_idx[idx]++;
-					count[idx]++;
 				}
-				assert(syn_idx[idx] - ret->ppConnections[idx]->pDelayStart[n_offset] == count[idx]);
 				for (size_t s=0; s<s_type_num; s++) {
-					ret->ppConnections[s]->pDelayNum[n_offset] = count[idx];
+					ret->ppConnections[s]->pDelayNum[n_offset] = syn_idx[idx] - start[idx];
+					start[idx] = syn_idx[idx];
 				}
 
 			}

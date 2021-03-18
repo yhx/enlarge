@@ -93,7 +93,7 @@ int LIFNeuron::append(const Neuron * neuron, size_t num)
 		_i_i.insert(_i_i.end(), num, 0);
 	} else {
 		ret = n->size();
-		_refract_step.insert(_refract_step.end(), n->_v.begin(), n->_v.end());
+		_refract_step.insert(_refract_step.end(), n->_refract_step.begin(), n->_refract_step.end());
 		_refract_time.insert(_refract_time.end(), n->_refract_time.begin(), n->_refract_time.end());
 
 		_v.insert(_v.end(), n->_v.begin(), n->_v.end());
@@ -130,7 +130,7 @@ void * LIFNeuron::packup()
 	p->pV_reset = _V_reset.data();
 	// p->pV_e = _v_.data();
 	p->pV_tmp = _v_tmp.data();
-	p->pI_i = _i_i.data();
+	// p->pI_i = _i_i.data();
 	p->pV_thresh = _V_thresh.data();
 	p->pCi = _Ci.data();
 	p->pV_m = _v.data();
@@ -152,9 +152,7 @@ int LIFNeuron::packup(void *data, size_t dst, size_t src)
 	p->pI_i[dst] = _i_i[src];
 	p->pCe[dst] = _Ce[src];
 	p->pV_reset[dst] = _V_reset[src];
-	// p->pV_e = _v_[src];
 	p->pV_tmp[dst] = _v_tmp[src];
-	p->pI_i[dst] = _i_i[src];
 	p->pV_thresh[dst] = _V_thresh[src];
 	p->pCi[dst] = _Ci[src];
 	p->pV_m[dst] = _v[src];
