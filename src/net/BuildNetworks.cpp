@@ -8,6 +8,10 @@
 
 void Network::update_status_splited()
 {
+	_neuron_nums.clear();
+	_synapse_nums.clear();
+	_crossnodeNeuronsRecv.clear();
+	_crossnodeNeuronsSend.clear();
 	for (auto t_iter = _neurons.begin(); t_iter != _neurons.end(); t_iter++) {
 		Type t = t_iter->first;
 		for (size_t i=0; i<t_iter->second->size(); i++) {
@@ -33,17 +37,26 @@ void Network::update_status_splited()
 }
 
 
-int Network::arrangeLocal(DistriNetwork *net, CrossTypeInfo_t & type_offset, CrossTypeInfo_t &neuron_offset, CrossTypeInfo_t & synapse_offset, CrossTypeInfo_t &neuron_count, CrossTypeInfo_t &synapse_count, CrossTypeInfo_t &n2s_count, map<unsigned int, size_t> &n_num)
+int Network::arrangeLocal(DistriNetwork *net, CrossTypeInfo_t &type_offset, CrossTypeInfo_t &neuron_offset, CrossTypeInfo_t & synapse_offset, CrossTypeInfo_t &neuron_count, CrossTypeInfo_t &synapse_count, CrossTypeInfo_t &n2s_count, map<unsigned int, size_t> &n_num)
 {
-	for (unsigned int d=0; d<_max_delay-_min_delay+1; d++) {
+	for (auto t_iter = _neurons.begin(); t_iter != _neurons.end(); t_iter++) {
+			Type t = t_iter->first;
+			for (size_t i=0; i<t_iter->second->size(); i++) {
+				ID id(t, 0, i);
+				unsigned int n_node = _nid2node[id];
+				_neurons[t]->packup(net[n_node]._network->ppNeurons[type_offset[n_node][t]], neuron_count[n_node][t], i);
+				_id2node_idx[id] = neuron_offset[n_node][t] + neuron_count[n_node][t];
+				neuron_count[n_node][t]++;
+			}
+	}
+
+	for (unsigned int d=_min_delay; d<_max_delay+1; d++) {
 		for (auto t_iter = _neurons.begin(); t_iter != _neurons.end(); t_iter++) {
 			Type t = t_iter->first;
 			for (size_t i=0; i<t_iter->second->size(); i++) {
 				ID id(t, 0, i);
-				unsigned n_node = _nid2node[id];
-				_neurons[t]->packup(net[n_node]._network->ppNeurons[type_offset[n_node][t]], neuron_count[n_node][t], i);
-				_id2node_idx[id] = neuron_offset[n_node][t] + neuron_count[n_node][t];
-				size_t n_offset = (n_num[n_node]+_crossnodeNeuronsRecv[n_node].size())*d+neuron_offset[n_node][t]+neuron_count[n_node][t];
+				unsigned int n_node = _nid2node[id];
+				size_t n_offset = (n_num[n_node]+_crossnodeNeuronsRecv[n_node].size())*(d-_min_delay)+_id2node_idx[id];
 				for (auto siter = n2s_conn[id][d].begin(); siter != n2s_conn[id][d].end(); siter++) {
 					unsigned int s_node = _sid2node[*siter];
 					if (s_node == n_node) {
@@ -59,11 +72,12 @@ int Network::arrangeLocal(DistriNetwork *net, CrossTypeInfo_t & type_offset, Cro
 				}
 				for (auto s_t = _synapse_nums[n_node].begin(); s_t != _synapse_nums[n_node].end(); s_t++) {
 					unsigned int s_idx = type_offset[n_node][s_t->first];
-					net[n_node]._network->ppConnections[s_idx]->pDelayNum[n_offset] = synapse_count[n_node][s_t->first] - n2s_count[n_node][s_t->first];
+					Connection * c = net[n_node]._network->ppConnections[s_idx];
+					c->pDelayNum[n_offset] = synapse_count[n_node][s_t->first] - n2s_count[n_node][s_t->first];
+					c->pDelayStart[n_offset+1] = c->pDelayStart[n_offset] + c->pDelayNum[n_offset];
 					n2s_count[n_node][s_t->first] = synapse_count[n_node][s_t->first];
 				}
 
-				neuron_count[n_node][t]++;
 			}
 		}
 	}

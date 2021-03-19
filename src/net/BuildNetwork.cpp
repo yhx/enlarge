@@ -18,6 +18,8 @@ void Network::update_status()
 		_neuron_num += iter->second->size();
 	}
 
+	_max_delay = 0;
+	_min_delay = INT_MAX;
 	_synapse_num = 0;
 	for (auto iter=_synapses.begin(); iter!=_synapses.end(); iter++) {
 		_synapses_offset[iter->first] = _synapse_num;
