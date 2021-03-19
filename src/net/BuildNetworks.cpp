@@ -184,7 +184,7 @@ DistriNetwork* Network::buildNetworks(const SimInfo &info, bool auto_splited)
 		for (auto s=_synapse_nums[i].begin(); s!=_synapse_nums[i].end(); s++) {
 			net[i]._network->pSTypes[offset] = s->first;
 			net[i]._network->ppSynapses[offset] = allocType[s->first](s->second);
-			net[i]._network->ppConnections[offset] = allocConnection(n_num[i], s->second, _max_delay, _min_delay);
+			net[i]._network->ppConnections[offset] = allocConnection(n_num[i] +  _crossnodeNeuronsRecv[i].size(), s->second, _max_delay, _min_delay);
 			synapse_count[i][s->first] = 0;
 			type_offset[i][s->first] = offset;
 			synapse_offset[i][s->first] = e_offset;
