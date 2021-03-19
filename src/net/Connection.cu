@@ -18,8 +18,7 @@ Connection * cudaAllocConnection(Connection * pCPU)
 	pTmp->maxDelay = pCPU->maxDelay;
 	pTmp->minDelay = pCPU->minDelay;
 
-	checkCudaErrors(cudaMalloc((void**)&(pTmp->pDelayStart), sizeof(size_t)*length));
-	checkCudaErrors(cudaMemcpy(pTmp->pDelayStart, pCPU->pDelayStart, sizeof(size_t)*length, cudaMemcpyHostToDevice));
+	pTmp->pDelayStart = copyToGPU(pCPU->pDelayStart, length+1);
 
 	checkCudaErrors(cudaMalloc((void**)&(pTmp->pDelayNum), sizeof(size_t)*length));
 	checkCudaErrors(cudaMemcpy(pTmp->pDelayNum, pCPU->pDelayNum, sizeof(size_t)*length, cudaMemcpyHostToDevice));
@@ -29,8 +28,7 @@ Connection * cudaAllocConnection(Connection * pCPU)
 	checkCudaErrors(cudaMalloc((void**)&(pTmp->dst), sizeof(size_t)*sNum));
 	checkCudaErrors(cudaMemcpy(pTmp->dst, pCPU->dst, sizeof(size_t)*sNum, cudaMemcpyHostToDevice));
 
-	checkCudaErrors(cudaMalloc((void**)&(pTmp->pDelayStartRev), sizeof(size_t)*length));
-	checkCudaErrors(cudaMemcpy(pTmp->pDelayStartRev, pCPU->pDelayStartRev, sizeof(size_t)*length, cudaMemcpyHostToDevice));
+	pTmp->pDelayStartRev = copyToGPU(pCPU->pDelayStartRev, length+1);
 
 	checkCudaErrors(cudaMalloc((void**)&(pTmp->pDelayNumRev), sizeof(size_t)*length));
 	checkCudaErrors(cudaMemcpy(pTmp->pDelayNumRev, pCPU->pDelayNumRev, sizeof(size_t)*length, cudaMemcpyHostToDevice));
@@ -60,13 +58,13 @@ int cudaFetchConnection(Connection *pCPU, Connection *pGPU)
 	assert(pCPU->maxDelay == pTmp->maxDelay);
 	assert(pCPU->minDelay == pTmp->minDelay);
 
-	checkCudaErrors(cudaMemcpy(pCPU->pDelayStart, pTmp->pDelayStart, sizeof(size_t)*length, cudaMemcpyDeviceToHost));
+	checkCudaErrors(cudaMemcpy(pCPU->pDelayStart, pTmp->pDelayStart, sizeof(size_t)*(length+1), cudaMemcpyDeviceToHost));
 	checkCudaErrors(cudaMemcpy(pCPU->pDelayNum, pTmp->pDelayNum, sizeof(size_t)*length, cudaMemcpyDeviceToHost));
 	checkCudaErrors(cudaMemcpy(pCPU->pSidMap, pTmp->pSidMap, sizeof(size_t)*sNum, cudaMemcpyDeviceToHost));
 	checkCudaErrors(cudaMemcpy(pCPU->dst, pTmp->dst, sizeof(size_t)*sNum, cudaMemcpyDeviceToHost));
 
 
-	checkCudaErrors(cudaMemcpy(pCPU->pDelayStartRev, pTmp->pDelayStartRev, sizeof(size_t)*length, cudaMemcpyDeviceToHost));
+	checkCudaErrors(cudaMemcpy(pCPU->pDelayStartRev, pTmp->pDelayStartRev, sizeof(size_t)*(length+1), cudaMemcpyDeviceToHost));
 	checkCudaErrors(cudaMemcpy(pCPU->pDelayNumRev, pTmp->pDelayNumRev, sizeof(size_t)*length, cudaMemcpyDeviceToHost));
 	checkCudaErrors(cudaMemcpy(pCPU->pSidMapRev, pTmp->pSidMapRev, sizeof(size_t)*sNum, cudaMemcpyDeviceToHost));
 

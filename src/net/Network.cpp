@@ -81,7 +81,7 @@ int Network::set_node_num(int node_num)
 	return _node_num;
 }
 
-int Network::connect(ID src, ID dst, ID syn, unsigned int delay)
+int Network::connect_(ID src, ID dst, ID syn, unsigned int delay)
 {
 	n2s_conn[src][delay].push_back(syn);
 	s2n_conn[syn] = dst;
@@ -101,7 +101,7 @@ int Network::connect(Population *p_src, Population *p_dst, real weight, real del
 	if (_synapses.find(type) == _synapses.end()) {
 		_synapses[type] = new StaticSynapse(weight, delay, tau, _dt, size);
 	} else {
-		offset = _synapses.size();
+		offset = _synapses[type]->size();
 		StaticSynapse t(weight, delay, tau, _dt, size);
 		_synapses[type]->append(&t, size);
 	}
@@ -110,7 +110,7 @@ int Network::connect(Population *p_src, Population *p_dst, real weight, real del
 	for (size_t s=0; s<src_size; s++) {
 		for (size_t d=0; d<dst_size; d++) {
 			size_t s_offset = offset + s*dst_size + d;
-			connect(ID(p_src->type(), 0, p_src->offset()+s), 
+			connect_(ID(p_src->type(), 0, p_src->offset()+s), 
 					ID(p_dst->type(), sp, p_dst->offset()+d),
 				   ID(type, 0, s_offset),
 				   _synapses[type]->delay()[s_offset]);
@@ -131,7 +131,7 @@ int Network::connect(Population *p_src, Population *p_dst, real *weight, real *d
 	if (_synapses.find(type) == _synapses.end()) {
 		_synapses[type] = new StaticSynapse(weight, delay, tau, _dt, size);
 	} else {
-		offset = _synapses.size();
+		offset = _synapses[type]->size();
 		StaticSynapse t(weight, delay, tau, _dt, size);
 		_synapses[type]->append(&t, size);
 	}
@@ -140,7 +140,7 @@ int Network::connect(Population *p_src, Population *p_dst, real *weight, real *d
 	for (size_t s=0; s<src_size; s++) {
 		for (size_t d=0; d<dst_size; d++) {
 			size_t s_offset = offset + s*dst_size + d;
-			connect(ID(p_src->type(), 0, p_src->offset()+s), 
+			connect_(ID(p_src->type(), 0, p_src->offset()+s), 
 					ID(p_dst->type(), sp[s*dst_size+d], p_dst->offset()+d),
 				   ID(type, 0, s_offset),
 				   _synapses[type]->delay()[s_offset]);
@@ -161,7 +161,7 @@ int Network::connect(Population *p_src, Population *p_dst, real *weight, real *d
 	if (_synapses.find(type) == _synapses.end()) {
 		_synapses[type] = new StaticSynapse(weight, delay, tau, _dt, size);
 	} else {
-		offset = _synapses.size();
+		offset = _synapses[type]->size();
 		StaticSynapse t(weight, delay, tau, _dt, size);
 		_synapses[type]->append(&t, size);
 	}
@@ -170,7 +170,7 @@ int Network::connect(Population *p_src, Population *p_dst, real *weight, real *d
 	for (size_t s=0; s<src_size; s++) {
 		for (size_t d=0; d<dst_size; d++) {
 			size_t s_offset = offset + s*dst_size + d;
-			connect(ID(p_src->type(), 0, p_src->offset()+s), 
+			connect_(ID(p_src->type(), 0, p_src->offset()+s), 
 					ID(p_dst->type(), sp, p_dst->offset()+d),
 				   ID(type, 0, s_offset),
 				   _synapses[type]->delay()[s_offset]);
@@ -191,7 +191,7 @@ int Network::connect(Population *p_src, Population *p_dst, real *weight, real *d
 	if (_synapses.find(type) == _synapses.end()) {
 		_synapses[type] = new StaticSynapse(weight, delay, 0.0, _dt, size);
 	} else {
-		offset = _synapses.size();
+		offset = _synapses[type]->size();
 		StaticSynapse t(weight, delay, 0.0, _dt, size);
 		_synapses[type]->append(&t, size);
 	}
@@ -201,7 +201,7 @@ int Network::connect(Population *p_src, Population *p_dst, real *weight, real *d
 		for (size_t d=0; d<dst_size; d++) {
 			size_t s_offset = offset + s*dst_size + d;
 			SpikeType sp_t = sp ? sp[s*dst_size+d] : Exc;
-			connect(ID(p_src->type(), 0, p_src->offset()+s), 
+			connect_(ID(p_src->type(), 0, p_src->offset()+s), 
 					ID(p_dst->type(), sp_t, p_dst->offset()+d),
 				   ID(type, 0, s_offset),
 				   _synapses[type]->delay()[s_offset]);
@@ -219,13 +219,13 @@ int Network::connect(Population *p_src, size_t src, Population *p_dst, size_t ds
 	if (_synapses.find(type) == _synapses.end()) {
 		_synapses[type] = new StaticSynapse(weight, delay, tau, _dt);
 	} else {
-		offset = _synapses.size();
+		offset = _synapses[type]->size();
 		StaticSynapse t(weight, delay, tau, _dt);
 		_synapses[type]->append(&t);
 	}
 
 	size_t s_offset = offset;
-	connect(ID(p_src->type(), 0, p_src->offset()+src), 
+	connect_(ID(p_src->type(), 0, p_src->offset()+src), 
 			ID(p_dst->type(), sp, p_dst->offset()+dst),
 			ID(type, 0, s_offset),
 			_synapses[type]->delay()[s_offset]);

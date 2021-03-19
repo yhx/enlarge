@@ -50,24 +50,25 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 
 	GNetwork * ret = allocGNetwork(n_type_num, s_type_num);
 
-	int i=0;
+	int n_t=0;
 	for (auto iter=_neurons.begin(); iter!=_neurons.end(); iter++) {
-		ret->pNTypes[i] = iter->first;
-		ret->ppNeurons[i] = iter->second->packup();
-		assert(ret->ppNeurons[i] != NULL);
-		ret->pNeuronNums[i+1] = iter->second->size() + ret->pNeuronNums[i];
+		ret->pNTypes[n_t] = iter->first;
+		ret->ppNeurons[n_t] = iter->second->packup();
+		assert(ret->ppNeurons[n_t] != NULL);
+		ret->pNeuronNums[n_t+1] = iter->second->size() + ret->pNeuronNums[n_t];
+		n_t++;
 	}
 	assert(ret->pNeuronNums[n_type_num] == _neuron_num);
 
 	map<Type, size_t> tp2idx;
-	int idx = 0;
+	int s_t = 0;
 	for (auto iter=_synapses.begin(); iter!=_synapses.end(); iter++) {
-		ret->pSTypes[i] = iter->first;
-		ret->ppSynapses[i] = iter->second->packup();
-		assert(ret->ppSynapses[i] != NULL);
-		ret->pSynapseNums[i+1] = iter->second->size() + ret->pSynapseNums[i];
-		tp2idx[iter->first] = idx;
-		idx++;
+		ret->pSTypes[s_t] = iter->first;
+		ret->ppSynapses[s_t] = iter->second->packup();
+		assert(ret->ppSynapses[s_t] != NULL);
+		ret->pSynapseNums[s_t+1] = iter->second->size() + ret->pSynapseNums[s_t];
+		tp2idx[iter->first] = s_t;
+		s_t++;
 	}
 	assert(ret->pSynapseNums[n_type_num] == _synapse_num);
 
@@ -78,26 +79,31 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 
 	size_t *syn_idx = malloc_c<size_t>(s_type_num); 
 	size_t *start = malloc_c<size_t>(s_type_num); 
-	for (size_t i=0; i<n_type_num; i++) {
-		Type t = ret->pNTypes[i];
-		for (size_t n=0; n<ret->pNeuronNums[i+1]-ret->pNeuronNums[i]; n++) {
-			ID nid(t, 0, n);
-			for (auto d_iter = n2s_conn[nid].begin(); d_iter != n2s_conn[nid].end(); d_iter++) {
-				unsigned int d = d_iter->first;
-				size_t n_offset = _neuron_num*(d-_min_delay)+_neurons_offset[t]+n;
-				for (auto s_iter = d_iter->second.begin(); s_iter != d_iter->second.end(); s_iter++) {
-					int idx = tp2idx[s_iter->type()];
-					Connection * c = ret->ppConnections[idx];
-					c->pDelayStart[n_offset] = start[idx];
-					c->pSidMap[syn_idx[idx]] = s_iter->id();
-					syn_idx[idx]++;
+	for (unsigned int d=_min_delay; d<_max_delay+1; d++) {
+		for (size_t i=0; i<n_type_num; i++) {
+			Type t = ret->pNTypes[i];
+			for (size_t n=0; n<ret->pNeuronNums[i+1]-ret->pNeuronNums[i]; n++) {
+				ID nid(t, 0, n);
+				size_t n_offset = _neuron_num*(d-_min_delay) + _neurons_offset[t]+n;
+				for (auto s_iter = n2s_conn[nid][d].begin(); s_iter != n2s_conn[nid][d].end(); s_iter++) {
+					int s_idx = tp2idx[s_iter->type()];
+					Connection * c = ret->ppConnections[s_idx];
+					c->pDelayStart[n_offset] = start[s_idx];
+					c->pSidMap[syn_idx[s_idx]] = s_iter->id();
+					syn_idx[s_idx]++;
 				}
 				for (size_t s=0; s<s_type_num; s++) {
-					ret->ppConnections[s]->pDelayNum[n_offset] = syn_idx[idx] - start[idx];
-					start[idx] = syn_idx[idx];
+					ret->ppConnections[s]->pDelayNum[n_offset] = syn_idx[s] - start[s];
+					ret->ppConnections[s]->pDelayStart[n_offset+1] = ret->ppConnections[s]->pDelayStart[n_offset] +  ret->ppConnections[s]->pDelayNum[n_offset];
+					start[s] = syn_idx[s];
 				}
-
 			}
+		}
+	}
+
+	for (size_t st=0; st<s_type_num; st++) {
+		for (unsigned int i=0; i<ret->pNeuronNums[n_type_num] * (_max_delay - _min_delay+1); i++) {
+			assert(ret->ppConnections[st]->pDelayStart[i+1] == ret->ppConnections[st]->pDelayStart[i] + ret->ppConnections[st]->pDelayNum[i]);
 		}
 	}
 

@@ -19,12 +19,12 @@ Connection * allocConnection(size_t nNum, size_t sNum, unsigned int maxDelay, un
 
     size_t length = (maxDelay - minDelay + 1) * nNum;
 
-	ret->pDelayStart = malloc_c<size_t>(length);
+	ret->pDelayStart = malloc_c<size_t>(length+1);
 	ret->pDelayNum = malloc_c<size_t>(length);
 	ret->pSidMap = malloc_c<size_t>(sNum);
 	ret->dst = malloc_c<size_t>(sNum);
 
-	ret->pDelayStartRev = malloc_c<size_t>(length);
+	ret->pDelayStartRev = malloc_c<size_t>(length+1);
 	ret->pDelayNumRev = malloc_c<size_t>(length);
 	ret->pSidMapRev = malloc_c<size_t>(sNum);
 
@@ -54,12 +54,12 @@ int saveConnection(Connection *conn, FILE *f)
 
 	size_t length = (conn->maxDelay - conn->minDelay + 1) * conn->nNum;
 
-	fwrite_c(conn->pDelayStart, length, f);
+	fwrite_c(conn->pDelayStart, length+1, f);
 	fwrite_c(conn->pDelayNum, length, f);
 	fwrite_c(conn->pSidMap, conn->sNum, f);
 	fwrite_c(conn->dst, conn->sNum, f);
 
-	fwrite_c(conn->pDelayStartRev, length, f);
+	fwrite_c(conn->pDelayStartRev, length+1, f);
 	fwrite_c(conn->pDelayNumRev, length, f);
 	fwrite_c(conn->pSidMapRev, conn->sNum, f);
 
@@ -78,21 +78,21 @@ Connection * loadConnection(FILE *f)
 	size_t length = (conn->maxDelay - conn->minDelay + 1) * conn->nNum;
 	size_t sNum = conn->sNum;
 
-	conn->pDelayStart = malloc_c<size_t>(length);
+	conn->pDelayStart = malloc_c<size_t>(length+1);
 	conn->pDelayNum = malloc_c<size_t>(length);
 	conn->pSidMap = malloc_c<size_t>(sNum);
 	conn->dst = malloc_c<size_t>(sNum);
 
-	conn->pDelayStartRev = malloc_c<size_t>(length);
+	conn->pDelayStartRev = malloc_c<size_t>(length+1);
 	conn->pDelayNumRev = malloc_c<size_t>(length);
 	conn->pSidMapRev = malloc_c<size_t>(sNum);
 
-	fread_c(conn->pDelayStart, length, f);
+	fread_c(conn->pDelayStart, length+1, f);
 	fread_c(conn->pDelayNum, length, f);
 	fread_c(conn->pSidMap, conn->sNum, f);
 	fread_c(conn->dst, conn->sNum, f);
 
-	fread_c(conn->pDelayStartRev, length, f);
+	fread_c(conn->pDelayStartRev, length+1, f);
 	fread_c(conn->pDelayNumRev, length, f);
 	fread_c(conn->pSidMapRev, conn->sNum, f);
 
@@ -110,12 +110,12 @@ bool isEqualConnection(Connection *c1, Connection *c2)
 
 	size_t length = (c1->maxDelay - c1->minDelay + 1) * c1->nNum;
 
-	ret = ret && isEqualArray(c1->pDelayStart, c2->pDelayStart, length);
+	ret = ret && isEqualArray(c1->pDelayStart, c2->pDelayStart, length+1);
 	ret = ret && isEqualArray(c1->pDelayNum, c2->pDelayNum, length);
 	ret = ret && isEqualArray(c1->pSidMap, c2->pSidMap, c1->sNum);
 	ret = ret && isEqualArray(c1->dst, c2->dst, c1->sNum);
 
-	ret = ret && isEqualArray(c1->pDelayStartRev, c2->pDelayStartRev, length);
+	ret = ret && isEqualArray(c1->pDelayStartRev, c2->pDelayStartRev, length+1);
 	ret = ret && isEqualArray(c1->pDelayNumRev, c2->pDelayNumRev, length);
 
 	ret = ret && isEqualArray(c1->pSidMapRev, c2->pSidMapRev, c1->sNum);
@@ -132,7 +132,7 @@ int sendConnection(Connection *conn, int dest, int tag, MPI_Comm comm)
 
 	unsigned int length = (conn->maxDelay - conn->minDelay + 1) * conn->nNum;
 
-	ret = MPI_Send(conn->pDelayStart, length, MPI_SIZE_T, dest, tag+1, comm);
+	ret = MPI_Send(conn->pDelayStart, length+1, MPI_SIZE_T, dest, tag+1, comm);
 	assert(ret == MPI_SUCCESS);
 	ret = MPI_Send(conn->pDelayNum, length, MPI_SIZE_T, dest, tag+2, comm);
 	assert(ret == MPI_SUCCESS);
@@ -142,7 +142,7 @@ int sendConnection(Connection *conn, int dest, int tag, MPI_Comm comm)
 	ret = MPI_Send(conn->dst, conn->sNum, MPI_SIZE_T, dest, tag+4, comm);
 	assert(ret == MPI_SUCCESS);
 
-	ret = MPI_Send(conn->pDelayStartRev, length, MPI_SIZE_T, dest, tag+5, comm);
+	ret = MPI_Send(conn->pDelayStartRev, length+1, MPI_SIZE_T, dest, tag+5, comm);
 	assert(ret == MPI_SUCCESS);
 	ret = MPI_Send(conn->pDelayNumRev, length, MPI_SIZE_T, dest, tag+6, comm);
 	assert(ret == MPI_SUCCESS);
@@ -164,10 +164,10 @@ Connection *recvConnection(int src, int tag, MPI_Comm comm)
 
 	int length = (conn->maxDelay - conn->minDelay + 1) * (conn->nNum);
 
-	conn->pDelayStart = (size_t *)malloc(sizeof(size_t) * length);
+	conn->pDelayStart = malloc_c<size_t>(length+1);
 	conn->pDelayNum = (size_t *)malloc(sizeof(size_t) * length);
 
-	ret = MPI_Recv(conn->pDelayStart, length, MPI_SIZE_T, src, tag+1, comm, &status);
+	ret = MPI_Recv(conn->pDelayStart, length+1, MPI_SIZE_T, src, tag+1, comm, &status);
 	assert(ret==MPI_SUCCESS);
 	ret = MPI_Recv(conn->pDelayNum, length, MPI_SIZE_T, src, tag+2, comm, &status);
 	assert(ret==MPI_SUCCESS);
@@ -180,10 +180,10 @@ Connection *recvConnection(int src, int tag, MPI_Comm comm)
 	ret = MPI_Recv(conn->dst, conn->sNum, MPI_SIZE_T, src, tag+4, comm, &status);
 	assert(ret==MPI_SUCCESS);
 
-	conn->pDelayStartRev = (size_t *)malloc(sizeof(size_t) * length);
+	conn->pDelayStartRev = malloc_c<size_t>(length+1);
 	conn->pDelayNumRev = (size_t *)malloc(sizeof(size_t) * length);
 
-	ret = MPI_Recv(conn->pDelayStartRev, length, MPI_SIZE_T, src, tag+5, comm, &status);
+	ret = MPI_Recv(conn->pDelayStartRev, length+1, MPI_SIZE_T, src, tag+5, comm, &status);
 	assert(ret==MPI_SUCCESS);
 	ret = MPI_Recv(conn->pDelayNumRev, length, MPI_SIZE_T, src, tag+6, comm, &status);
 	assert(ret==MPI_SUCCESS);

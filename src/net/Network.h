@@ -49,7 +49,7 @@ public:
 	template<class S>
 	int connect(Population *p_src, size_t src, Population *p_dst, size_t dst, S syn, SpikeType s_type);
 
-	int connect(ID src, ID dst, ID syn, unsigned int delay);
+	int connect_(ID src, ID dst, ID syn, unsigned int delay);
 
 	int connect(Population *p_src, Population *p_dst, real weight, real delay, real tau, SpikeType type=Exc);
 	int connect(Population *p_src, Population *p_dst, real *weight, real *delay, real *tau, SpikeType *type, size_t size);
@@ -203,7 +203,7 @@ int Network::connect(Population *p_src, Population *p_dst, S templ, SpikeType sp
 	for (size_t s=0; s<src_size; s++) {
 		for (size_t d =0; d<dst_size; d++) {
 			size_t s_offset = offset + s * dst_size + d;
-			connect(ID(p_src->type(), 0, p_src->offset()+s), ID(p_dst->type(), sp, p_dst->offset()+d), ID(type, 0, s_offset), _synapses[type]->delay()[s_offset]);
+			connect_(ID(p_src->type(), 0, p_src->offset()+s), ID(p_dst->type(), sp, p_dst->offset()+d), ID(type, 0, s_offset), _synapses[type]->delay()[s_offset]);
 			count++;
 		}
 	}
@@ -224,7 +224,7 @@ int Network::connect(Population *p_src, size_t src, Population *p_dst, size_t ds
 		_synapses[type]->append(&templ);
 	}
 
-	connect(ID(p_src->type(), 0, p_src->offset()+src), ID(p_dst->type(), sp, p_dst->offset()+dst), ID(type, 0, offset), _synapses[type]->delay()[offset]);
+	connect_(ID(p_src->type(), 0, p_src->offset()+src), ID(p_dst->type(), sp, p_dst->offset()+dst), ID(type, 0, offset), _synapses[type]->delay()[offset]);
 
 	return 1;
 }
