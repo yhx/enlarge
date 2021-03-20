@@ -31,10 +31,10 @@ Network::Network(real dt, int node_num)
 	
 	_crossnodeNeuronsSend.resize(node_num);
 	_crossnodeNeuronsRecv.resize(node_num);
-	_crossnodeNeuron2idx.resize(node_num);
+	// _crossnodeNeuron2idx.resize(node_num);
 
-	_globalNTypeNum.resize(node_num);
-	_globalSTypeNum.resize(node_num);
+	// _globalNTypeNum.resize(node_num);
+	// _globalSTypeNum.resize(node_num);
 }
 
 Network::~Network()
@@ -52,10 +52,10 @@ Network::~Network()
 
 	_crossnodeNeuronsSend.clear();
 	_crossnodeNeuronsRecv.clear();
-	_crossnodeNeuron2idx.clear();
+	// _crossnodeNeuron2idx.clear();
 
-	_globalNTypeNum.clear();
-	_globalSTypeNum.clear();
+	// _globalNTypeNum.clear();
+	// _globalSTypeNum.clear();
 
 	print_mem("Free Network 2");
 }
@@ -64,19 +64,21 @@ int Network::set_node_num(int node_num)
 {
 	_node_num = node_num;
 
+	_neuron_nums.clear();
+	_synapse_nums.clear();
 	_crossnodeNeuronsSend.clear();
 	_crossnodeNeuronsRecv.clear();
-	_crossnodeNeuron2idx.clear();
+	// _crossnodeNeuron2idx.clear();
 
-	_globalNTypeNum.clear();
-	_globalSTypeNum.clear();
+	// _globalNTypeNum.clear();
+	// _globalSTypeNum.clear();
 
 	_crossnodeNeuronsSend.resize(node_num);
 	_crossnodeNeuronsRecv.resize(node_num);
-	_crossnodeNeuron2idx.resize(node_num);
+	// _crossnodeNeuron2idx.resize(node_num);
 
-	_globalNTypeNum.resize(node_num);
-	_globalSTypeNum.resize(node_num);
+	// _globalNTypeNum.resize(node_num);
+	// _globalSTypeNum.resize(node_num);
 
 	return _node_num;
 }
@@ -320,12 +322,18 @@ int Network::connect(Population *p_src, size_t src, Population *p_dst, size_t ds
 
 int Network::reset(const SimInfo &info)
 {
+	_neuron_num = 0;
+	_synapse_num = 0;
+	_max_delay = 0;
+	_min_delay = INT_MAX;
+	_neuron_nums.clear();
+	_synapse_nums.clear();
 	_crossnodeNeuronsSend.clear();
 	_crossnodeNeuronsRecv.clear();
-	_crossnodeNeuron2idx.clear();
+	// _crossn_nodeNeuron2idx.clear();
 
-	_globalNTypeNum.clear();
-	_globalSTypeNum.clear();
+	// _globalNTypeNum.clear();
+	// _globalSTypeNum.clear();
 	
 	return 0;
 }
@@ -379,15 +387,14 @@ CrossNodeData* Network::arrangeCrossNodeData(const SimInfo &info)
 	assert(cross_data != NULL);
 
 	int delay_t = _min_delay;
-	for (unsigned int i=0; i<_node_num; i++) {
+	for (int i=0; i<_node_num; i++) {
 		allocParaCND(&(cross_data[i]), _node_num, delay_t);
 	}
 
-	for (unsigned int i=0; i<_node_num; i++) {
+	for (int i=0; i<_node_num; i++) {
 		cross_data[i]._send_offset[0] = 0;
-		for (unsigned int j=0; j<_node_num; j++) {
-
-			int count = 0;
+		for (int j=0; j<_node_num; j++) {
+			size_t count = 0;
 			for (auto iter = _crossnodeNeuronsSend[i].begin(); iter != _crossnodeNeuronsSend[i].end(); iter++) {
 				if (_crossnodeNeuronsRecv[j].find(*iter) != _crossnodeNeuronsRecv[j].end()) {
 					count++;
@@ -400,10 +407,10 @@ CrossNodeData* Network::arrangeCrossNodeData(const SimInfo &info)
 	}
 
 
-	for (unsigned int i=0; i<_node_num; i++) {
+	for (int i=0; i<_node_num; i++) {
 		cross_data[i]._recv_offset[0] = 0;
 		assert(0 ==  cross_data[i]._send_offset[i+1] - cross_data[i]._send_offset[i]); 
-		for (unsigned int j=0; j<_node_num; j++) {
+		for (int j=0; j<_node_num; j++) {
 			int count_t = cross_data[j]._send_offset[i+1] - cross_data[j]._send_offset[i]; 
 			cross_data[i]._recv_offset[j+1] = cross_data[i]._recv_offset[j] + count_t;
 		}

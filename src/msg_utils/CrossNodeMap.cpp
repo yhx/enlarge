@@ -17,6 +17,7 @@ CrossNodeMap * allocCNM(size_t num, size_t cross_num, unsigned node_num)
 
 	if (cross_num > 0) {
 		ret->_crossnodeIndex2idx = malloc_c<integer_t>(cross_num * node_num);
+		std::fill(ret->_crossnodeIndex2idx, ret->_crossnodeIndex2idx + (cross_num*node_num), -1);
 	} else {
 		ret->_crossnodeIndex2idx = NULL;
 	}

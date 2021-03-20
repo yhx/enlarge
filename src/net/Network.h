@@ -27,7 +27,7 @@ using std::set;
 
 typedef ModelView<Neuron> Population;
 typedef ModelView<Synapse> Projection;
-typedef map<unsigned int, map<Type, size_t>> CrossTypeInfo_t;
+typedef map<int, map<Type, size_t>> CrossTypeInfo_t;
 
 class Network {
 public:
@@ -100,8 +100,8 @@ private:
 
 public:
 	/** Cross Node Data **/
-	map<ID, unsigned int> _nid2node;
-	map<ID, unsigned int> _sid2node;
+	map<ID, int> _nid2node;
+	map<ID, int> _sid2node;
 	CrossTypeInfo_t _neuron_nums;
 	CrossTypeInfo_t _synapse_nums;
 	// map<unsigned int, map<Type, size_t>> _neuron_nums;
@@ -115,15 +115,15 @@ public:
 	vector<set<ID> > _crossnodeNeuronsRecv;
 	// Get idx of shadow neuron on destination node, the idxs of shadow neurons are larger than that of real neurons.
 	// Accessed by idx = _crossnodeNeuron2idx[node][neuron]
-	vector<map<Neuron *, int> > _crossnodeNeuron2idx;
+	// vector<map<Neuron *, int> > _crossnodeNeuron2idx;
 
 	/** Per Node Data **/
 	// vector<map<int, ID> > _global_idx2nID;
 	// vector<map<int, ID> > _global_idx2sID;
 	// Number of neurons for different types on different nodes accessed by _global_ntype_num[node][type]
-	vector<map<Type, unsigned long long> >	_globalNTypeNum;
+	// vector<map<Type, unsigned long long> >	_globalNTypeNum;
 	// Number of synapses for different types on different nodes accessed by _global_ntype_num[node][type]
-	vector<map<Type, unsigned long long> > _globalSTypeNum;
+	// vector<map<Type, unsigned long long> > _globalSTypeNum;
 
 	map<Type, Neuron*> _neurons;
 	map<Type, Synapse*> _synapses;
@@ -142,7 +142,7 @@ public:
 	uint64_t _synapse_num;
 	map<Type, size_t> _neurons_offset;
 	map<Type, size_t> _synapses_offset;
-	unsigned int _node_num;
+	int _node_num;
 	real _dt;
 // private:
 // 	real _maxFireRate;

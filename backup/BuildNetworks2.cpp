@@ -98,32 +98,22 @@ int Network::arrangeCross(DistriNetwork *net, CrossTypeInfo_t & type_offset, Cro
 	map<unsigned int, size_t> cross_idx; // idx for cross-node neuron
 	map<unsigned int, size_t> node_n_offset; // neuron offset for each node
 	vector<bool> cross_nodes(_node_num, false);
-
-	for (auto d=_min_delay; d<_max_delay+1; d++) {
-		for (int n_node = 0; n_node < _node_num; n_node++) {
-			CrossNodeMap *map = net[n_node]._crossnodeMap;
-			for (auto iter = _crossnodeNeuronsSend[n_node].begin(); iter != _crossnodeNeuronsSend[n_node].end(); iter++) {
-				assert(n_node == _nid2node[*iter]);
-				if (d == _min_delay) {
-					assert(cross_idx[n_node] < _crossnodeNeuronsSend[n_node].size());
-					map->_idx2index[_id2node_idx[*iter]] = cross_idx[n_node];
-					cross_idx[n_node]++;
-				}
-
-				fill(cross_nodes.begin(), cross_nodes.end(), false);
-				for (auto siter = n2s_conn[*iter][d].begin(); siter != n2s_conn[*iter][d].end(); siter++) {
-					int s_node = _sid2node[*siter];
-					if (s_node != n_node) {
-						cross_nodes[s_node] = true;
-						assert(map->_idx2index[_id2node_idx[*iter]] >= 0);
-					    auto index_t =  map->_idx2index[_id2node_idx[*iter]] * _node_num + s_node;
-						assert(map->_crossnodeIndex2idx != NULL);
-						auto idx_t = map->_crossnodeIndex2idx[index_t];
-						if ( idx_t < 0) {
-							map->_crossnodeIndex2idx[index_t] = n_num[s_node] + node_n_offset[s_node];
-							node_n_offset[s_node]++;
-						} else {
-							size_t n_offset = (n_num[s_node]+_crossnodeNeuronsRecv[s_node].size())*(d-_min_delay)+idx_t;
+	for (unsigned int d=0; d<_max_delay-_min_delay+1; d++) {
+		for (auto t_iter = _neurons.begin(); t_iter != _neurons.end(); t_iter++) {
+			// Type t = t_iter->first;
+			for (size_t i=0; i<t_iter->second->size(); i++) {
+				ID id(t_iter->first, 0, i);
+				unsigned n_node = _nid2node[id];
+				if (_crossnodeNeuronsSend[n_node].find(id) == _crossnodeNeuronsSend[n_node].end()) {
+					continue;
+				} else {
+					net[n_node]._crossnodeMap->_idx2index[_id2node_idx[id]] = cross_idx[n_node];
+					fill(cross_nodes.begin(), cross_nodes.end(), false);
+					for (auto siter = n2s_conn[id][d].begin(); siter != n2s_conn[id][d].end(); siter++) {
+						unsigned int s_node = _sid2node[*siter];
+						if (s_node != n_node) {
+							cross_nodes[s_node] = true;
+							size_t n_offset = (n_num[s_node]+_crossnodeNeuronsRecv[s_node].size())*d+n_num[s_node]+node_n_offset[s_node];
 							Type s_t = siter->type();
 							size_t s_idx = type_offset[s_node][s_t];
 							_synapses[s_t]->packup(net[s_node]._network->ppSynapses[s_idx], synapse_count[s_node][s_t], siter->id());
@@ -133,29 +123,28 @@ int Network::arrangeCross(DistriNetwork *net, CrossTypeInfo_t & type_offset, Cro
 							synapse_count[s_node][s_t]++;
 						}
 					}
-				}
-				for (int node_t = 0; node_t < _node_num; node_t++) {
-					if (node_t == n_node) {
-						continue;
-					}
-					if (cross_nodes[node_t]) {
-						for (auto s_i = _synapse_nums[node_t].begin(); s_i != _synapse_nums[node_t].end(); s_i++) {
-							Type s_t = s_i->first;
-							auto index_t =  map->_idx2index[_id2node_idx[*iter]] * _node_num + node_t;
-							auto idx_t = map->_crossnodeIndex2idx[index_t];
-							size_t n_offset = (n_num[node_t]+_crossnodeNeuronsRecv[node_t].size())*(d-_min_delay)+idx_t;
-							Connection *c= net[node_t]._network->ppConnections[type_offset[node_t][s_t]];
-							c->pDelayNum[n_offset] = synapse_count[node_t][s_t] - n2s_count[node_t][s_t];
-							c->pDelayStart[n_offset+1] = c->pDelayStart[n_offset] + c->pDelayNum[n_offset];
-							n2s_count[node_t][s_t] = synapse_count[node_t][s_t];
+					for (unsigned int  node_t = 0; node_t < _node_num; node_t++) {
+						if (cross_nodes[node_t]) {
+							for (auto s_i = _synapse_nums[node_t].begin(); s_i != _synapse_nums[node_t].end(); s_i++) {
+								Type s_t = s_i->first;
+								size_t n_offset = (n_num[node_t]+_crossnodeNeuronsRecv[node_t].size())*d+n_num[node_t]+node_n_offset[node_t];
+								Connection *c= net[n_node]._network->ppConnections[type_offset[n_node][s_t]];
+								c->pDelayNum[n_offset] = synapse_count[node_t][s_t] - n2s_count[node_t][s_t];
+								c->pDelayStart[n_offset+1] = c->pDelayStart[n_offset] + c->pDelayNum[n_offset];
+								n2s_count[node_t][s_t] = synapse_count[node_t][s_t];
+								node_n_offset[node_t]++;
+							}
+							net[n_node]._crossnodeMap->_crossnodeIndex2idx[cross_idx[n_node]*_node_num+node_t] = node_n_offset[node_t] + n_num[node_t];
 						}
 					}
+
+					cross_idx[n_node]++;
 				}
 			}
 		}
 	}
 
-	for (int  node_t = 0; node_t < _node_num; node_t++) {
+	for (unsigned int  node_t = 0; node_t < _node_num; node_t++) {
 		assert(cross_idx[node_t] == _crossnodeNeuronsSend[node_t].size());
 		assert(node_n_offset[node_t] == _crossnodeNeuronsRecv[node_t].size());
 		for (auto i = _synapse_nums[node_t].begin(); i != _synapse_nums[node_t].end(); i++) {
@@ -192,7 +181,7 @@ DistriNetwork* Network::buildNetworks(const SimInfo &info, bool auto_splited)
 	map<unsigned int, size_t> n_num;
 
 
-	for (int i=0; i<_node_num; i++) {
+	for (unsigned int i=0; i<_node_num; i++) {
 		net[i]._network = allocGNetwork(_neuron_nums[i].size(), _synapse_nums[i].size());
 		size_t offset = 0;
 		size_t e_offset = 0;
