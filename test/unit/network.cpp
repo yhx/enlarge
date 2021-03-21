@@ -168,7 +168,7 @@ TEST(NetworkTest, BuildTest2) {
 			);
 	ASSERT_THAT(
 			vector<int>(n0->pNeuronNums, n0->pNeuronNums + n0->nTypeNum + 1), 
-			ElementsAreArray({0, 4})
+			ElementsAreArray({0, 3})
 			);
 	ASSERT_EQ(n0->sTypeNum, 1);
 	ASSERT_THAT(
@@ -189,7 +189,7 @@ TEST(NetworkTest, BuildTest2) {
 			);
 	ASSERT_THAT(
 			vector<int>(n1->pNeuronNums, n1->pNeuronNums + n1->nTypeNum + 1), 
-			ElementsAreArray({0, 2})
+			ElementsAreArray({0, 3})
 			);
 	ASSERT_EQ(n1->sTypeNum, 1);
 	ASSERT_THAT(
@@ -205,23 +205,23 @@ TEST(NetworkTest, BuildTest2) {
 	LIFData *n0_ = (LIFData*)n0->ppNeurons[0];
 	ASSERT_THAT(
 			vector<int>(n0_->pRefracTime, n0_->pRefracTime + n0->pNeuronNums[n0->nTypeNum]), 
-			ElementsAreArray({15000, 15000, 25000, 25000, 25000})
+			ElementsAreArray({15000, 25000, 25000})
 			);
 	ASSERT_THAT(
 			vector<int>(n0_->pRefracStep, n0_->pRefracStep + n0->pNeuronNums[n0->nTypeNum]), 
-			ElementsAreArray({0, 0, 0, 0, 0})
+			ElementsAreArray({0, 0, 0})
 			);
 	ASSERT_THAT(
 			vector<real>(n0_->pV_thresh, n0_->pV_thresh + n0->pNeuronNums[n0->nTypeNum]), 
-			ElementsAreArray({1.8, 1.8, 2.8, 2.8, 2.8})
+			ElementsAreArray({1.8, 2.8, 2.8})
 			);
 	ASSERT_THAT(
 			vector<real>(n0_->pI_i, n0_->pI_i + n0->pNeuronNums[n0->nTypeNum]), 
-			ElementsAreArray({0, 0, 0, 0, 0})
+			ElementsAreArray({0, 0, 0})
 			);
 	ASSERT_THAT(
 			vector<real>(n0_->pV_tmp, n0_->pV_tmp + n0->pNeuronNums[n0->nTypeNum]), 
-			ElementsAreArray({0.00022465541388783095, 0.00022465541388783095, 0.00021357148557399341, 0.00021357148557399341, 0.00021357148557399341})
+			ElementsAreArray({0.00022465541388783095, 0.00021357148557399341, 0.00021357148557399341})
 			);
 	// ASSERT_THAT(
 	// 		vector<real>(n0_->pV_e, n0_->pV_e + n0->pNeuronNums[n0->nTypeNum]), 
@@ -229,35 +229,35 @@ TEST(NetworkTest, BuildTest2) {
 	// 		);
 	ASSERT_THAT(
 			vector<real>(n0_->pC_i, n0_->pC_i + n0->pNeuronNums[n0->nTypeNum]), 
-			ElementsAreArray({7.6749377e-05, 7.6749377e-05, 4.3661708e-05, 4.3661708e-05, 4.3661708e-05})
+			ElementsAreArray({7.6749377e-05,  4.3661708e-05, 4.3661708e-05})
 			);
 	ASSERT_THAT(
 			vector<real>(n0_->pCe, n0_->pCe + n0->pNeuronNums[n0->nTypeNum]), 
-			ElementsAreArray({0.99993747, 0.99993747, 0.99996156, 0.99996156, 0.99996156})
+			ElementsAreArray({0.99993747, 0.99996156, 0.99996156})
 			);
 	ASSERT_THAT(
 			vector<real>(n0_->pC_m, n0_->pC_m + n0->pNeuronNums[n0->nTypeNum]), 
-			ElementsAreArray({0.99992859, 0.99992859, 0.99995834, 0.99995834, 0.99995834})
+			ElementsAreArray({0.99992859, 0.99995834, 0.99995834})
 			);
 	ASSERT_THAT(
 			vector<real>(n0_->pV_m, n0_->pV_m + n0->pNeuronNums[n0->nTypeNum]), 
-			ElementsAreArray({1.0, 1.0, 2.0, 2.0, 2.0})
+			ElementsAreArray({1.0, 2.0, 2.0})
 			);
 	ASSERT_THAT(
 			vector<real>(n0_->pV_reset, n0_->pV_reset + n0->pNeuronNums[n0->nTypeNum]), 
-			ElementsAreArray({1.2, 1.2, 2.2, 2.2, 2.2})
+			ElementsAreArray({1.2, 2.2, 2.2})
 			);
 	ASSERT_THAT(
 			vector<real>(n0_->pCi, n0_->pCi + n0->pNeuronNums[n0->nTypeNum]), 
-			ElementsAreArray({0.99994117, 0.99994117, 0.99996299, 0.99996299, 0.99996299})
+			ElementsAreArray({0.99994117, 0.99996299, 0.99996299})
 			);
 	ASSERT_THAT(
 			vector<real>(n0_->pI_e, n0_->pI_e + n0->pNeuronNums[n0->nTypeNum]), 
-			ElementsAreArray({0, 0, 0, 0, 0})
+			ElementsAreArray({0, 0, 0})
 			);
 	ASSERT_THAT(
 			vector<real>(n0_->pC_e, n0_->pC_e + n0->pNeuronNums[n0->nTypeNum]), 
-			ElementsAreArray({7.6514014e-05, 7.6514014e-05, 4.3661741e-05, 4.3661741e-05, 4.3661741e-05})
+			ElementsAreArray({7.6514014e-05, 4.3661741e-05, 4.3661741e-05})
 			);
 	// ASSERT_THAT(
 	// 		vector<real>(n0_->pV_i, n0_->pV_i + n0->pNeuronNums[n0->nTypeNum]), 
@@ -268,23 +268,23 @@ TEST(NetworkTest, BuildTest2) {
 
 	ASSERT_THAT(
 			vector<int>(n1_->pRefracTime, n1_->pRefracTime + n1->pNeuronNums[n1->nTypeNum]), 
-			ElementsAreArray({35000})
+			ElementsAreArray({15000, 25000, 35000})
 			);
 	ASSERT_THAT(
 			vector<int>(n1_->pRefracStep, n1_->pRefracStep + n1->pNeuronNums[n1->nTypeNum]), 
-			ElementsAreArray({0})
+			ElementsAreArray({0, 0, 0})
 			);
 	ASSERT_THAT(
 			vector<real>(n1_->pV_thresh, n1_->pV_thresh + n1->pNeuronNums[n1->nTypeNum]), 
-			ElementsAreArray({3.8})
+			ElementsAreArray({1.8, 2.8, 3.8})
 			);
 	ASSERT_THAT(
 			vector<real>(n1_->pI_i, n1_->pI_i + n1->pNeuronNums[n1->nTypeNum]), 
-			ElementsAreArray({0})
+			ElementsAreArray({0, 0, 0})
 			);
 	ASSERT_THAT(
 			vector<real>(n1_->pV_tmp, n1_->pV_tmp + n1->pNeuronNums[n1->nTypeNum]), 
-			ElementsAreArray({0.00020916842316864859})
+			ElementsAreArray({0.00022465541388783095, 0.00021357148557399341, 0.00020916842316864859})
 			);
 	// ASSERT_THAT(
 	// 		vector<real>(n1_->pV_e, n1_->pV_e + n1->pNeuronNums[n1->nTypeNum]), 
@@ -292,35 +292,35 @@ TEST(NetworkTest, BuildTest2) {
 	// 		);
 	ASSERT_THAT(
 			vector<real>(n1_->pC_i, n1_->pC_i + n1->pNeuronNums[n1->nTypeNum]), 
-			ElementsAreArray({3.0296025e-05})
+			ElementsAreArray({7.6749377e-05, 4.3661708e-05, 3.0296025e-05})
 			);
 	ASSERT_THAT(
 			vector<real>(n1_->pCe, n1_->pCe + n1->pNeuronNums[n1->nTypeNum]), 
-			ElementsAreArray({0.99997222})
+			ElementsAreArray({0.99993747, 0.99996156, 0.99997222})
 			);
 	ASSERT_THAT(
 			vector<real>(n1_->pC_m, n1_->pC_m + n1->pNeuronNums[n1->nTypeNum]), 
-			ElementsAreArray({0.99997061})
+			ElementsAreArray({0.99992859, 0.99995834, 0.99997061})
 			);
 	ASSERT_THAT(
 			vector<real>(n1_->pV_m, n1_->pV_m + n1->pNeuronNums[n1->nTypeNum]), 
-			ElementsAreArray({3.0})
+			ElementsAreArray({1.0, 2.0, 3.0})
 			);
 	ASSERT_THAT(
 			vector<real>(n1_->pV_reset, n1_->pV_reset + n1->pNeuronNums[n1->nTypeNum]), 
-			ElementsAreArray({3.2})
+			ElementsAreArray({1.2, 2.2, 3.2})
 			);
 	ASSERT_THAT(
 			vector<real>(n1_->pCi, n1_->pCi + n1->pNeuronNums[n1->nTypeNum]), 
-			ElementsAreArray({0.999973})
+			ElementsAreArray({0.99994117, 0.99996299, 0.999973})
 			);
 	ASSERT_THAT(
 			vector<real>(n1_->pI_e, n1_->pI_e + n1->pNeuronNums[n1->nTypeNum]), 
-			ElementsAreArray({0})
+			ElementsAreArray({0, 0, 0})
 			);
 	ASSERT_THAT(
 			vector<real>(n1_->pC_e, n1_->pC_e + n1->pNeuronNums[n1->nTypeNum]), 
-			ElementsAreArray({2.9845702e-05})
+			ElementsAreArray({7.6514014e-05, 4.3661741e-05, 2.9845702e-05})
 			);
 	// ASSERT_THAT(
 	// 		vector<real>(n1_->pV_i, n1_->pV_i + n1->pNeuronNums[n1->nTypeNum]), 
@@ -330,7 +330,7 @@ TEST(NetworkTest, BuildTest2) {
 	StaticData *s0 = (StaticData*)n0->ppSynapses[0];
 	ASSERT_THAT(
 			vector<real>(s0->pWeight, s0->pWeight + n0->pSynapseNums[n0->sTypeNum]), 
-			ElementsAreArray({1.0, 1.2, 1.1, 1.4, 1.3, 1.5})
+			ElementsAreArray({1.0, 1.2, 1.4, 1.3, 1.5})
 			);
 	// ASSERT_THAT(
 	// 		vector<int>(s0->pDst, s0->pDst + n0->pSynapseNums[n0->sTypeNum]), 
@@ -340,7 +340,7 @@ TEST(NetworkTest, BuildTest2) {
 	StaticData *s1 = (StaticData*)n1->ppSynapses[0];
 	ASSERT_THAT(
 			vector<real>(s1->pWeight, s1->pWeight + n1->pSynapseNums[n1->sTypeNum]), 
-			ElementsAreArray({2.0, 2.1, 2.2})
+			ElementsAreArray({1.4, 2.1, 2.2})
 			);
 	// ASSERT_THAT(
 	// 		vector<int>(s1->pDst, s1->pDst + n1->pSynapseNums[n1->sTypeNum]), 
@@ -408,13 +408,13 @@ TEST(NetworkTest, SaveLoadTest) {
 	fclose_c(f);
 }
 
-TEST(NetworkTest, RunTest) {
-	SGSim sg(network, 1.0e-4);
-	sg.run(0.01);
-	MGSim mg(network, 1.0e-4);
-	mg.run(0.01);
-}
-
+// TEST(NetworkTest, RunTest) {
+// 	SGSim sg(network, 1.0e-4);
+// 	sg.run(0.01);
+// 	MGSim mg(network, 1.0e-4);
+// 	mg.run(0.01);
+// }
+// 
 
 int main(int argc, char **argv)
 {
