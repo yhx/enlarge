@@ -26,8 +26,8 @@ void Network::update_status()
 		_synapse_num += iter->second->size();
 
 		auto t = minmax_element(iter->second->delay().begin(), iter->second->delay().end());
-		unsigned int max = *(t.second);
-		unsigned int min = *(t.first);
+		int max = *(t.second);
+		int min = *(t.first);
 		if (_max_delay < max) {
 			_max_delay = max;
 		}
@@ -81,7 +81,7 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 
 	size_t *syn_idx = malloc_c<size_t>(s_type_num); 
 	size_t *start = malloc_c<size_t>(s_type_num); 
-	for (unsigned int d=_min_delay; d<_max_delay+1; d++) {
+	for (int d=_min_delay; d<_max_delay+1; d++) {
 		for (size_t i=0; i<n_type_num; i++) {
 			Type t = ret->pNTypes[i];
 			for (size_t n=0; n<ret->pNeuronNums[i+1]-ret->pNeuronNums[i]; n++) {

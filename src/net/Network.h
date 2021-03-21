@@ -28,6 +28,7 @@ using std::set;
 typedef ModelView<Neuron> Population;
 typedef ModelView<Synapse> Projection;
 typedef map<int, map<Type, size_t>> CrossTypeInfo_t;
+typedef map<int, size_t> CrossInfo_t;
 
 class Network {
 public:
@@ -85,13 +86,14 @@ private:
 	void update_status();
 	void update_status_splited();
 
-	int arrangeNet(DistriNetwork *net);
+
+	int arrangeNet(DistriNetwork *net, CrossTypeInfo_t &type_offset, CrossTypeInfo_t &_neuron_offset, CrossTypeInfo_t &neuron_count, CrossTypeInfo_t &synapse_offset, CrossTypeInfo_t &synapse_count);
 	
 	int arrangeNeuron(DistriNetwork *net, CrossTypeInfo_t &type_offset, CrossTypeInfo_t &neuron_offset, CrossTypeInfo_t &neuron_count);
 
-	int arrangeLocal(DistriNetwork *net, CrossTypeInfo_t & type_offset, CrossTypeInfo_t &neuron_offset, CrossTypeInfo_t & synapse_offset, CrossTypeInfo_t &neuron_count, CrossTypeInfo_t &synapse_count, CrossTypeInfo_t &n2s_count, map<unsigned int, size_t> &n_num);
+	int arrangeLocal(DistriNetwork *net, CrossTypeInfo_t & type_offset, CrossTypeInfo_t &neuron_offset, CrossTypeInfo_t & synapse_offset, CrossTypeInfo_t &neuron_count, CrossTypeInfo_t &synapse_count, CrossTypeInfo_t &n2s_count, int delay);
 
-	int arrangeCross(DistriNetwork *net, CrossTypeInfo_t & type_offset, CrossTypeInfo_t &synapse_count, CrossTypeInfo_t &n2s_count, map<unsigned int, size_t> &n_num);
+	int arrangeCross(DistriNetwork *net, CrossTypeInfo_t & type_offset, CrossTypeInfo_t &synapse_count, CrossTypeInfo_t &n2s_count, CrossInfo_t &cross_idx, CrossInfo_t &node_n_offset, int delay);
 
 	// GNetwork* arrangeData(int node, const SimInfo &info);
 	// Connection* arrangeConnect(size_t n_num, size_t s_num, int node_idx, const SimInfo &info);
@@ -134,8 +136,8 @@ public:
 	map<ID, map<unsigned int, vector<ID>>> n2s_conn_rev;
 	map<ID, ID> s2n_conn_rev;
 
-	unsigned int _max_delay;
-	unsigned int _min_delay;
+	int _max_delay;
+	int _min_delay;
 
 	uint64_t _neuron_num;
 	uint64_t _synapse_num;
