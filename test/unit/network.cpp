@@ -361,7 +361,7 @@ TEST(NetworkTest, BuildTest2) {
 			);
 	ASSERT_THAT(
 			vector<int>(c0_->_crossnodeIndex2idx, c0_->_crossnodeIndex2idx + c0_->_crossSize), 
-			ElementsAreArray({-1, 4, -1, 3, -1, 5})
+			ElementsAreArray({-1, 3, -1, 4, -1, 5})
 			);
 
 	CrossNodeMap * c1_ = n[1]._crossnodeMap;
