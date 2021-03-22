@@ -361,11 +361,11 @@ TEST(NetworkTest, BuildTest2) {
 			);
 	ASSERT_THAT(
 			vector<int>(c0_->_crossnodeIndex2idx, c0_->_crossnodeIndex2idx + c0_->_crossSize), 
-			ElementsAreArray({-1, 3, -1, 4, -1, 5})
+			ElementsAreArray({-1, 4, -1, 3, -1, 5})
 			);
 
 	CrossNodeMap * c1_ = n[1]._crossnodeMap;
-	ASSERT_EQ(c1_->_crossSize, n[1]._nodeNum * 0);
+	ASSERT_EQ(c1_->_crossSize, n[1]._nodeNum * 1);
 	ASSERT_THAT(
 			vector<int>(c1_->_idx2index, c1_->_idx2index + c1_->_num), 
 			ElementsAreArray({0, -1, -1, -1, -1, -1})
@@ -403,16 +403,11 @@ TEST(NetworkTest, BuildTest2) {
 	ASSERT_EQ(c1->minDelay, 1);
 	ASSERT_THAT(
 			vector<int>(c1->pDelayNum, c1->pDelayNum + c1->nNum * (c1->maxDelay-c1->minDelay+1)), 
-			ElementsAreArray({1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1})
+			ElementsAreArray({1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1})
 			);
 	ASSERT_THAT(
 			vector<int>(c1->pDelayStart, c1->pDelayStart + c1->nNum * (c1->maxDelay-c1->minDelay+1)+1), 
-			ElementsAreArray({0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5})
-			);
-
-	ASSERT_THAT(
-			vector<int>(c1->pDelayStart, c1->pDelayStart + c1->nNum * (c1->maxDelay-c1->minDelay+1)+1), 
-			ElementsAreArray({0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5})
+			ElementsAreArray({0, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 5})
 			);
 
 	ASSERT_THAT(
