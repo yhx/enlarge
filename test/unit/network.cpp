@@ -138,6 +138,11 @@ TEST(NetworkTest, ConnectionTest) {
 			// ElementsAreArray({2, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0})
 			ElementsAreArray({2, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0})
 			);
+
+	ASSERT_THAT(
+			vector<int>(c->pSidMap, c->pSidMap + c->sNum), 
+			ElementsAreArray({0, 2, 4, 6, 1, 3, 7, 5, 8})
+			);
 }
 
 TEST(NetworkTest, BuildTest1) {
@@ -330,7 +335,7 @@ TEST(NetworkTest, BuildTest2) {
 	StaticData *s0 = (StaticData*)n0->ppSynapses[0];
 	ASSERT_THAT(
 			vector<real>(s0->pWeight, s0->pWeight + n0->pSynapseNums[n0->sTypeNum]), 
-			ElementsAreArray({1.0, 1.2, 1.4, 1.3, 1.5})
+			ElementsAreArray({1.0, 1.2, 1.3, 1.5})
 			);
 	// ASSERT_THAT(
 	// 		vector<int>(s0->pDst, s0->pDst + n0->pSynapseNums[n0->sTypeNum]), 
@@ -340,62 +345,81 @@ TEST(NetworkTest, BuildTest2) {
 	StaticData *s1 = (StaticData*)n1->ppSynapses[0];
 	ASSERT_THAT(
 			vector<real>(s1->pWeight, s1->pWeight + n1->pSynapseNums[n1->sTypeNum]), 
-			ElementsAreArray({1.4, 2.1, 2.2})
+			ElementsAreArray({1.4, 2.0, 2.1, 1.1, 2.2})
 			);
 	// ASSERT_THAT(
 	// 		vector<int>(s1->pDst, s1->pDst + n1->pSynapseNums[n1->sTypeNum]), 
 	// 		ElementsAreArray({0, 0, 0})
 	// 		);
-
-	Connection *c0 = n0->ppConnections[0];
-	ASSERT_EQ(c0->nNum, 5);
-	ASSERT_EQ(c0->sNum, 6);
-	ASSERT_EQ(c0->maxDelay, 3);
-	ASSERT_EQ(c0->minDelay, 1);
-	ASSERT_THAT(
-			vector<int>(c0->pDelayNum, c0->pDelayNum + c0->nNum * (c0->maxDelay-c0->minDelay+1)), 
-			ElementsAreArray({2, 1, 0, 1, 1, 1
-				, 0, 0, 0, 0, 0, 0, 0, 0, 0})
-			);
-	ASSERT_THAT(
-			vector<int>(c0->pDelayStart, c0->pDelayStart + c0->nNum * (c0->maxDelay-c0->minDelay+1)), 
-			ElementsAreArray({0, 2, 3, 3, 4, 5, 
-				6, 6, 6, 6, 6, 6, 6, 6, 6})
-			);
-
-	Connection *c1 = n1->ppConnections[0];
-	ASSERT_EQ(c1->nNum, 4);
-	ASSERT_EQ(c1->sNum, 3);
-	ASSERT_EQ(c1->maxDelay, 3);
-	ASSERT_EQ(c1->minDelay, 1);
-	ASSERT_THAT(
-			vector<int>(c1->pDelayNum, c1->pDelayNum + c1->nNum * (c1->maxDelay-c1->minDelay+1)), 
-			ElementsAreArray({0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1})
-			);
-	ASSERT_THAT(
-			vector<int>(c1->pDelayStart, c1->pDelayStart + c1->nNum * (c1->maxDelay-c1->minDelay+1)), 
-			ElementsAreArray({0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2})
-			);
-
+	
 	CrossNodeMap * c0_ = n[0]._crossnodeMap;
 	ASSERT_EQ(c0_->_crossSize, n[0]._nodeNum * 3);
 	ASSERT_THAT(
-			vector<int>(c0_->_idx2index, c0_->_idx2index + n0->pNeuronNums[n0->nTypeNum]), 
+			vector<int>(c0_->_idx2index, c0_->_idx2index + c0_->_num), 
 			// vector<int>(c0_->_idx2index, c0_->_idx2index + 5), 
-			ElementsAreArray({-1, -1, 0, 1, 2})
+			ElementsAreArray({0, 1, 2, -1})
 			);
 	ASSERT_THAT(
 			vector<int>(c0_->_crossnodeIndex2idx, c0_->_crossnodeIndex2idx + c0_->_crossSize), 
-			ElementsAreArray({-1, 1, -1, 2, -1, 3})
+			ElementsAreArray({-1, 3, -1, 4, -1, 5})
 			);
 
 	CrossNodeMap * c1_ = n[1]._crossnodeMap;
 	ASSERT_EQ(c1_->_crossSize, n[1]._nodeNum * 0);
 	ASSERT_THAT(
-			vector<int>(c1_->_idx2index, c1_->_idx2index + n1->pNeuronNums[n1->nTypeNum]), 
-			ElementsAreArray({-1})
+			vector<int>(c1_->_idx2index, c1_->_idx2index + c1_->_num), 
+			ElementsAreArray({0, -1, -1, -1, -1, -1})
 			);
-	ASSERT_EQ(c1_->_crossnodeIndex2idx, nullptr);
+
+	ASSERT_THAT(
+			vector<int>(c1_->_crossnodeIndex2idx, c1_->_crossnodeIndex2idx + c1_->_crossSize), 
+			ElementsAreArray({3, -1})
+			);
+	// ASSERT_EQ(c1_->_crossnodeIndex2idx, nullptr);
+
+	Connection *c0 = n0->ppConnections[0];
+	ASSERT_EQ(c0->nNum, 4);
+	ASSERT_EQ(c0->sNum, 4);
+	ASSERT_EQ(c0->maxDelay, 3);
+	ASSERT_EQ(c0->minDelay, 1);
+	ASSERT_THAT(
+			vector<int>(c0->pDelayNum, c0->pDelayNum + c0->nNum * (c0->maxDelay-c0->minDelay+1)), 
+			ElementsAreArray({2, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1})
+			);
+	ASSERT_THAT(
+			vector<int>(c0->pDelayStart, c0->pDelayStart + c0->nNum * (c0->maxDelay-c0->minDelay+1)+1), 
+			ElementsAreArray({0, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4})
+			);
+
+	ASSERT_THAT(
+			vector<int>(c0->pSidMap, c0->pSidMap + c0->sNum), 
+			ElementsAreArray({0, 1, 2, 3})
+			);
+
+	Connection *c1 = n1->ppConnections[0];
+	ASSERT_EQ(c1->nNum, 6);
+	ASSERT_EQ(c1->sNum, 5);
+	ASSERT_EQ(c1->maxDelay, 3);
+	ASSERT_EQ(c1->minDelay, 1);
+	ASSERT_THAT(
+			vector<int>(c1->pDelayNum, c1->pDelayNum + c1->nNum * (c1->maxDelay-c1->minDelay+1)), 
+			ElementsAreArray({1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1})
+			);
+	ASSERT_THAT(
+			vector<int>(c1->pDelayStart, c1->pDelayStart + c1->nNum * (c1->maxDelay-c1->minDelay+1)+1), 
+			ElementsAreArray({0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5})
+			);
+
+	ASSERT_THAT(
+			vector<int>(c1->pDelayStart, c1->pDelayStart + c1->nNum * (c1->maxDelay-c1->minDelay+1)+1), 
+			ElementsAreArray({0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5})
+			);
+
+	ASSERT_THAT(
+			vector<int>(c1->pSidMap, c1->pSidMap + c1->sNum), 
+			ElementsAreArray({0, 1, 2, 3, 4})
+			);
+
 }
 
 TEST(NetworkTest, SaveLoadTest) {
