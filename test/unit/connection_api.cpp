@@ -32,8 +32,8 @@ TEST(ConnectionAPITest, SynapseTemplTest) {
 	real delay0[] = {1e-4, 2e-4, 1e-4, 2e-4, 1e-4, 3e-4};
 	real delay1[] = {1e-4, 2e-4, 3e-4};
 
-	StaticSynapse s0 = StaticSynapse(weight0, delay0, 1.6, dt, 6);
-	StaticSynapse s1 = StaticSynapse(weight1, delay1, 2.6, dt, 6);
+	StaticSynapse s0 = StaticSynapse(weight0, delay0, 0.0, dt, 6);
+	StaticSynapse s1 = StaticSynapse(weight1, delay1, 0.0, dt, 6);
 
 	//Network.connect(population1, population2, weight_array, delay_array, Exec or Inhi array, num)
 	c0.connect(pn0, pn1, weight0, delay0, NULL, 6);

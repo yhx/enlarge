@@ -147,9 +147,9 @@ TEST(NetworkTest, ConnectionTest) {
 
 TEST(NetworkTest, BuildTest1) {
 	SimInfo info(1e-4);
-	DistriNetwork* n1 = network->buildNetworks(info);
-	GNetwork * n2 = network->buildNetwork(info);
-	ASSERT_TRUE(compareGNetwork(n1->_network, n2));
+	GNetwork * n1 = network->buildNetwork(info);
+	DistriNetwork* n2 = network->buildNetworks(info);
+	ASSERT_TRUE(compareGNetwork(n1, n2->_network));
 }
 
 TEST(NetworkTest, BuildTest2) {
