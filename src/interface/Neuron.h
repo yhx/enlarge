@@ -9,7 +9,7 @@
 
 class Neuron : public Model {
 public:
-	Neuron(Type type, size_t num, size_t offset=0) : Model(type, num, offset) {
+	Neuron(Type type, size_t num, size_t offset=0, int buffer_size=2) : Model(type, num, offset, buffer_size) {
 	}
 
 	virtual ~Neuron() = 0;

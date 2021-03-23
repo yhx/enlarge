@@ -76,8 +76,6 @@ public:
 
 	CrossNodeData * arrangeCrossNodeData(const SimInfo &info);
 
-
-
 private:
 	// void mapIDtoIdx(GNetwork *net);
 	// bool checkIDtoIdx();
@@ -105,6 +103,7 @@ public:
 	map<ID, int> _sid2node;
 	CrossTypeInfo_t _neuron_nums;
 	CrossTypeInfo_t _synapse_nums;
+	CrossTypeInfo_t _buffer_offsets;
 	// map<unsigned int, map<Type, size_t>> _neuron_nums;
 	// map<unsigned int, map<Type, size_t>> _synapse_nums;
 	map<ID, size_t> _id2node_idx;

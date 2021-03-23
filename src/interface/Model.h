@@ -16,7 +16,7 @@ class Model {
 public:
 	Model() : _num(0), _type(UNSET), _id() {}
 
-	Model(Type type, size_t num, size_t offset=0) : _num(num), _type(type) {
+	Model(Type type, size_t num, size_t offset=0, int buffer_size=0) : _num(num), _type(type), _buffer_size(buffer_size) {
 		_id.set_type(type);
 		_id.set_offset(offset);
 	}
@@ -39,6 +39,10 @@ public:
 		this->_id = id;
 	}
 
+	inline int buffer_size() {
+		return _buffer_size;
+	}
+
 
 	virtual void * packup() = 0;
 	virtual int packup(void *data, size_t dst, size_t src) = 0;
@@ -47,6 +51,7 @@ protected:
 	size_t _num;
 	Type _type;
 	ID _id;
+	int _buffer_size;
 };
 
 #endif /* MODEL_H */

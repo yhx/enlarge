@@ -36,6 +36,15 @@ void Network::update_status_splited()
 			}
 		}
 	}
+
+	_buffer_offsets.clear();
+	for (int node=0; node<_node_num; node++) {
+		size_t count = 0;
+		for (auto iter=_neuron_nums[node].begin(); iter!=_neuron_nums[node].end(); iter++) {
+			_buffer_offsets[node][iter->first] = count;
+			count += iter->second * _neurons[iter->first]->buffer_size();
+		}
+	}
 }
 
 int Network::arrangeNet(DistriNetwork *net, CrossTypeInfo_t &type_offset, CrossTypeInfo_t &neuron_offset, CrossTypeInfo_t &neuron_count, CrossTypeInfo_t &synapse_offset, CrossTypeInfo_t &synapse_count)
@@ -117,6 +126,8 @@ int Network::arrangeLocal(DistriNetwork *net, CrossTypeInfo_t &type_offset, Cros
 					Connection * c = net[s_node]._network->ppConnections[s_idx];
 					c->pDelayStart[n_offset] = n2s_count[s_node][s_t];
 					c->pSidMap[synapse_count[s_node][s_t]] = synapse_count[s_node][s_t];
+					ID target = s2n_conn[*siter];
+					c->dst[synapse_count[s_node][s_t]] = _buffer_offsets[s_node][target.type()] + target.offset() * _neuron_nums[s_node][target.type()] + _id2node_idx[target.mask_offset()];
 					synapse_count[s_node][s_t]++;
 				}
 			}
@@ -177,6 +188,8 @@ int Network::arrangeCross(DistriNetwork *net, CrossTypeInfo_t & type_offset, Cro
 					Connection * c = net[s_node]._network->ppConnections[s_idx];
 					c->pDelayStart[n_offset] = n2s_count[s_node][s_t];
 					c->pSidMap[synapse_count[s_node][s_t]] = synapse_count[s_node][s_t];
+					ID target = s2n_conn[*siter];
+					c->dst[synapse_count[s_node][s_t]] = _buffer_offsets[s_node][target.type()] + target.offset() * _neuron_nums[s_node][target.type()] + _id2node_idx[target.mask_offset()];
 					synapse_count[s_node][s_t]++;
 				}
 			}

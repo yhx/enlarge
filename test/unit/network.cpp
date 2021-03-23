@@ -396,6 +396,11 @@ TEST(NetworkTest, BuildTest2) {
 			ElementsAreArray({0, 1, 2, 3})
 			);
 
+	ASSERT_THAT(
+			vector<int>(c0->dst, c0->dst + c0->sNum), 
+			ElementsAreArray({1, 2, 1, 2})
+			);
+
 	Connection *c1 = n1->ppConnections[0];
 	ASSERT_EQ(c1->nNum, 6);
 	ASSERT_EQ(c1->sNum, 5);
@@ -403,11 +408,11 @@ TEST(NetworkTest, BuildTest2) {
 	ASSERT_EQ(c1->minDelay, 1);
 	ASSERT_THAT(
 			vector<int>(c1->pDelayNum, c1->pDelayNum + c1->nNum * (c1->maxDelay-c1->minDelay+1)), 
-			ElementsAreArray({1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1})
+			ElementsAreArray({1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1})
 			);
 	ASSERT_THAT(
 			vector<int>(c1->pDelayStart, c1->pDelayStart + c1->nNum * (c1->maxDelay-c1->minDelay+1)+1), 
-			ElementsAreArray({0, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 5})
+			ElementsAreArray({0, 1, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5})
 			);
 
 	ASSERT_THAT(
@@ -415,6 +420,10 @@ TEST(NetworkTest, BuildTest2) {
 			ElementsAreArray({0, 1, 2, 3, 4})
 			);
 
+	ASSERT_THAT(
+			vector<int>(c1->dst, c1->dst + c1->sNum), 
+			ElementsAreArray({1, 5, 5, 1, 5})
+			);
 }
 
 TEST(NetworkTest, SaveLoadTest) {
@@ -449,9 +458,11 @@ int main(int argc, char **argv)
 	real delay0[] = {1e-4, 2e-4, 1e-4, 2e-4, 1e-4, 3e-4};
 	real delay1[] = {1e-4, 2e-4, 3e-4};
 
+	SpikeType type[] = {Inh, Inh, Inh};
+
 	//Network.connect(population1, population2, weight_array, delay_array, Exec or Inhi array, num)
 	c.connect(pn0, pn1, weight0, delay0, NULL, 6);
-	c.connect(pn1, pn2, weight1, delay1, NULL, 3);
+	c.connect(pn1, pn2, weight1, delay1, type, 3);
 
 	// SGSim sg(&c, 1.0e-4);
 

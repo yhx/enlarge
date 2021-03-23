@@ -36,6 +36,15 @@ void Network::update_status()
 		}
 	}
 	assert(_min_delay <= _max_delay);
+
+	if (_node_num == 1) {
+		_buffer_offsets.clear();
+		size_t count = 0;
+		for (auto iter=_neurons.begin(); iter!=_neurons.end(); iter++) {
+			_buffer_offsets[0][iter->first] = count;
+			count = count + iter->second->size() * iter->second->buffer_size();
+		}
+	}
 }
 
 GNetwork* Network::buildNetwork(const SimInfo &info)
@@ -92,6 +101,8 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 					Connection * c = ret->ppConnections[s_idx];
 					c->pDelayStart[n_offset] = start[s_idx];
 					c->pSidMap[syn_idx[s_idx]] = s_iter->id();
+					ID target = s2n_conn[*s_iter];
+					c->dst[syn_idx[s_idx]] = _buffer_offsets[0][target.type()] + target.offset() * _neurons[target.type()]->size() + target.id();
 					syn_idx[s_idx]++;
 				}
 				for (size_t s=0; s<s_type_num; s++) {

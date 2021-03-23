@@ -328,6 +328,7 @@ int Network::reset(const SimInfo &info)
 	_min_delay = INT_MAX;
 	_neuron_nums.clear();
 	_synapse_nums.clear();
+	_buffer_offsets.clear();
 	_crossnodeNeuronsSend.clear();
 	_crossnodeNeuronsRecv.clear();
 	// _crossn_nodeNeuron2idx.clear();
