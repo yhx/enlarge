@@ -150,11 +150,12 @@ int generateCND(integer_t *idx2index, integer_t *crossnode_index2idx, CrossNodeD
 	for (int node=0; node<node_num; node++) {
 		for (uinteger_t idx=0; idx<fired_size; idx++) {
 			uinteger_t nid = firedTable[gFiredTableCap * delay_idx + idx];
-			uinteger_t tmp = idx2index[nid];
+			integer_t tmp = idx2index[nid];
 			if (tmp >= 0) {
-				uinteger_t map_nid = crossnode_index2idx[tmp*node_num+node];
+				integer_t map_nid = crossnode_index2idx[tmp*node_num+node];
 				if (map_nid >= 0) {
-					uinteger_t idx_t = node * (min_delay+1) + curr_delay + 1;
+					integer_t idx_t = node * (min_delay+1) + curr_delay + 1;
+					assert(idx_t >= 0);
 					cnd->_send_data[cnd->_send_offset[node] + cnd->_send_start[idx_t]]= map_nid;
 					cnd->_send_start[idx_t]++;
 				}

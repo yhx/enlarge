@@ -122,11 +122,24 @@ TEST(NetworkTest, ConnectionTest) {
 
 	ASSERT_THAT(
 			vector<int>(c->pDelayNum, c->pDelayNum + c->nNum * (c->maxDelay-c->minDelay+1)), 
-			ElementsAreArray({2, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0})
+			// ElementsAreArray({2, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0})
+			ElementsAreArray({2, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0})
 			);
 	ASSERT_THAT(
 			vector<int>(c->pDelayStart, c->pDelayStart + c->nNum * (c->maxDelay-c->minDelay+1)), 
-			ElementsAreArray({0, 2, 3, 3, 4, 5, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9})
+			// ElementsAreArray({0, 2, 3, 3, 4, 5, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9})
+			ElementsAreArray({0, 2, 3, 4, 4, 4, 4, 5, 6, 6, 7, 7, 7, 7, 8, 8, 8, 9})
+			);
+
+	ASSERT_THAT(
+			vector<int>(c->pSidMap, c->pSidMap + c->sNum), 
+			ElementsAreArray({0, 2, 4, 6, 1, 3, 7, 5, 8})
+			);
+
+	ASSERT_THAT(
+			vector<int>(c->dst, c->dst + c->sNum), 
+			ElementsAreArray({2, 4, 3, 5, 3, 2, 5, 4, 5})
+			// ElementsAreArray({2, 4, 3, 3, 2, 4, 5, 5, 5})
 			);
 }
 

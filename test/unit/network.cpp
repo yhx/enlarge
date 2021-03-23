@@ -143,6 +143,11 @@ TEST(NetworkTest, ConnectionTest) {
 			vector<int>(c->pSidMap, c->pSidMap + c->sNum), 
 			ElementsAreArray({0, 2, 4, 6, 1, 3, 7, 5, 8})
 			);
+
+	ASSERT_THAT(
+			vector<int>(c->dst, c->dst + c->sNum), 
+			ElementsAreArray({2, 4, 3, 11, 3, 2, 11, 4, 11})
+			);
 }
 
 TEST(NetworkTest, BuildTest1) {
