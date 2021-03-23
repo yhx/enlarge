@@ -33,17 +33,17 @@ TEST(ConnectionAPITest, SynapseTemplTest) {
 	real delay1[] = {1e-4, 2e-4, 3e-4};
 
 	StaticSynapse s0 = StaticSynapse(weight0, delay0, 0.0, dt, 6);
-	StaticSynapse s1 = StaticSynapse(weight1, delay1, 0.0, dt, 6);
+	StaticSynapse s1 = StaticSynapse(weight1, delay1, 0.0, dt, 3);
 
 	//Network.connect(population1, population2, weight_array, delay_array, Exec or Inhi array, num)
 	c0.connect(pn0, pn1, weight0, delay0, NULL, 6);
 	c0.connect(pn1, pn2, weight1, delay1, NULL, 3);
 
+	// c1.connect(pn0, pn1, weight0, delay0, NULL, 6);
+	// c1.connect(pn1, pn2, weight1, delay1, NULL, 3);
 	c1.connect(pn0_1, pn1_1, s0);
 	c1.connect(pn1_1, pn2_1, s1);
 
-
-	// SGSim sg(&c, 1.0e-4);
 
 	DistriNetwork *n0 = c0.buildNetworks(SimInfo(1.0e-4));
 	DistriNetwork *n1 = c1.buildNetworks(SimInfo(1.0e-4));

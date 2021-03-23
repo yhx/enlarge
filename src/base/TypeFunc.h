@@ -25,7 +25,7 @@ extern void* (*loadType[TYPESIZE])(size_t num, FILE *f);
 // extern int (*addTypeConnection[TYPESIZE])(void *, int *);
 extern void (*updateType[TYPESIZE])(Connection *, void *, real *, real *, uinteger_t *, uinteger_t*,  size_t, size_t, size_t, int);
 
-extern bool (*isEqualType[TYPESIZE])(void *p1, void *p2, size_t num, size_t *shuffle);
+extern bool (*isEqualType[TYPESIZE])(void *p1, void *p2, size_t num, size_t *shuffle1, size_t *shuffle2);
 
 extern void *(*cudaAllocType[TYPESIZE])(void *pCPU, size_t num);
 // extern int (*cudaTypeToGPU[TYPESIZE])(void *pCPU, void *pGPU, int num);

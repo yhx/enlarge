@@ -165,10 +165,10 @@ bool compareGNetwork(GNetwork *n1, GNetwork *n2)
 	equal = equal && isEqualArray(n1->pSynapseNums, n2->pSynapseNums, n1->sTypeNum+1);
 
 	for (size_t i=0; i<n1->nTypeNum; i++) {
-		equal = isEqualType[n1->pNTypes[i]](n1->ppNeurons[i], n2->ppNeurons[i], n1->pNeuronNums[i+1]-n1->pNeuronNums[i], NULL) && equal;
+		equal = isEqualType[n1->pNTypes[i]](n1->ppNeurons[i], n2->ppNeurons[i], n1->pNeuronNums[i+1]-n1->pNeuronNums[i], NULL, NULL) && equal;
 	}
 	for (size_t i=0; i<n1->sTypeNum; i++) {
-		equal = isEqualType[n1->pSTypes[i]](n1->ppSynapses[i], n2->ppSynapses[i], n1->pSynapseNums[i+1]-n1->pSynapseNums[i], n1->ppConnections[i]->pSidMap) && equal;
+		equal = isEqualType[n1->pSTypes[i]](n1->ppSynapses[i], n2->ppSynapses[i], n1->pSynapseNums[i+1]-n1->pSynapseNums[i], n1->ppConnections[i]->pSidMap, n2->ppConnections[i]->pSidMap) && equal;
 	}
 
 	for (size_t i=0; i<n1->sTypeNum; i++) {

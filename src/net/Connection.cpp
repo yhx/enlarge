@@ -112,7 +112,7 @@ bool isEqualConnection(Connection *c1, Connection *c2)
 
 	ret = ret && isEqualArray(c1->pDelayStart, c2->pDelayStart, length+1);
 	ret = ret && isEqualArray(c1->pDelayNum, c2->pDelayNum, length);
-	ret = ret && isEqualArray(c1->pSidMap, c2->pSidMap, c1->sNum);
+	// ret = ret && isEqualArray(c1->pSidMap, c2->pSidMap, c1->sNum);
 	ret = ret && isEqualArray(c1->dst, c2->dst, c1->sNum);
 
 	ret = ret && isEqualArray(c1->pDelayStartRev, c2->pDelayStartRev, length+1);

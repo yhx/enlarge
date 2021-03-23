@@ -195,7 +195,7 @@ int Network::connect(Population *p_src, Population *p_dst, S templ, SpikeType sp
 	if (_synapses.find(type) == _synapses.end()) {
 		_synapses[type] = new S(templ, size);
 	} else {
-		offset = _synapses.size();
+		offset = _synapses[type]->size();
 		_synapses[type]->append(&templ, size);
 	}
 
@@ -220,7 +220,7 @@ int Network::connect(Population *p_src, size_t src, Population *p_dst, size_t ds
 	if (_synapses.find(type) == _synapses.end()) {
 		_synapses[type] = new S(templ);
 	} else {
-		offset = _synapses.size();
+		offset = _synapses[type]->size();
 		_synapses[type]->append(&templ);
 	}
 

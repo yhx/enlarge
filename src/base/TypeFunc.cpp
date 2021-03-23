@@ -53,7 +53,7 @@ void (*updateType[])(Connection *, void *, real *, real *, uinteger_t *, uintege
 	updateStatic
 };
 
-bool (*isEqualType[])(void *p1, void *p2, size_t num, size_t *shuffle) = {
+bool (*isEqualType[])(void *p1, void *p2, size_t num, size_t *shuffle1, size_t *shuffle2) = {
 	isEqualLIF,
 	isEqualStatic
 };
