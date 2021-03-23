@@ -41,7 +41,7 @@ int freeLIFPara(void *pCPU);
 void updateLIF(Connection *, void *, real *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int);
 int saveLIF(void *pCPU, size_t num, FILE *f);
 void *loadLIF(size_t num, FILE *f);
-bool isEqualLIF(void *p1, void *p2, size_t num);
+bool isEqualLIF(void *p1, void *p2, size_t num, size_t *shuffle=NULL);
 int copyLIF(void *src, size_t s_off, void *dst, size_t d_off);
 
 void *cudaMallocLIF();

@@ -183,28 +183,28 @@ void *loadLIF(size_t num, FILE *f)
 	return p;
 }
 
-bool isEqualLIF(void *p1, void *p2, size_t num)
+bool isEqualLIF(void *p1, void *p2, size_t num, size_t *shuffle)
 {
 	LIFData *t1 = (LIFData*)p1;
 	LIFData *t2 = (LIFData*)p2;
 
 	bool ret = t1->num == t2->num;
-	ret = ret && isEqualArray(t1->pRefracTime, t2->pRefracTime, num);
-	ret = ret && isEqualArray(t1->pRefracStep, t2->pRefracStep, num);
+	ret = ret && isEqualArray(t1->pRefracTime, t2->pRefracTime, num, shuffle);
+	ret = ret && isEqualArray(t1->pRefracStep, t2->pRefracStep, num, shuffle);
 
-	ret = ret && isEqualArray(t1->pI_e, t2->pI_e, num);
-	// ret = ret && isEqualArray(t1->pV_i, t2->pV_i, num);
-	ret = ret && isEqualArray(t1->pCe, t2->pCe, num);
-	ret = ret && isEqualArray(t1->pV_reset, t2->pV_reset, num);
-	// ret = ret && isEqualArray(t1->pV_e, t2->pV_e, num);
-	ret = ret && isEqualArray(t1->pV_tmp, t2->pV_tmp, num);
-	ret = ret && isEqualArray(t1->pI_i, t2->pI_i, num);
-	ret = ret && isEqualArray(t1->pV_thresh, t2->pV_thresh, num);
-	ret = ret && isEqualArray(t1->pCi, t2->pCi, num);
-	ret = ret && isEqualArray(t1->pV_m, t2->pV_m, num);
-	ret = ret && isEqualArray(t1->pC_e, t2->pC_e, num);
-	ret = ret && isEqualArray(t1->pC_m, t2->pC_m, num);
-	ret = ret && isEqualArray(t1->pC_i, t2->pC_i, num);
+	ret = ret && isEqualArray(t1->pI_e, t2->pI_e, num, shuffle);
+	// ret = ret && isEqualArray(t1->pV_i, t2->pV_i, num, shuffle);
+	ret = ret && isEqualArray(t1->pCe, t2->pCe, num, shuffle);
+	ret = ret && isEqualArray(t1->pV_reset, t2->pV_reset, num, shuffle);
+	// ret = ret && isEqualArray(t1->pV_e, t2->pV_e, num, shuffle);
+	ret = ret && isEqualArray(t1->pV_tmp, t2->pV_tmp, num, shuffle);
+	ret = ret && isEqualArray(t1->pI_i, t2->pI_i, num, shuffle);
+	ret = ret && isEqualArray(t1->pV_thresh, t2->pV_thresh, num, shuffle);
+	ret = ret && isEqualArray(t1->pCi, t2->pCi, num, shuffle);
+	ret = ret && isEqualArray(t1->pV_m, t2->pV_m, num, shuffle);
+	ret = ret && isEqualArray(t1->pC_e, t2->pC_e, num, shuffle);
+	ret = ret && isEqualArray(t1->pC_m, t2->pC_m, num, shuffle);
+	ret = ret && isEqualArray(t1->pC_i, t2->pC_i, num, shuffle);
 
 	return ret;
 }

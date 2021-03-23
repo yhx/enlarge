@@ -27,7 +27,7 @@ int freeStaticPara(void *pCPU);
 void updateStatic(Connection *, void *, real *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int);
 int saveStatic(void *pCPU, size_t num, FILE *f);
 void *loadStatic(size_t num, FILE *f);
-bool isEqualStatic(void *p1, void *p2, size_t num);
+bool isEqualStatic(void *p1, void *p2, size_t num, size_t *shuffle=NULL);
 
 void *cudaMallocStatic();
 void *cudaAllocStatic(void *pCPU, size_t num);

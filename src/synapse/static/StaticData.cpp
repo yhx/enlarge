@@ -91,7 +91,7 @@ void *loadStatic(size_t num, FILE *f)
 	return p;
 }
 
-bool isEqualStatic(void *p1, void *p2, size_t num)
+bool isEqualStatic(void *p1, void *p2, size_t num, size_t *shuffle)
 {
 	StaticData *t1 = (StaticData*)p1;
 	StaticData *t2 = (StaticData*)p2;
@@ -99,7 +99,7 @@ bool isEqualStatic(void *p1, void *p2, size_t num)
 	bool ret = true;
 	// ret = ret && isEqualArray(t1->pDst, t2->pDst, num);
 
-	ret = ret && isEqualArray(t1->pWeight, t2->pWeight, num);
+	ret = ret && isEqualArray(t1->pWeight, t2->pWeight, num, shuffle);
 
 	return ret;
 }
