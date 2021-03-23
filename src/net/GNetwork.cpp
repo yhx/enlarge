@@ -155,34 +155,27 @@ GNetwork *loadGNetwork(FILE *f)
 
 bool compareGNetwork(GNetwork *n1, GNetwork *n2)
 {
-	//bool equal = true;
-	//equal = (n1->nTypeNum == n2->nTypeNum) && equal;
-	//equal = (n1->sTypeNum == n2->sTypeNum) && equal;
-	//for (size_t i=0; i<n1->nTypeNum; i++) {
-	//	equal = (n1->pNTypes[i] == n2->pNTypes[i]) && equal;
-	//}
-	//for (size_t i=0; i<n1->sTypeNum; i++) {
-	//	equal = (n1->pSTypes[i] == n2->pSTypes[i]) && equal;
-	//}
+	bool equal = true;
+	equal = (n1->nTypeNum == n2->nTypeNum) && equal;
+	equal = (n1->sTypeNum == n2->sTypeNum) && equal;
 
-	//for (size_t i=0; i<=n1->nTypeNum; i++) {
-	//	equal = (n1->pNeuronNums[i] == n2->pNeuronNums[i]) && equal;
-	//}
-	//for (size_t i=0; i<=n1->sTypeNum; i++) {
-	//	equal = (n1->pSynapseNums[i] == n2->pSynapseNums[i]) && equal;
-	//}
+	equal = equal && isEqualArray(n1->pNTypes, n2->pNTypes, n1->nTypeNum);
+	equal = equal && isEqualArray(n1->pSTypes, n2->pSTypes, n1->sTypeNum);
+	equal = equal && isEqualArray(n1->pNeuronNums, n2->pNeuronNums, n1->nTypeNum+1);
+	equal = equal && isEqualArray(n1->pSynapseNums, n2->pSynapseNums, n1->sTypeNum+1);
 
-	//for (size_t i=0; i<n1->nTypeNum; i++) {
-	//	equal = isEqualType[n1->pNTypes[i]](n1->ppNeurons[i], n2->ppNeurons[i], n1->pNeuronNums[i+1]-n1->pNeuronNums[i]) && equal;
-	//}
-	//for (size_t i=0; i<n1->sTypeNum; i++) {
-	//	equal = isEqualType[n1->pSTypes[i]](n1->ppSynapses[i], n2->ppSynapses[i], n1->pSynapseNums[i+1]-n1->pSynapseNums[i]) && equal;
-	//}
-	//
-	//return equal;
+	for (size_t i=0; i<n1->nTypeNum; i++) {
+		equal = isEqualType[n1->pNTypes[i]](n1->ppNeurons[i], n2->ppNeurons[i], n1->pNeuronNums[i+1]-n1->pNeuronNums[i]) && equal;
+	}
+	for (size_t i=0; i<n1->sTypeNum; i++) {
+		equal = isEqualType[n1->pSTypes[i]](n1->ppSynapses[i], n2->ppSynapses[i], n1->pSynapseNums[i+1]-n1->pSynapseNums[i]) && equal;
+	}
+
+	for (size_t i=0; i<n1->sTypeNum; i++) {
+		ret = ret && isEqualConnection(n1->ppConnections[i], n2->ppConnections[i]);
+	}
 	
-	printf("Departured, use isEqualGNetwork instead\n");
-	return true;
+	return equal;
 }
 
 int copyGNetwork(GNetwork *dNet, GNetwork *sNet, int rank, int rankSize)
@@ -286,29 +279,29 @@ GNetwork * recvGNetwork(int src, int tag, MPI_Comm comm)
 	return net;
 }
 
-bool isEqualGNetwork(GNetwork *n1, GNetwork *n2)
-{
-	bool ret = true;
-	ret = ret && (n1->nTypeNum == n2->nTypeNum);
-	ret = ret && (n1->sTypeNum == n2->sTypeNum);
-	ret = ret && isEqualArray(n1->pNTypes, n2->pNTypes, n1->nTypeNum);
-	ret = ret && isEqualArray(n1->pSTypes, n2->pSTypes, n1->sTypeNum);
-	ret = ret && isEqualArray(n1->pNeuronNums, n2->pNeuronNums, n1->nTypeNum+1);
-	ret = ret && isEqualArray(n1->pSynapseNums, n2->pSynapseNums, n1->sTypeNum+1);
-
-	for (size_t i=0; i<n1->nTypeNum; i++) {
-		ret = ret && isEqualType[n1->pNTypes[i]](n1->ppNeurons[i], n2->ppNeurons[i], n1->pNeuronNums[i+1]-n1->pNeuronNums[i]);
-	}
-	for (size_t i=0; i<n2->sTypeNum; i++) {
-		ret = ret && isEqualType[n1->pSTypes[i]](n1->ppSynapses[i], n2->ppSynapses[i], n1->pSynapseNums[i+1]-n1->pSynapseNums[i]);
-	}
-
-	for (size_t i=0; i<n2->sTypeNum; i++) {
-		ret = ret && isEqualConnection(n1->ppConnections[i], n2->ppConnections[i]);
-	}
-
-	return ret;
-}
+// bool isEqualGNetwork(GNetwork *n1, GNetwork *n2)
+// {
+// 	bool ret = true;
+// 	ret = ret && (n1->nTypeNum == n2->nTypeNum);
+// 	ret = ret && (n1->sTypeNum == n2->sTypeNum);
+// 	ret = ret && isEqualArray(n1->pNTypes, n2->pNTypes, n1->nTypeNum);
+// 	ret = ret && isEqualArray(n1->pSTypes, n2->pSTypes, n1->sTypeNum);
+// 	ret = ret && isEqualArray(n1->pNeuronNums, n2->pNeuronNums, n1->nTypeNum+1);
+// 	ret = ret && isEqualArray(n1->pSynapseNums, n2->pSynapseNums, n1->sTypeNum+1);
+// 
+// 	for (size_t i=0; i<n1->nTypeNum; i++) {
+// 		ret = ret && isEqualType[n1->pNTypes[i]](n1->ppNeurons[i], n2->ppNeurons[i], n1->pNeuronNums[i+1]-n1->pNeuronNums[i]);
+// 	}
+// 	for (size_t i=0; i<n2->sTypeNum; i++) {
+// 		ret = ret && isEqualType[n1->pSTypes[i]](n1->ppSynapses[i], n2->ppSynapses[i], n1->pSynapseNums[i+1]-n1->pSynapseNums[i]);
+// 	}
+// 
+// 	for (size_t i=0; i<n2->sTypeNum; i++) {
+// 		ret = ret && isEqualConnection(n1->ppConnections[i], n2->ppConnections[i]);
+// 	}
+// 
+// 	return ret;
+// }
 
 // int printNetwork(GNetwork *net, int rank)
 // {
