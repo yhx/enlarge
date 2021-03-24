@@ -7,7 +7,7 @@
 #include "StaticData.h"
 
 
-void updateStatic(Connection *connection, void *_data, real *currentE, real *currentI, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t start_id, int time)
+void updateStatic(Connection *connection, void *_data, real *buffer, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t start_id, int time)
 {
 	StaticData * data = (StaticData *)_data;
 	int delayLength = connection->maxDelay - connection->minDelay + 1;
@@ -26,11 +26,7 @@ void updateStatic(Connection *connection, void *_data, real *currentE, real *cur
 				size_t sid = j+startLoc;
 				assert(sid < num);
 				real weight = data->pWeight[connection->pSidMap[sid]];
-				if (weight >= 0) {
-					currentE[connection->dst[sid]] += weight;
-				} else {
-					currentI[connection->dst[sid]] += weight;
-				}
+			    buffer[connection->dst[sid]] += weight;
 			}
 		}
 	}

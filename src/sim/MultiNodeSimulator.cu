@@ -266,7 +266,7 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 	uinteger_t *c_gFiredTable = malloc_c<uinteger_t>(allNeuronNum*(maxDelay+1));
    	uinteger_t *c_gFiredTableSizes = malloc_c<uinteger_t>(maxDelay+1);
 
-   	c_gFiredCount = malloc_c<int>(allNeuronNum);
+   	c_gFiredCount = malloc_c<size_t>(allNeuronNum);
 
 #ifdef LOG_DATA
 	int copy_idx = getIndex(pNetCPU->pNTypes, nTypeNum, LIF);
@@ -306,7 +306,7 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 #endif
 
 		for (int i=0; i<nTypeNum; i++) {
-			updateType[pNetCPU->pNTypes[i]](pNetCPU->ppConnections[i], pNetCPU->ppNeurons[i], c_gNeuronInput, c_gNeuronInput_I, c_gFiredTable, c_gFiredTableSizes, cFiredTableCap, pNetCPU->pNeuronNums[i+1]-pNetCPU->pNeuronNums[i], pNetCPU->pNeuronNums[i], time);
+			updateType[pNetCPU->pNTypes[i]](pNetCPU->ppConnections[i], pNetCPU->ppNeurons[i], c_gNeuronInput, c_gFiredTable, c_gFiredTableSizes, cFiredTableCap, pNetCPU->pNeuronNums[i+1]-pNetCPU->pNeuronNums[i], pNetCPU->pNeuronNums[i], time);
 		}
 
 #if 1
@@ -341,7 +341,7 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 #endif
 
 		for (int i=0; i<sTypeNum; i++) {
-			updateType[pNetCPU->pSTypes[i]](pNetCPU->ppConnections[i], pNetCPU->ppSynapses[i], c_gNeuronInput, c_gNeuronInput_I, c_gFiredTable, c_gFiredTableSizes, cFiredTableCap, pNetCPU->pSynapseNums[i+1]-pNetCPU->pSynapseNums[i], pNetCPU->pSynapseNums[i], time);
+			updateType[pNetCPU->pSTypes[i]](pNetCPU->ppConnections[i], pNetCPU->ppSynapses[i], c_gNeuronInput, c_gFiredTable, c_gFiredTableSizes, cFiredTableCap, pNetCPU->pSynapseNums[i+1]-pNetCPU->pSynapseNums[i], pNetCPU->pSynapseNums[i], time);
 		}
 
 #ifdef PROF
@@ -534,7 +534,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 		for (int i=0; i<nTypeNum; i++) {
 			assert(c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i] > 0);
-			cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->ppConnections[0], c_pNetGPU->ppNeurons[i], buffers->c_gNeuronInput, buffers->c_gNeuronInput_I, buffers->c_gFiredTable, buffers->c_gFiredTableSizes, allNeuronNum, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i], time, &updateSize[c_pNetGPU->pNTypes[i]]);
+			cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->ppConnections[0], c_pNetGPU->ppNeurons[i], buffers->c_gNeuronInput, buffers->c_gFiredTable, buffers->c_gFiredTableSizes, allNeuronNum, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i], time, &updateSize[c_pNetGPU->pNTypes[i]]);
 		}
 
 #ifdef PROF
@@ -578,7 +578,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 		for (int i=0; i<sTypeNum; i++) {
 			assert(c_pNetGPU->pSynapseNums[i+1]-c_pNetGPU->pSynapseNums[i] > 0);
-			cudaUpdateType[c_pNetGPU->pSTypes[i]](c_pNetGPU->ppConnections[i], c_pNetGPU->ppSynapses[i], buffers->c_gNeuronInput, buffers->c_gNeuronInput_I, buffers->c_gFiredTable, buffers->c_gFiredTableSizes, allNeuronNum, c_pNetGPU->pSynapseNums[i+1]-c_pNetGPU->pSynapseNums[i], c_pNetGPU->pSynapseNums[i], time, &updateSize[c_pNetGPU->pSTypes[i]]);
+			cudaUpdateType[c_pNetGPU->pSTypes[i]](c_pNetGPU->ppConnections[i], c_pNetGPU->ppSynapses[i], buffers->c_gNeuronInput, buffers->c_gFiredTable, buffers->c_gFiredTableSizes, allNeuronNum, c_pNetGPU->pSynapseNums[i+1]-c_pNetGPU->pSynapseNums[i], c_pNetGPU->pSynapseNums[i], time, &updateSize[c_pNetGPU->pSTypes[i]]);
 		}
 
 #ifdef PROF

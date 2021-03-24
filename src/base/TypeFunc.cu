@@ -23,7 +23,7 @@ int (*cudaFreeType[])(void *) = {
 	cudaFreeStatic
 };
 
-void (*cudaUpdateType[])(Connection *, void *, real *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int, BlockSize *) = {
+void (*cudaUpdateType[])(Connection *, void *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int, BlockSize *) = {
 	cudaUpdateLIF,
 	cudaUpdateStatic
 };

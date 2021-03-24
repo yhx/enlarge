@@ -49,6 +49,13 @@ T * malloc_c(size_t size = 1)
 }
 
 template<typename T>
+void  free_c(T *array)
+{
+	free(array);
+	array = NULL;
+}
+
+template<typename T>
 void  memset_c(T *array, int c, size_t size = 1)
 {
 	memset(array, c, sizeof(T) * (size));

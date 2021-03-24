@@ -44,6 +44,7 @@ void Network::update_status()
 			_buffer_offsets[0][iter->first] = count;
 			count = count + iter->second->size() * iter->second->buffer_size();
 		}
+		_buffer_offsets[0][TYPESIZE] = count;
 	}
 }
 
@@ -67,8 +68,10 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 		ret->ppNeurons[n_t] = iter->second->packup();
 		assert(ret->ppNeurons[n_t] != NULL);
 		ret->pNeuronNums[n_t+1] = iter->second->size() + ret->pNeuronNums[n_t];
+		ret->bufferOffsets[n_t] = _buffer_offsets[0][iter->first];
 		n_t++;
 	}
+	ret->bufferOffsets[n_t] = _buffer_offsets[0][TYPESIZE];
 	assert(ret->pNeuronNums[n_type_num] == _neuron_num);
 
 	map<Type, size_t> tp2idx;

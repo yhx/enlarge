@@ -4,7 +4,7 @@
 #include "StaticData.h"
 
 
-__global__ void update_dense_static_hit(Connection *connection, StaticData *data, real *currentE, real *currentI, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTabelCap, size_t num, size_t start_id, int time)
+__global__ void update_dense_static_hit(Connection *connection, StaticData *data, real *buffer, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTabelCap, size_t num, size_t start_id, int time)
 {
 	int delayLength = connection->maxDelay - connection->minDelay + 1;
 	for (int delta_t = 0; delta_t<delayLength; delta_t++) {
@@ -46,11 +46,7 @@ __global__ void update_dense_static_hit(Connection *connection, StaticData *data
 					//int sid = connection->pSynapsesIdx[j+startLoc];
 					uinteger_t sid = j+startLoc;
 					real weight = data->pWeight[connection->pSidMap[sid]];
-					if (weight >= 0) {
-						atomicAdd(&(currentE[connection->dst[sid]]), weight);
-					} else {
-						atomicAdd(&(currentI[connection->dst[sid]]), weight);
-					}
+					atomicAdd(&(buffer[connection->dst[sid]]), weight);
 				}
 			}
 		}
@@ -58,11 +54,11 @@ __global__ void update_dense_static_hit(Connection *connection, StaticData *data
 	}
 }
 
-void cudaUpdateStatic(Connection * connection, void *data, real *currentE, real *currentI, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t start_id, int time, BlockSize *pSize)
+void cudaUpdateStatic(Connection * connection, void *data, real *buffer, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t start_id, int time, BlockSize *pSize)
 {
 	//update_static_hit<<<pSize->gridSize, pSize->blockSize>>>((StaticData*)data, num, start_id);
 	//reset_active_synapse<<<1, 1>>>();
-	update_dense_static_hit<<<pSize->gridSize, pSize->blockSize>>>((Connection *)connection,  (StaticData *)data, currentE, currentI, firedTable, firedTableSizes, firedTableCap, num, start_id, time);
+	update_dense_static_hit<<<pSize->gridSize, pSize->blockSize>>>((Connection *)connection,  (StaticData *)data, buffer, firedTable, firedTableSizes, firedTableCap, num, start_id, time);
 
 }
 

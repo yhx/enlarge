@@ -38,7 +38,7 @@ void *allocLIF(size_t num);
 int allocLIFPara(void *pCPU, size_t num);
 int freeLIF(void *pCPU);
 int freeLIFPara(void *pCPU);
-void updateLIF(Connection *, void *, real *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int);
+void updateLIF(Connection *, void *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int);
 int saveLIF(void *pCPU, size_t num, FILE *f);
 void *loadLIF(size_t num, FILE *f);
 bool isEqualLIF(void *p1, void *p2, size_t num, size_t *shuffle1=NULL, size_t *shuffle2=NULL);
@@ -52,7 +52,7 @@ int cudaFreeLIFPara(void *pGPU);
 int cudaFetchLIF(void *pCPU, void *pGPU, size_t num);
 int cudaLIFParaToGPU(void *pCPU, void *pGPU, size_t num);
 int cudaLIFParaFromGPU(void *pCPU, void *pGPU, size_t num);
-void cudaUpdateLIF(Connection *conn, void *data, real *currentE, real *currentI, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t start_id, int t, BlockSize *pSize);
+void cudaUpdateLIF(Connection *conn, void *data, real *buffer, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t start_id, int t, BlockSize *pSize);
 
 int sendLIF(void *data, int dest, int tag, MPI_Comm comm);
 void * recvLIF(int src, int tag, MPI_Comm comm);

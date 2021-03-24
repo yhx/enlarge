@@ -44,6 +44,7 @@ void Network::update_status_splited()
 			_buffer_offsets[node][iter->first] = count;
 			count += iter->second * _neurons[iter->first]->buffer_size();
 		}
+		_buffer_offsets[node][TYPESIZE] = count;
 	}
 }
 
@@ -57,6 +58,7 @@ int Network::arrangeNet(DistriNetwork *net, CrossTypeInfo_t &type_offset, CrossT
 			net[i]._network->pNTypes[t_offset] = n->first;
 			net[i]._network->pNeuronNums[t_offset] = n_offset;
 			net[i]._network->ppNeurons[t_offset] = allocType[n->first](n->second);
+			net[i]._network->bufferOffsets[t_offset] = _buffer_offsets[i][n->first];
 			assert(net[i]._network->ppNeurons[t_offset] != NULL);
 			neuron_count[i][n->first] = 0;
 			type_offset[i][n->first] = t_offset;
@@ -65,6 +67,7 @@ int Network::arrangeNet(DistriNetwork *net, CrossTypeInfo_t &type_offset, CrossT
 			n_offset += n->second;
 		}
 		net[i]._network->pNeuronNums[t_offset] = n_offset;
+		net[i]._network->bufferOffsets[t_offset] = _buffer_offsets[i][TYPESIZE];
 		// n_num[i] = n_offset;
 
 		t_offset = 0;

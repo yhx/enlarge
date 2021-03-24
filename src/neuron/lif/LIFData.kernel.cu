@@ -159,7 +159,7 @@
 // 	//}
 // }
 
-__global__ void update_all_lif_neuron(Connection *connection, LIFData *data, real *currentE, real *currentI, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t offset, int time)
+__global__ void update_all_lif_neuron(Connection *connection, LIFData *data, real *buffer, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t offset, int time)
 // __global__ void update_all_lif_neuron(LIFData *data, int num, int offset, int time)
 {
 	int currentIdx = time % (connection->maxDelay + 1);
@@ -184,7 +184,7 @@ __global__ void update_all_lif_neuron(Connection *connection, LIFData *data, rea
 		if (actived) {
 			data->pV_m[nid] = data->pC_m[nid] * data->pV_m[nid] + data->pV_tmp[nid] + data->pI_e[nid] * data->pC_e[nid] + data->pI_i[nid] * data->pC_i[nid];
 
-			gXInput[gnid] += currentE[gnid] + currentI[gnid];
+			// gXInput[gnid] += currentE[gnid] + currentI[gnid];
 
 			data->pI_e[nid] *= data->pCe[nid];
 			data->pI_i[nid] *= data->pCi[nid];
@@ -203,8 +203,8 @@ __global__ void update_all_lif_neuron(Connection *connection, LIFData *data, rea
 				data->pRefracStep[nid] = data->pRefracTime[nid] - 1;
 				data->pV_m[nid] = data->pV_reset[nid];
 			} else {
-				data->pI_e[nid] += currentE[gnid];
-				data->pI_i[nid] += currentI[gnid];
+				data->pI_e[nid] += buffer[gnid];
+				data->pI_i[nid] += buffer[gnid+num];
 			}
 
 			__syncthreads();
@@ -242,13 +242,13 @@ __global__ void update_all_lif_neuron(Connection *connection, LIFData *data, rea
 		} else {
 			data->pRefracStep[idx] = data->pRefracStep[idx] - 1;
 		}
-		currentE[gnid] = 0;
-		currentI[gnid] = 0;
+		buffer[gnid] = 0;
+		buffer[gnid+num] = 0;
 	}
 	__syncthreads();
 }
 
-__global__ void update_dense_lif_neuron(Connection *connection, LIFData *data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int num, int offset, int time)
+__global__ void update_dense_lif_neuron(Connection *connection, LIFData *data, real *buffer, int *firedTable, int *firedTableSizes, int num, int offset, int time)
 {
 	//__shared__ int fire_table_t[MAX_BLOCK_SIZE];
 	//__shared__ volatile int fire_cnt;
@@ -285,9 +285,9 @@ __global__ void update_dense_lif_neuron(Connection *connection, LIFData *data, r
 				data->pV_m[nid] = data->pV_reset[nid];
 
 			} else {
-				gXInput[gnid] += currentE[gnid] + currentI[gnid];
-				data->pI_e[nid] += currentE[gnid];
-				data->pI_i[nid] += currentI[gnid];
+				// gXInput[gnid] += currentE[gnid] + currentI[gnid];
+				data->pI_e[nid] += buffer[gnid];
+				data->pI_i[nid] += buffer[gnid+num];
 				//real input = 0, input_I = 0;
 				//for (int i=data->p_start_E[nid]; i<data->p_start_I[nid]; i++) {
 				//	input += currentE[i];
@@ -304,16 +304,16 @@ __global__ void update_dense_lif_neuron(Connection *connection, LIFData *data, r
 			data->pRefracStep[idx] = data->pRefracStep[idx] - 1;
 			firedTable[gFiredTableCap*currentIdx + gnid] = 0;
 		}
-		currentE[gnid] = 0;
-		currentI[gnid] = 0;
+		buffer[gnid] = 0;
+		buffer[gnid+num] = 0;
 	}
 	__syncthreads();
 }
 
-void cudaUpdateLIF(Connection *conn, void *data, real *currentE, real *currentI, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t offset, int time, BlockSize *pSize)
+void cudaUpdateLIF(Connection *conn, void *data, real *buffer, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t offset, int time, BlockSize *pSize)
 {
 	// find_lif_neuron<<<pSize->gridSize, pSize->blockSize>>>((LIFData*)data, currentE, currentI, num, offset);
 	// update_lif_neuron<<<pSize->gridSize, pSize->blockSize>>>(conn, (LIFData*)data, currentE, currentI, firedTable, firedTableSizes, num, offset, time);
-	update_all_lif_neuron<<<pSize->gridSize, pSize->blockSize>>>(conn, (LIFData*)data, currentE, currentI, firedTable, firedTableSizes, firedTableCap, num, offset, time);
+	update_all_lif_neuron<<<pSize->gridSize, pSize->blockSize>>>(conn, (LIFData*)data, buffer, firedTable, firedTableSizes, firedTableCap, num, offset, time);
 
 }

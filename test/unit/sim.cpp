@@ -13,9 +13,9 @@ int main(int argc, char **argv)
 	real dt = 1e-4;
 	Network c(dt);
 	//createPopulation(int id, int N, LIFNeuron(ID id, real v_init, real v_rest, real v_reset, real cm, real tau_m, real tau_refrac, real tau_syn_E, real tau_syn_I, real v_thresh, real i_offset)), ID(0, 0), real tau_syn_E, real tau_syn_I);
-	Population *pn0 = c.createPopulation(N, LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.0, 1.0, 1.0, 15.0e-3, 100.0e-1, dt));
-	Population *pn1 = c.createPopulation(N, LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.0, 1.0, 1.0, 15.0e-3, 0.0e-3, dt));
-	Population *pn2 = c.createPopulation(N, LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.0, 1.0, 1.0, 15.0e-3, 0.0e-3, dt));
+	Population *pn0 = c.createPopulation(N, LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.002, 1.0, 1.0, 15.0e-3, 10.0e-1, dt));
+	Population *pn1 = c.createPopulation(N, LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.001, 1.0, 1.0, 15.0e-3, 0.0e-3, dt));
+	Population *pn2 = c.createPopulation(N, LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.0, 1.0, 1.0, 15.0e-3, 1.0e-3, dt));
 	//Population<LIF_curr_exp> *pn3 = c.createPopulation(N, LIF_curr_exp(LIFNeuron(0.0, 0.0, 0.0, 1.0e-1, 50.0e-3, 0.0, 1.0, 1.0, 15.0e-3, 0.0e-3), 1.0, 1.0));
 
 	real * weight0 = NULL;
@@ -23,8 +23,8 @@ int main(int argc, char **argv)
 	real * delay = NULL;
 
 	printf("GENERATE DATA...\n");
-	weight0 = getConstArray((real)1e-5, N*N);
-	weight1 = getConstArray((real)2e-5, N*N);
+	weight0 = getConstArray((real)0.002, N*N);
+	weight1 = getConstArray((real)0.004, N*N);
 	delay = getConstArray((real)1e-4, N*N);
 	printf("GENERATE DATA FINISHED\n");
 

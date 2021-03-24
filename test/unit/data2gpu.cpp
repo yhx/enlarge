@@ -13,6 +13,7 @@ using ::testing::AtLeast;
 using ::testing::ElementsAreArray;
 
 GNetwork *net = NULL;
+GNetwork *net2 = NULL;
 
 TEST(NetworkTest, NeuronTest) {
 	ASSERT_EQ(net->nTypeNum, 1);
@@ -143,6 +144,10 @@ TEST(NetworkTest, ConnectionTest) {
 			);
 }
 
+TEST(NetworkTest, NetTest) {
+	ASSERT_TRUE(compareGNetwork(net, net2));
+}
+
 
 int main(int argc, char **argv)
 {
@@ -166,9 +171,10 @@ int main(int argc, char **argv)
 	GNetwork * netCPU = sg.getNet();
 	GNetwork * netGPU = copyGNetworkToGPU(netCPU);
 
-	net = deepcopyGNetwork(netCPU);
+	net2 = deepcopyGNetwork(netCPU);
 
 	fetchGNetworkFromGPU(net, netGPU);
+
 
 	::testing::InitGoogleMock(&argc, argv);
 	return RUN_ALL_TESTS();

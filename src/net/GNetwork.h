@@ -25,6 +25,8 @@ struct GNetwork {
 	size_t *pNeuronNums;
 	size_t *pSynapseNums;
 
+	size_t *bufferOffsets;
+
 	//Posize_ters to neurons
 	void **ppNeurons;
 	//Pointers to synapses
@@ -40,7 +42,6 @@ struct GNetwork {
 // This func just set the content of ppConnections to NULL
 GNetwork * allocGNetwork(size_t nTypeNum, size_t sTypeNum);
 GNetwork * deepcopyGNetwork(GNetwork *net);
-// TODO freeGNetwork
 void freeGNetwork(GNetwork * network);
 
 // Save and Load

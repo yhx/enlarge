@@ -48,7 +48,7 @@ void* (*loadType[])(size_t num, FILE *f) = {
 	loadStatic
 };
 
-void (*updateType[])(Connection *, void *, real *, real *, uinteger_t *, uinteger_t*,  size_t, size_t, size_t, int) = {
+void (*updateType[])(Connection *, void *, real *, uinteger_t *, uinteger_t*,  size_t, size_t, size_t, int) = {
 	updateLIF,
 	updateStatic
 };
