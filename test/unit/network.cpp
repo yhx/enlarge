@@ -160,7 +160,7 @@ TEST(NetworkTest, BuildTest1) {
 TEST(NetworkTest, BuildTest2) {
 	SimInfo info(1e-4);
 	network->set_node_num(2);
-	DistriNetwork* n = network->buildNetworks(info);
+	DistriNetwork* n = network->buildNetworks(info, RoundRobin);
 	ASSERT_EQ(n[0]._simCycle, 0);
 	ASSERT_EQ(n[0]._nodeIdx, 0);
 	ASSERT_EQ(n[0]._nodeNum, 2);

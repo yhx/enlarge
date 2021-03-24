@@ -10,6 +10,7 @@
 #include "../../utils/BlockSize.h"
 
 struct LIFData {
+	bool is_view;
 	size_t num;
 
 	int *pRefracTime;
@@ -28,7 +29,6 @@ struct LIFData {
 	real *pC_m;
 	real *pC_i;
 	// real *pV_e;
-	bool is_view;
 };
 
 

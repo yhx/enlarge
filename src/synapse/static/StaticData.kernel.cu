@@ -37,19 +37,19 @@ __global__ void update_dense_static_hit(Connection *connection, StaticData *data
 				}
 #endif
 				uinteger_t nid = firedTable[nid_offset + idx];
-				uinteger_t startLoc = connection->pDelayStart[delta_t + nid * delayLength];
-				uinteger_t synapseNum = connection->pDelayNum[delta_t + nid * delayLength];
+				uinteger_t startLoc = access_(connection->pDelayStart, delta_t, nid);
+				uinteger_t synapseNum = access_(connection->pDelayNum, delta_t, nid);
 				if (threadIdx.x == 0) {
 					gLayerInput[nid]++;
 				}
 				for (uinteger_t j=threadIdx.x; j<synapseNum; j += blockDim.x) {
 					//int sid = connection->pSynapsesIdx[j+startLoc];
 					uinteger_t sid = j+startLoc;
-					real weight = data->pWeight[sid];
+					real weight = data->pWeight[connection->pSidMap[sid]];
 					if (weight >= 0) {
-						atomicAdd(&(currentE[connection->dst[connection->pSidMap[sid]]]), weight);
+						atomicAdd(&(currentE[connection->dst[sid]]), weight);
 					} else {
-						atomicAdd(&(currentI[connection->dst[connection->pSidMap[sid]]]), weight);
+						atomicAdd(&(currentI[connection->dst[sid]]), weight);
 					}
 				}
 			}

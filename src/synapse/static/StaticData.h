@@ -11,6 +11,7 @@
 #include "../../utils/BlockSize.h"
 
 struct StaticData {
+	bool is_view;
 	size_t num;
 
 	// int *pDst;

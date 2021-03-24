@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 
 #include "../../include/BSim.h"
+#include "../../src/msg_utils/msg_utils.h"
 
 using namespace std;
 
@@ -149,6 +150,7 @@ int main(int argc, char **argv)
 	info.save_mem = true;
 	int sim_cycle = 100;
 
+	to_attach();
 	sg.distribute(&network, &data, info, sim_cycle);
 
 	uinteger_t fire_tbl[12] = {0, 1, 2, 3, 2, 3, 0, 0, 3, 1, 0, 0};
@@ -158,16 +160,16 @@ int main(int argc, char **argv)
 	uinteger_t fire_tbl_size1[3] = {2, 4, 1};
 
 	for (int time = 0; time<DELAY; time++) {
-		int curr_delay = time % data->_min_delay;
 		int max_delay = network->_network->ppConnections[0]->maxDelay;
 		if (node_id == 0) {
 			generateCND(network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, data, fire_tbl, fire_tbl_size, N*2, max_delay, data->_min_delay, NODE_NUM, time);
 		} else {
-			generateCND(network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, data, fire_tbl1, fire_tbl_size1, N*2, data->_min_delay, curr_delay, NODE_NUM, time);
+			generateCND(network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, data, fire_tbl1, fire_tbl_size1, N*2, max_delay, data->_min_delay, NODE_NUM, time);
 		}
 		MPI_Barrier(MPI_COMM_WORLD);
 
 		MPI_Request request_t;
+		int curr_delay = time % data->_min_delay;
 		update_cnd(data, curr_delay, &request_t);
 
 		MPI_Barrier(MPI_COMM_WORLD);

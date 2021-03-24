@@ -102,6 +102,7 @@ void * StaticSynapse::packup()
 
 	p->num = _num;
 	p->pWeight = _weight.data();
+	p->is_view = true;
 
 	return p;
 }

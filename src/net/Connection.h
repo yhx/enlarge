@@ -8,6 +8,8 @@
 #include <mpi.h>
 #include <stdio.h>
 
+#define access_(array, a, b) ((array)[a*num + b])
+
 struct Connection {
 	//int *pSynapsesIdx; 
 	//int synapsesNum; 

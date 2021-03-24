@@ -26,6 +26,7 @@ int allocStaticPara(void *pCPU, size_t num)
 
 	p->num = num;
 	p->pWeight = malloc_c<real>(num);
+	p->is_view = false;
 
 	return 0;
 }
@@ -45,8 +46,10 @@ int freeStaticPara(void *pCPU)
 	// free(p->pDst);
 	// p->pDst = NULL;
 
-	free(p->pWeight);
-	p->pWeight = NULL;
+	if (!p->is_view) {
+		free(p->pWeight);
+		p->pWeight = NULL;
+	}
 
 	return 0;
 }

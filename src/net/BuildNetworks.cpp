@@ -206,7 +206,7 @@ int Network::arrangeCross(DistriNetwork *net, CrossTypeInfo_t & type_offset, Cro
 	return 0;
 }
 
-DistriNetwork* Network::buildNetworks(const SimInfo &info, bool auto_splited)
+DistriNetwork* Network::buildNetworks(const SimInfo &info, SplitType split, bool auto_splited)
 {
 	print_mem("Before build");
 	printf("===================Update Status================================\n");
@@ -217,7 +217,7 @@ DistriNetwork* Network::buildNetworks(const SimInfo &info, bool auto_splited)
 
 	printf("=====================Split Network=============================\n");
 	if (auto_splited && _node_num > 1) {
-		splitNetwork();
+		splitNetwork(split);
 	}
 
 	update_status_splited();

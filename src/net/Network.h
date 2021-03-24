@@ -69,7 +69,7 @@ public:
 	void status();
 
 	GNetwork* buildNetwork(const SimInfo &info);
-	DistriNetwork * buildNetworks(const SimInfo &info, bool auto_splited = true);
+	DistriNetwork * buildNetworks(const SimInfo &info, SplitType split = SynapseBalance, bool auto_splited = true);
 
 	// CrossThreadData * arrangeCrossThreadData(int node_num);
 	CrossThreadDataGPU * arrangeCrossGPUData();
@@ -80,7 +80,7 @@ private:
 	// void mapIDtoIdx(GNetwork *net);
 	// bool checkIDtoIdx();
 	
-	void splitNetwork();
+	void splitNetwork(SplitType split);
 	void update_status();
 	void update_status_splited();
 

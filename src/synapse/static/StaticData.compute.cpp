@@ -17,13 +17,15 @@ void updateStatic(Connection *connection, void *_data, real *currentE, real *cur
 
 		for (size_t i=0; i<firedSize; i++) {
 		    size_t nid = firedTable[time_idx*firedTableCap + i];
-			size_t startLoc = connection->pDelayStart[delta_t + nid * delayLength];
-			size_t synapseNum = connection->pDelayNum[delta_t + nid * delayLength];
+			size_t startLoc = access_(connection->pDelayStart, delta_t, nid);
+			size_t synapseNum = access_(connection->pDelayNum, delta_t, nid);
+			// size_t startLoc = connection->pDelayStart[delta_t + nid * delayLength];
+			// size_t synapseNum = connection->pDelayNum[delta_t + nid * delayLength];
 			for (size_t j=0; j<synapseNum; j++) {
 				//int sid = connection->pSynapsesIdx[j+startLoc];
 				size_t sid = j+startLoc;
 				assert(sid < num);
-				real weight = data->pWeight[sid];
+				real weight = data->pWeight[connection->pSidMap[sid]];
 				if (weight >= 0) {
 					currentE[connection->dst[sid]] += weight;
 				} else {

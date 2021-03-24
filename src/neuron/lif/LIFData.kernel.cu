@@ -177,8 +177,8 @@ __global__ void update_all_lif_neuron(Connection *connection, LIFData *data, rea
 		bool fired = false;
 		uinteger_t testLoc = 0;
 
-		uinteger_t nid = idx;
-		uinteger_t gnid = offset + idx; 
+	    size_t nid = idx;
+		size_t gnid = offset + idx; 
 		bool actived = data->pRefracStep[idx] <= 0;
 
 		if (actived) {
@@ -194,7 +194,7 @@ __global__ void update_all_lif_neuron(Connection *connection, LIFData *data, rea
 			gFireCount[gnid] += fired;
 
 			if (fired) {
-				testLoc = atomicAdd((unsigned long long *)&fire_cnt, 1);
+				testLoc = atomicAdd((uinteger_t *)&fire_cnt, 1);
 				if (testLoc < MAX_BLOCK_SIZE) {
 					fire_table_t[testLoc] = gnid;
 					fired = false;
