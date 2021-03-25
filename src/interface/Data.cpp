@@ -1,6 +1,7 @@
 
 #ifdef USE_GPU
 #include "../gpu_utils/helper_gpu.h"
+#endif
 
 #include "Data.h"
 
@@ -29,11 +30,11 @@ Data::~Data() {
 		_gpu = NULL;
 	}
 #else
-	assert(!gpu);
+	assert(!_gpu);
 #endif
 }
 
-int Data::alloc()
+int Data::alloc(size_t num)
 {
 	_is_view = false;
 	_num = num;
@@ -53,6 +54,7 @@ int Data::save(FILE *f, size_t num)
 	}
 
 	fwrite_c(&num, 1, f);
+
 	fwrite_c(&_data, _num, f);
 
 	return 0;
@@ -170,6 +172,7 @@ bool is_equal(Father *p, size_t *shuffle1, size_t *shuffle2)
 {
 	Data *d = dynamic_cast<Data *>(p)
 	bool ret = _num == d.num;
+
 	ret = ret && isEqualArray(_data, d->_data, _num, shuffle1, shuffle2);
 
 	return ret;
