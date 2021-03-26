@@ -1,9 +1,10 @@
 #!/usr/bin/python
 
-import sys, getopt
+import sys, getopt, os
 import re
 import ast
 import numpy as np
+import column_merge
 
 def column_sub(file1="", file2=""):
     data1 = np.loadtxt(file1)
@@ -35,8 +36,14 @@ def main(argv):
             file1 = arg
         elif opt in ("-2", "--file2"):
             file2 = arg
-    
-    column_sub(file1, file2);
+
+    if not os.path.exists(file2):
+        inputfile, outputfile = column_merge.find_series_files(file2)
+        print('Column Merge: ' + ' '.join(str(e) for e in inputfile) + " to " + str(outputfile))
+        column_merge.column_merge(inputfile, outputfile)
+        column_sub(file1, outputfile);
+    else:
+        column_sub(file1, file2);
 
 
 if __name__ == "__main__":

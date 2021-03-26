@@ -1,15 +1,18 @@
 
+#include <assert.h>
+
 #ifdef USE_GPU
 #include "../gpu_utils/helper_gpu.h"
 #endif
 
+#include "../utils/helper_c.h"
 #include "Data.h"
 
 Data::Data() {
 	_is_view = false;
 	_num = 0;
 
-	_data = NULL;
+	// _data = NULL;
 
 	_gpu = NULL;
 }
@@ -21,7 +24,7 @@ Data::Data(size_t num) {
 
 Data::~Data() {
 	if (_num > 0 && !_is_view) {
-		delete [] _data;
+		// delete [] _data;
 	}
 #ifdef USE_GPU
 	if (_gpu) {
@@ -39,7 +42,7 @@ int Data::alloc(size_t num)
 	_is_view = false;
 	_num = num;
 
-	_data = new uinteger_t[num]();
+	// _data = new uinteger_t[num]();
 
 	_gpu = NULL;
 
@@ -55,7 +58,7 @@ int Data::save(FILE *f, size_t num)
 
 	fwrite_c(&num, 1, f);
 
-	fwrite_c(&_data, _num, f);
+	// fwrite_c(&_data, _num, f);
 
 	return 0;
 }
@@ -71,11 +74,14 @@ int Data::load(FILE *f)
 
 	alloc(num);
 
-	fread_c(_data, num, f);
+	// fread_c(_data, num, f);
+	
+	return 0;
 }
 
 #ifdef USE_MPI
-int send(int dest, int tag, MPI_Comm comm, int offset, size_t num) {
+int Data::send(int dest, int tag, MPI_Comm comm, int offset, size_t num) 
+{
 	if (offset >= _num || offset + num > _num) {
 		printf("Wrong offset %d and num %d\n", offset, num);
 		return -1;
@@ -93,7 +99,8 @@ int send(int dest, int tag, MPI_Comm comm, int offset, size_t num) {
 	return 0;
 }
 
-int recv(int dest, int tag, MPI_Comm comm=MPI_COMM_WORLD, int offset) {
+int Data::recv(int dest, int tag, MPI_Comm comm, int offset) 
+{
     size_t num = 0;
 	MPI_Status status;
 	ret = MPI_Recv(&(_num), 1, MPI_SIZE_T, src, tag, comm, &status);
@@ -114,12 +121,13 @@ int recv(int dest, int tag, MPI_Comm comm=MPI_COMM_WORLD, int offset) {
 	return 0;
 }
 #else
-int send() 
+int Data::send(int dest, int tag, MPI_Comm comm, int offset, size_t num) 
 {
 	printf("MPI not enabled!\n");
 	return -1;
 }
-int recv() 
+
+int Data::recv(int dest, int tag, MPI_Comm comm, int offset) 
 {
 	printf("MPI not enabled!\n");
 	return -1;
@@ -128,7 +136,7 @@ int recv()
 #endif
 
 #ifdef USE_GPU
-int to_gpu() 
+int Data::to_gpu() 
 {
 	if (!gpu) {
 		_gpu = new Data();
@@ -145,7 +153,7 @@ int to_gpu()
 	return 0;
 }
 
-int from_gpu() 
+int Data::from_gpu() 
 {
 	if (!gpu) {
 		printf("No Data on GPU!\n");
@@ -156,24 +164,24 @@ int from_gpu()
 	return 0;
 }
 #else
-int to_gpu() 
+int Data::to_gpu() 
 {
 	printf("GPU not enabled!\n");
 	return -1;
 }
-int fetch() 
+int Data::fetch() 
 {
 	printf("GPU not enabled!\n");
 	return -1;
 }
 #endif
 
-bool is_equal(Father *p, size_t *shuffle1, size_t *shuffle2) 
+bool Data::is_equal(Data *p, size_t *shuffle1, size_t *shuffle2) 
 {
-	Data *d = dynamic_cast<Data *>(p)
-	bool ret = _num == d.num;
+	Data *d = dynamic_cast<Data *>(p);
+	bool ret = _num == d->_num;
 
-	ret = ret && isEqualArray(_data, d->_data, _num, shuffle1, shuffle2);
+	// ret = ret && isEqualArray(_data, d->_data, _num, shuffle1, shuffle2);
 
 	return ret;
 }

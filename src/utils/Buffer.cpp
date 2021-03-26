@@ -2,6 +2,9 @@
 #include "../utils/helper_c.h"
 #include "Buffer.h"
 
+size_t *c_gFiredCount = NULL;
+
+
 Buffer::Buffer(size_t buffer_size, size_t n_num, int max_delay)
 {
 	_fire_table_cap = n_num;
@@ -12,6 +15,7 @@ Buffer::Buffer(size_t buffer_size, size_t n_num, int max_delay)
 	_neurons = new uinteger_t[n_num]();
 
 	_fire_count = new size_t[n_num]();
+	c_gFiredCount = _fire_count;
 }
 
 Buffer::~Buffer()

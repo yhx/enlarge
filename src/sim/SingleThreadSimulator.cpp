@@ -16,8 +16,6 @@
 
 #include "SingleThreadSimulator.h"
 
-size_t *c_gFiredCount = NULL;
-
 SingleThreadSimulator::SingleThreadSimulator(Network *network, real dt)
 	: Simulator(network, dt)
 {
