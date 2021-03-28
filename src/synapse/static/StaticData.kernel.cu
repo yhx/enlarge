@@ -4,7 +4,7 @@
 #include "StaticData.h"
 
 
-__global__ void update_dense_static_hit(Connection *connection, StaticData *data, real *buffer, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTabelCap, size_t num, size_t start_id, int time)
+__global__ void update_dense_static_hit(Connection *connection, StaticData *data, real *buffer, const uinteger_t *firedTable, const uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t start_id, int time)
 {
 	int delayLength = connection->maxDelay - connection->minDelay + 1;
 	for (int delta_t = 0; delta_t<delayLength; delta_t++) {
@@ -20,10 +20,10 @@ __global__ void update_dense_static_hit(Connection *connection, StaticData *data
 			uinteger_t nid_offset = 0;
 			if (block_idx < full_offset) {
 				fired_size_block = num_per_block;
-				nid_offset = time_idx * gFiredTableCap + block_idx * num_per_block;
+				nid_offset = time_idx * firedTableCap + block_idx * num_per_block;
 			} else if (block_idx < gridDim.x) {
 				fired_size_block = npb_minus_1;
-				nid_offset = time_idx * gFiredTableCap + block_idx * npb_minus_1 + full_offset;
+				nid_offset = time_idx * firedTableCap + block_idx * npb_minus_1 + full_offset;
 			} else {
 				fired_size_block = 0;
 				nid_offset = 0;
@@ -31,9 +31,9 @@ __global__ void update_dense_static_hit(Connection *connection, StaticData *data
 
 			for (uinteger_t idx = 0; idx < fired_size_block; idx++) {
 #ifdef DEBUG
-				if (nid_offset + idx > firedSize + time_idx * gFiredTableCap) {
-					printf("over flow %lld + %ld >= %lld, from (%d, %d)\n", (long long)nid_offset, (long long)idx, (long long)(firedSize + time_idx * gFiredTableCap), blockIdx.x, threadIdx.x);
-					printf("%lld %d %d %ld %d %lld %ld\n", (long long)firedSize, gridDim.x, time_idx, gFiredTableCap, block_idx, (long long)npb_minus_1, (long long)full_offset);
+				if (nid_offset + idx > firedSize + time_idx * firedTableCap) {
+					printf("over flow %lld + %ld >= %lld, from (%d, %d)\n", (long long)nid_offset, (long long)idx, (long long)(firedSize + time_idx * firedTableCap), blockIdx.x, threadIdx.x);
+					printf("%lld %d %d %ld %d %lld %ld\n", (long long)firedSize, gridDim.x, time_idx, firedTableCap, block_idx, (long long)npb_minus_1, (long long)full_offset);
 				}
 #endif
 				uinteger_t nid = firedTable[nid_offset + idx];

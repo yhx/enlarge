@@ -71,7 +71,7 @@ __global__ void cuda_gen_cnd(integer_t *idx2index, integer_t *crossnode_index2id
 	uinteger_t fired_size = firedTableSizes[delayIdx];
 	for (int node = 0; node < node_num; node++) {
 		for (size_t idx = tid; idx < fired_size; idx += blockDim.x * gridDim.x) {
-			size_t nid = firedTable[gFiredTableCap*delayIdx + idx];
+			size_t nid = firedTable[firedTableCap*delayIdx + idx];
 			integer_t tmp = idx2index[nid];
 			
 			if (tmp >= 0) {

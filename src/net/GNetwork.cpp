@@ -14,9 +14,6 @@
 #include "GNetwork.h"
 
 GNetwork * deepcopyGNetwork(GNetwork * net) {
-	printf("Not implemented!\n");
-	return NULL;
-
 	//TODO finish data copy
 	GNetwork * ret = allocGNetwork(net->nTypeNum, net->sTypeNum);
 
@@ -83,6 +80,19 @@ GNetwork * allocGNetwork(size_t nTypeNum, size_t sTypeNum) {
 
 void freeGNetwork(GNetwork * network)
 {
+
+	for (size_t i=0; i<network->nTypeNum; i++) {
+		freeType[network->pNTypes[i]](network->ppNeurons[i]);
+	}
+
+	for (size_t i=0; i<network->sTypeNum; i++) {
+		freeType[network->pSTypes[i]](network->ppSynapses[i]);
+	}
+
+	for (size_t i=0; i<network->sTypeNum; i++) {
+		freeConnection(network->ppConnections[i]);
+	}
+
 	free_c(network->pNTypes);
 	free_c(network->pSTypes);
 
@@ -91,22 +101,11 @@ void freeGNetwork(GNetwork * network)
 
 	free_c(network->bufferOffsets);
 
-	for (size_t i=0; i<network->nTypeNum; i++) {
-		freeType[network->pNTypes[i]](network->ppNeurons[i]);
-	}
 	free(network->ppNeurons);
-
-	for (size_t i=0; i<network->sTypeNum; i++) {
-		freeType[network->pSTypes[i]](network->ppSynapses[i]);
-	}
 	free(network->ppSynapses);
-
-	for (size_t i=0; i<network->sTypeNum; i++) {
-		freeConnection(network->ppConnections[i]);
-	}
 	free(network->ppConnections);
-
-
+	free_c(network);
+	network = NULL;
 }
 
 int saveGNetwork(GNetwork *net, FILE *f)

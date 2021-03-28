@@ -91,6 +91,7 @@ TEST(NetworkTest, NeuronTest) {
 	// 		);
 }
 
+
 TEST(NetworkTest, SynapseTest) {
 	ASSERT_EQ(net->sTypeNum, 1);
 	ASSERT_THAT(
@@ -166,14 +167,14 @@ int main(int argc, char **argv)
 	c.connect(pn0, pn1, weight0, delay0, NULL, 6);
 	c.connect(pn1, pn2, weight1, delay1, NULL, 3);
 
-	SGSim sg(&c, 1.0e-4);
+	//SGSim sg(&c, 1.0e-4);
 
-	GNetwork * netCPU = sg.getNet();
-	GNetwork * netGPU = copyGNetworkToGPU(netCPU);
+	net = c.buildNetwork(SimInfo(dt));
+	GNetwork * netGPU = copyGNetworkToGPU(net);
 
-	net2 = deepcopyGNetwork(netCPU);
+	net2 = deepcopyGNetwork(net);
 
-	fetchGNetworkFromGPU(net, netGPU);
+	fetchGNetworkFromGPU(net2, netGPU);
 
 
 	::testing::InitGoogleMock(&argc, argv);

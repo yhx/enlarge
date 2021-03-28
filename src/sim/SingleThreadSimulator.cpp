@@ -65,7 +65,7 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 		//printf("\rCycle: %d", cycle);
 		//fflush(stdout);
 #ifdef LOG_DATA
-		log_array(input_file, buffer._data, totalNeuronNum);
+		log_array(input_file, buffer._data, pNetCPU->bufferOffsets[nTypeNum]);
 
 		// for (int i=pNetCPU->pNeuronNums[copy_idx]; i<pNetCPU->pNeuronNums[copy_idx+1]; i++) {
 		// 	fprintf(input_e_file, "%.10lf \t", c_gNeuronInput[i]);

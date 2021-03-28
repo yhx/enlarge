@@ -43,8 +43,7 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 	GNetwork *pNetCPU = _network->buildNetwork(info);
 
 	FILE *v_file = fopen_c("v.gpu.log", "w+");
-	FILE *input_e_file = fopen_c("input_e.gpu.log", "w+");
-	FILE *input_i_file = fopen_c("input_i.gpu.log", "w+");
+	FILE *input_file = fopen_c("input.gpu.log", "w+");
 	FILE *ie_file = fopen_c("ie.gpu.log", "w+");
 	FILE *ii_file = fopen_c("ii.gpu.log", "w+");
 	FILE *fire_file = fopen_c("fire.gpu.log", "w+");
@@ -106,6 +105,10 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 	for (int time=0; time<sim_cycle; time++) {
 		//printf("Cycle: %d ", time);
 		//fflush(stdout);
+#ifdef DEBUG
+		copyFromGPU<real>(buffer._data, g_buffer->_data, pNetCPU->bufferOffsets[nTypeNum]);
+		log_array(input_file, buffer._data, pNetCPU->bufferOffsets[nTypeNum]);
+#endif
 
 		update_time<<<1, 1>>>(g_buffer->_fired_sizes, maxDelay, time);
 
@@ -124,18 +127,13 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 
 		uinteger_t copySize = 0;
 		copyFromGPU(&copySize, g_buffer->_fired_sizes + currentIdx, 1);
-		copyFromGPU(buffer._neurons, g_buffer->_fire_table + (totalNeuronNum*currentIdx), copySize);
+		assert(copySize <= totalNeuronNum); 
+		copyFromGPU(buffer._fire_table, g_buffer->_fire_table + (totalNeuronNum*currentIdx), copySize);
 
 		copyFromGPU<real>(c_vm, c_g_vm, c_pNetGPU->pNeuronNums[copy_idx+1]-c_pNetGPU->pNeuronNums[copy_idx]);
-		for (int i=0; i<c_pNetGPU->pNeuronNums[copy_idx+1] - c_pNetGPU->pNeuronNums[copy_idx]; i++) {
-			fprintf(v_file, "%.10lf \t", c_vm[i]);
-		}
-		fprintf(v_file, "\n");
+		log_array(v_file, c_vm, pNetCPU->pNeuronNums[copy_idx+1] - pNetCPU->pNeuronNums[copy_idx]);
 
-		for (int i=0; i<copySize; i++) {
-			fprintf(log_file, "%d ", buffer._neurons[i]);
-		}
-		fprintf(log_file, "\n");
+		log_array(log_file, buffer._fire_table, copySize);
 
 		//LOG SYNAPSE
 		//copyFromGPU<int>(buffers->c_synapsesFired, buffers->c_gSynapsesLogTable, totalSynapseNum);
@@ -215,8 +213,7 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 
 
 	fclose_c(v_file);
-	fclose_c(input_e_file);
-	fclose_c(input_i_file);
+	fclose_c(input_file);
 	fclose_c(ie_file);
 	fclose_c(ii_file);
 	fclose_c(fire_file);

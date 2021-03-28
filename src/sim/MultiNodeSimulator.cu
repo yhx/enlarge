@@ -155,8 +155,9 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 		uinteger_t copySize = 0;
 		copyFromGPU(&copySize, g_buffer->_fired_sizes + currentIdx, 1);
+		assert(copySize <= allNeuronNum);
 		if (copySize > 0) {
-			copyFromGPU(buffer._neurons, g_buffer->_fire_table + (allNeuronNum*currentIdx), copySize);
+			copyFromGPU(buffer._fire_table, g_buffer->_fire_table + (allNeuronNum*currentIdx), copySize);
 		}
 
 		if (copy_idx >= 0 && (c_pNetGPU->pNeuronNums[copy_idx+1]-c_pNetGPU->pNeuronNums[copy_idx]) > 0) {
@@ -220,7 +221,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 		
 #ifdef LOG_DATA
 		for (int i=0; i<copySize; i++) {
-			fprintf(sim_file, "%d ", buffer._neurons[i]);
+			fprintf(sim_file, "%d ", buffer._fire_table[i]);
 		}
 		fprintf(sim_file, "\n");
 

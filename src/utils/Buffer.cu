@@ -15,7 +15,7 @@ Buffer::Buffer(size_t data_size, size_t n_num, int max_delay, int gpu): Buffer(d
 
 	_gpu_array->_fire_table =  gpuMalloc<uinteger_t>(n_num * (max_delay+1));
 	_gpu_array->_fired_sizes = gpuMalloc<uinteger_t>(max_delay + 1);
-	_gpu_array->_neurons = gpuMalloc<uinteger_t>(n_num);
+	// _gpu_array->_neurons = gpuMalloc<uinteger_t>(n_num);
 	// _gpu_array->_fire_count = gpuMalloc<size_t>(n_num);
 
 	_gpu_array->_data= gpuMalloc<real>(data_size);
@@ -26,7 +26,7 @@ void Buffer::free_gpu() {
 	if (_gpu_array->_fire_table_cap > 0) {
 		gpuFree(_gpu_array->_fire_table);
 		gpuFree(_gpu_array->_fired_sizes);
-		gpuFree(_gpu_array->_neurons);
+	//	gpuFree(_gpu_array->_neurons);
 	//	gpuFree(_gpu_array->_fire_count);
 	}
 	_gpu_array->_fire_table_cap = 0;

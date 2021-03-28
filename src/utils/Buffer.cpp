@@ -13,7 +13,7 @@ Buffer::Buffer()
 
 	_fire_table = NULL;
 	_fired_sizes = NULL;
-	_neurons = NULL;
+	// _neurons = NULL;
 	// _fire_count = NULL;
 	_data = NULL;
 
@@ -29,7 +29,7 @@ Buffer::Buffer(size_t data_size, size_t n_num, int max_delay)
 
 	_fire_table =  new uinteger_t[n_num * (max_delay+1)]();
 	_fired_sizes = new uinteger_t[max_delay + 1]();
-	_neurons = new uinteger_t[n_num]();
+	// _neurons = new uinteger_t[n_num]();
 	// _fire_count = new size_t[n_num]();
 
 	_data= new real[data_size]();
@@ -45,7 +45,7 @@ Buffer::~Buffer()
 	if (_fire_table_cap > 0) {
 		delete [] _fire_table;
 		delete [] _fired_sizes;
-		delete [] _neurons;
+		// delete [] _neurons;
 		// delete [] _fire_count;
 	}
 	_fire_table_cap = 0;

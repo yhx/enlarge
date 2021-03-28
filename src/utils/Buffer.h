@@ -20,9 +20,8 @@ public:
 	// Neuron Tables
 	uinteger_t *_fire_table;
 	uinteger_t *_fired_sizes;
-
-	uinteger_t *_neurons;
-
+	// uinteger_t *_neurons;
+	
 	// Input Current
 	real *_data;
 

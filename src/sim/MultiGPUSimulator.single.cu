@@ -171,8 +171,9 @@ int MultiGPUSimulator::run_single(real time)
 			int currentIdx = time%(c_pNetGPU[d]->ppConnections[0]->maxDelay+1);
 
 			copyFromGPU(&copySize[d], buffers[d]->_fired_sizes + currentIdx, 1);
+			assert(copySize[d] <= c_pNetGPU[d]->ppConnections[0]->nNum);
 			if (copySize[d] > 0) {
-				copyFromGPU(buffers[d]->_neurons, buffers[d]->_fire_table + (c_pNetGPU[d]->ppConnections[0]->nNum*currentIdx), copySize[d]);
+				copyFromGPU(buffers[d]->_fire_table, buffers[d]->_fire_table + (c_pNetGPU[d]->ppConnections[0]->nNum*currentIdx), copySize[d]);
 			}
 
 			if (copy_idx[d] >= 0 && (c_pNetGPU[d]->pNeuronNums[copy_idx[d]+1]-c_pNetGPU[d]->pNeuronNums[copy_idx[d]]) > 0) {
@@ -209,7 +210,7 @@ int MultiGPUSimulator::run_single(real time)
 #ifdef LOG_DATA
 		for (int d=0; d<device_count; d++) {
 			for (int i=0; i<copySize[d]; i++) {
-				fprintf(log_file[d], "%d ", buffers[d]->_neurons[i]);
+				fprintf(log_file[d], "%d ", buffers[d]->_fire_table[i]);
 			}
 			fprintf(log_file[d], "\n");
 

@@ -18,9 +18,9 @@
 // Constant
 // extern __constant__ int MAX_DELAY;
 // extern __constant__ int gTimeTableCap;
-extern __constant__ size_t gFiredTableCap;
+// extern __constant__ size_t gFiredTableCap;
 // extern __constant__ int gSynapsesTableCap;
-extern __constant__ real DT;
+// extern __constant__ real DT;
 
 // Variable
 // extern __device__ int gCurrentIdx;
@@ -31,8 +31,8 @@ extern __constant__ real DT;
 // #define gMin   0
 // #define gMax 0.01
 
-#define G_MAX -100
-#define G_MIN 100
+// #define G_MAX -100
+// #define G_MIN 100
 // Arrays
 //extern __device__ int *gTimeTable;
 

@@ -103,13 +103,6 @@ int freeGNetworkGPU(GNetwork *pGpuNet)
 	size_t nTypeNum = pTmp->nTypeNum;
 	size_t sTypeNum = pTmp->sTypeNum;
 
-	free_c(pGpuNet->pNTypes);
-	free_c(pGpuNet->pSTypes);
-
-	free_c(pGpuNet->pNeuronNums);
-	free_c(pGpuNet->pSynapseNums);
-
-	free_c(pGpuNet->bufferOffsets);
 
 	for (size_t i=0; i<nTypeNum; i++) {
 		cudaFreeType[pTmp->pNTypes[i]](pTmp->ppNeurons[i]);
@@ -122,6 +115,14 @@ int freeGNetworkGPU(GNetwork *pGpuNet)
 	for (size_t i=0; i<sTypeNum; i++) {
 		cudaFreeConnection(pTmp->ppConnections[i]);
 	}
+
+	free_c(pGpuNet->pNTypes);
+	free_c(pGpuNet->pSTypes);
+
+	free_c(pGpuNet->pNeuronNums);
+	free_c(pGpuNet->pSynapseNums);
+
+	free_c(pGpuNet->bufferOffsets);
 
 	free_c(pTmp->ppNeurons);
 	free_c(pTmp->ppSynapses);

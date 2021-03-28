@@ -209,7 +209,7 @@ __global__ void update_all_lif_neuron(Connection *connection, LIFData *data, rea
 
 			__syncthreads();
 			if (fire_cnt >= MAX_BLOCK_SIZE) {
-				commit2globalTable(fire_table_t, static_cast<uinteger_t>(MAX_BLOCK_SIZE), firedTable, &firedTableSizes[currentIdx], static_cast<uinteger_t>(gFiredTableCap*currentIdx));
+				commit2globalTable(fire_table_t, static_cast<uinteger_t>(MAX_BLOCK_SIZE), firedTable, &firedTableSizes[currentIdx], static_cast<uinteger_t>(firedTableCap*currentIdx));
 				if (threadIdx.x == 0) {
 					fire_cnt = 0;
 				}
@@ -226,7 +226,7 @@ __global__ void update_all_lif_neuron(Connection *connection, LIFData *data, rea
 			}
 			__syncthreads();
 			if (fire_cnt >= MAX_BLOCK_SIZE) {
-				commit2globalTable(fire_table_t, static_cast<uinteger_t>(MAX_BLOCK_SIZE), firedTable, &firedTableSizes[currentIdx], static_cast<uinteger_t>(gFiredTableCap*currentIdx));
+				commit2globalTable(fire_table_t, static_cast<uinteger_t>(MAX_BLOCK_SIZE), firedTable, &firedTableSizes[currentIdx], static_cast<uinteger_t>(firedTableCap*currentIdx));
 				if (threadIdx.x == 0) {
 					fire_cnt = 0;
 				}
@@ -234,7 +234,7 @@ __global__ void update_all_lif_neuron(Connection *connection, LIFData *data, rea
 			__syncthreads();
 
 			if (fire_cnt > 0) {
-				commit2globalTable(fire_table_t, fire_cnt, firedTable, &firedTableSizes[currentIdx], static_cast<uinteger_t>(gFiredTableCap*currentIdx));
+				commit2globalTable(fire_table_t, fire_cnt, firedTable, &firedTableSizes[currentIdx], static_cast<uinteger_t>(firedTableCap*currentIdx));
 				if (threadIdx.x == 0) {
 					fire_cnt = 0;
 				}
@@ -248,7 +248,7 @@ __global__ void update_all_lif_neuron(Connection *connection, LIFData *data, rea
 	__syncthreads();
 }
 
-__global__ void update_dense_lif_neuron(Connection *connection, LIFData *data, real *buffer, int *firedTable, int *firedTableSizes, int num, int offset, int time)
+__global__ void update_dense_lif_neuron(Connection *connection, LIFData *data, real *buffer, int *firedTable, int *firedTableSizes, int firedTableCap, int num, int offset, int time)
 {
 	//__shared__ int fire_table_t[MAX_BLOCK_SIZE];
 	//__shared__ volatile int fire_cnt;
@@ -276,7 +276,7 @@ __global__ void update_dense_lif_neuron(Connection *connection, LIFData *data, r
 
 			bool fired = data->pV_m[nid] >= data->pV_thresh[nid];
 
-			firedTable[gFiredTableCap*currentIdx + gnid] = fired;
+			firedTable[firedTableCap*currentIdx + gnid] = fired;
 
 			data->_fire_count[gnid] += fired;
 
@@ -302,7 +302,7 @@ __global__ void update_dense_lif_neuron(Connection *connection, LIFData *data, r
 
 		} else {
 			data->pRefracStep[idx] = data->pRefracStep[idx] - 1;
-			firedTable[gFiredTableCap*currentIdx + gnid] = 0;
+			firedTable[firedTableCap*currentIdx + gnid] = 0;
 		}
 		buffer[gnid] = 0;
 		buffer[gnid+num] = 0;
