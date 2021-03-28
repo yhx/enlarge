@@ -7,7 +7,10 @@ size_t *c_gFiredCount = NULL;
 
 Buffer::Buffer(size_t buffer_size, size_t n_num, int max_delay)
 {
+	_delay = max_delay;
+	_buffer_size = buffer_size;
 	_fire_table_cap = n_num;
+
 	_data_buffer = new real[buffer_size]();
 	_fire_table =  new uinteger_t[n_num * (max_delay+1)]();
 	_fired_sizes = new uinteger_t[max_delay + 1]();

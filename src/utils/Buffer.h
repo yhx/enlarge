@@ -10,6 +10,8 @@ public:
 	~Buffer();
 
 
+	int _delay;
+	size_t _buffer_size;
 	size_t _fire_table_cap;
 	// Input Current
 	real *_data_buffer;
