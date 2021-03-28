@@ -39,9 +39,9 @@ __global__ void update_dense_static_hit(Connection *connection, StaticData *data
 				uinteger_t nid = firedTable[nid_offset + idx];
 				uinteger_t startLoc = access_(connection->pDelayStart, delta_t, nid);
 				uinteger_t synapseNum = access_(connection->pDelayNum, delta_t, nid);
-				if (threadIdx.x == 0) {
-					gLayerInput[nid]++;
-				}
+				// if (threadIdx.x == 0) {
+				// 	gLayerInput[nid]++;
+				// }
 				for (uinteger_t j=threadIdx.x; j<synapseNum; j += blockDim.x) {
 					//int sid = connection->pSynapsesIdx[j+startLoc];
 					uinteger_t sid = j+startLoc;

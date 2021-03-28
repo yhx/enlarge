@@ -16,7 +16,7 @@ public:
 	virtual int recv(int dest, int tag, MPI_Comm comm=MPI_COMM_WORLD, int offset=0) = 0;
 
 	virtual int to_gpu() = 0;
-	virtual int fetch() = 0;
+	virtual int from_gpu() = 0;
 
 	virtual bool is_equal(Data *p, size_t *shuffle1=NULL, size_t *shuffle2=NULL) = 0;
 

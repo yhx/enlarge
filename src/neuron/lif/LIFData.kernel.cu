@@ -191,7 +191,7 @@ __global__ void update_all_lif_neuron(Connection *connection, LIFData *data, rea
 
 			fired = data->pV_m[nid] >= data->pV_thresh[nid];
 
-			gFireCount[gnid] += fired;
+			data->_fire_count[gnid] += fired;
 
 			if (fired) {
 				testLoc = atomicAdd((uinteger_t *)&fire_cnt, 1);
@@ -278,7 +278,7 @@ __global__ void update_dense_lif_neuron(Connection *connection, LIFData *data, r
 
 			firedTable[gFiredTableCap*currentIdx + gnid] = fired;
 
-			gFireCount[gnid] += fired;
+			data->_fire_count[gnid] += fired;
 
 			if (fired) {
 				data->pRefracStep[nid] = data->pRefracTime[nid] - 1;

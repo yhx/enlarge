@@ -27,6 +27,8 @@ extern void (*updateType[TYPESIZE])(Connection *, void *, real *, uinteger_t *, 
 
 extern bool (*isEqualType[TYPESIZE])(void *p1, void *p2, size_t num, size_t *shuffle1, size_t *shuffle2);
 
+extern int (*logRateNeuron[TYPESIZE])(void *p1, const char *name);
+
 extern void *(*cudaAllocType[TYPESIZE])(void *pCPU, size_t num);
 // extern int (*cudaTypeToGPU[TYPESIZE])(void *pCPU, void *pGPU, int num);
 extern int (*cudaFetchType[TYPESIZE])(void *pCPU, void *pGPU, size_t num);
@@ -35,6 +37,8 @@ extern int (*cudaFreeType[TYPESIZE])(void *);
 // extern void (*cudaUpdateNeuron[TYPESIZE])(void *, real *, real *, int *, int*, int, int, int, BlockSize *);
 // extern void (*cudaUpdateSynapse[TYPESIZE])(void *, void *, real *, real *, int *, int*, int, int, int, BlockSize *);
 extern void (*cudaUpdateType[TYPESIZE])(Connection *, void *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int, BlockSize *);
+
+extern int (*cudaLogRateNeuron[TYPESIZE])(void *cpu, void *gpu, const char *name);
 
 extern int (*sendType[TYPESIZE])(void *data, int dest, int tag, MPI_Comm comm);
 extern void * (*recvType[TYPESIZE])(int src, int tag, MPI_Comm comm);

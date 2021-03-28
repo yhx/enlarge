@@ -112,3 +112,60 @@ int saveArray(const char *filename, real *array, int size)
 
 	return 0;
 }
+
+void log_array_noendl(FILE *f, int *array, size_t size)
+{
+	for (size_t i=0; i<size; i++) {
+		fprintf(f, "%d ", array[i]);
+	}
+}
+
+void log_array_noendl(FILE *f, unsigned int *array, size_t size)
+{
+	for (size_t i=0; i<size; i++) {
+		fprintf(f, "%u ", array[i]);
+	}
+}
+
+void log_array_noendl(FILE *f, long *array, size_t size)
+{
+	for (size_t i=0; i<size; i++) {
+		fprintf(f, "%ld ", array[i]);
+	}
+}
+
+void log_array_noendl(FILE *f, unsigned long *array, size_t size)
+{
+	for (size_t i=0; i<size; i++) {
+		fprintf(f, "%lu ", array[i]);
+	}
+}
+
+void log_array_noendl(FILE *f, long long *array, size_t size)
+{
+	for (size_t i=0; i<size; i++) {
+		fprintf(f, "%lld ", array[i]);
+	}
+}
+
+void log_array_noendl(FILE *f, unsigned long long *array, size_t size)
+{
+	for (size_t i=0; i<size; i++) {
+		fprintf(f, "%llu ", array[i]);
+	}
+}
+
+void log_array_noendl(FILE *f, float *array, size_t size)
+{
+	for (size_t i=0; i<size; i++) {
+		fprintf(f, "%.10lf ", array[i]);
+	}
+}
+
+void log_array_noendl(FILE *f, double *array, size_t size)
+{
+	for (size_t i=0; i<size; i++) {
+		fprintf(f, "%.10lf ", array[i]);
+	}
+}
+

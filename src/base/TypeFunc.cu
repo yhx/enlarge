@@ -28,3 +28,8 @@ void (*cudaUpdateType[])(Connection *, void *, real *, uinteger_t *, uinteger_t*
 	cudaUpdateStatic
 };
 
+int (*cudaLogRateNeuron[])(void *cpu, void *gpu, const char *name) = {
+	cudaLogRateLIF,
+	NULL
+};
+

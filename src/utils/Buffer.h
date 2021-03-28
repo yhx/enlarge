@@ -6,22 +6,29 @@
 
 class Buffer {
 public:
-	Buffer(size_t buffer_size, size_t n_num, int max_delay);
+	Buffer();
+	Buffer(size_t data_size, size_t n_num, int max_delay);
+	Buffer(size_t data_size, size_t n_num, int max_delay, int gpu);
 	~Buffer();
 
+	void free_gpu();
 
+	int _gpu;
 	int _delay;
-	size_t _buffer_size;
+	size_t _data_size;
 	size_t _fire_table_cap;
-	// Input Current
-	real *_data_buffer;
 	// Neuron Tables
 	uinteger_t *_fire_table;
 	uinteger_t *_fired_sizes;
 
 	uinteger_t *_neurons;
 
-	size_t *_fire_count;
+	// Input Current
+	real *_data;
+
+	// size_t *_fire_count;
+
+	Buffer *_gpu_array;
 };
 
 #endif // BUFFER_H

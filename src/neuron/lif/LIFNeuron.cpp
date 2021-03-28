@@ -4,6 +4,7 @@
 #include "math.h"
 
 #include "../../third_party/json/json.h"
+#include "../../utils/helper_c.h"
 #include "LIFNeuron.h"
 #include "LIFData.h"
 
@@ -137,6 +138,7 @@ void * LIFNeuron::packup()
 	p->pC_e = _C_e.data();
 	p->pC_m = _Cm.data();
 	p->pC_i = _C_i.data();
+	p->_fire_count = malloc_c<int>(_num);
 	p->is_view = true;
 
 	return p;

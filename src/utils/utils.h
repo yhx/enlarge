@@ -99,32 +99,15 @@ bool isEqualArray(T const & a, T const & b, size_t size, size_t *shuffle1=NULL, 
 	return true;
 }
 
-template<typename T>
-void log_array_noendl(FILE *f, T *array, size_t size)
-{
-	for (size_t i=0; i<size; i++) {
-		if (typeid(T).hash_code() == typeid(int).hash_code()) {
-			fprintf(f, "%d ", array[i]);
-		} else if (typeid(T).hash_code() == typeid(unsigned int).hash_code()) {
-			fprintf(f, "%u ", array[i]);
-		} else if (typeid(T).hash_code() == typeid(long).hash_code()) {
-			fprintf(f, "%ld ", array[i]);
-		} else if (typeid(T).hash_code() == typeid(unsigned long).hash_code()) {
-			fprintf(f, "%lu ", array[i]);
-		} else if (typeid(T).hash_code() == typeid(long long).hash_code()) {
-			fprintf(f, "%lld ", array[i]);
-		} else if (typeid(T).hash_code() == typeid(unsigned long long).hash_code()) {
-			fprintf(f, "%llu ", array[i]);
-		} else if (typeid(T).hash_code() == typeid(float).hash_code()) {
-			fprintf(f, "%.10lf \t", array[i]);
-		} else if (typeid(T).hash_code() == typeid(double).hash_code()) {
-			fprintf(f, "%.10lf \t", array[i]);
-		} else {
-			fprintf(f, "Unsupported type\n");
-			break;
-		}
-	}
-}
+void log_array_noendl(FILE *f, int *array, size_t size);
+void log_array_noendl(FILE *f, unsigned int *array, size_t size);
+void log_array_noendl(FILE *f, long *array, size_t size);
+void log_array_noendl(FILE *f, unsigned long *array, size_t size);
+void log_array_noendl(FILE *f, long long *array, size_t size);
+void log_array_noendl(FILE *f, unsigned long long *array, size_t size);
+void log_array_noendl(FILE *f, float *array, size_t size);
+void log_array_noendl(FILE *f, double *array, size_t size);
+
 
 template<typename T>
 void log_array(FILE *f, T *array, size_t size)

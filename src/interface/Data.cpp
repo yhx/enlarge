@@ -1,10 +1,6 @@
 
 #include <assert.h>
 
-#ifdef USE_GPU
-#include "../gpu_utils/helper_gpu.h"
-#endif
-
 #include "../utils/helper_c.h"
 #include "Data.h"
 
@@ -28,7 +24,7 @@ Data::~Data() {
 	}
 #ifdef USE_GPU
 	if (_gpu) {
-		freeGPU(_gpu->data);
+		//freeGPU(_gpu>_data);
 		_gpu->_num = 0;
 		_gpu = NULL;
 	}
@@ -135,35 +131,7 @@ int Data::recv(int dest, int tag, MPI_Comm comm, int offset)
 
 #endif
 
-#ifdef USE_GPU
-int Data::to_gpu() 
-{
-	if (!gpu) {
-		_gpu = new Data();
-		_gpu->_is_view = _is_view;
-		_gpu->_num = _num;
-
-		_gpu->_data = copyToGPU(_data, num);
-	} else {
-		_gpu->_is_view = _is_view;
-		_gpu->_num = _num;
-
-		copyToGPU(_gpu->_data, _data, num);
-	}
-	return 0;
-}
-
-int Data::from_gpu() 
-{
-	if (!gpu) {
-		printf("No Data on GPU!\n");
-		return -1;
-	}
-
-	copyFromGPU(_data, _gpu->data, num);
-	return 0;
-}
-#else
+#ifndef USE_GPU
 int Data::to_gpu() 
 {
 	printf("GPU not enabled!\n");

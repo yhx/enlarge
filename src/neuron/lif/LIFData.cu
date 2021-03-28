@@ -188,3 +188,13 @@ int cudaFreeLIFPara(void *pGPU)
 	return 0;
 }
 
+int cudaLogRateLIF(void *cpu, void *gpu, const char *name)
+{
+	LIFData *c = static_cast<LIFData *>(cpu);
+	LIFData *g = static_cast<LIFData *>(gpu);
+
+	LIFData *t = copyFromGPU(g, 1);
+	copyFromGPU(c->_fire_count, t->_fire_count, c->num);
+	return logRateLIF(cpu, name);
+}
+

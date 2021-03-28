@@ -58,6 +58,8 @@ int allocLIFPara(void *pCPU, size_t num)
 	memset(p->pC_m, 0, num*sizeof(real));
 	p->pC_i = (real*)malloc(num*sizeof(real));
 	memset(p->pC_i, 0, num*sizeof(real));
+
+	p->_fire_count = malloc_c<int>(num);
 	
 	p->is_view = false;
 
@@ -111,6 +113,7 @@ int freeLIFPara(void *pCPU)
 		free(p->pC_i);
 		p->pC_i = NULL;
 	}
+	free_c(p->_fire_count);
 
 	return 0;
 }
@@ -151,6 +154,7 @@ int saveLIF(void *pCPU, size_t num, FILE *f)
 	fwrite(p->pC_e, sizeof(real), num, f);
 	fwrite(p->pC_m, sizeof(real), num, f);
 	fwrite(p->pC_i, sizeof(real), num, f);
+	fwrite_c(p->_fire_count, num, f);
 
 	return 0;
 }
@@ -179,6 +183,7 @@ void *loadLIF(size_t num, FILE *f)
 	fread_c(p->pC_e, num, f);
 	fread_c(p->pC_m, num, f);
 	fread_c(p->pC_i, num, f);
+	fread_c(p->_fire_count, num, f);
 
 	return p;
 }
@@ -215,5 +220,16 @@ int copyLIF(void *p_src, size_t s_off, void *p_dst, size_t d_off)
 	LIFData *dst = static_cast<LIFData *>(p_dst);
 
 	dst->pRefracTime[d_off] = src->pRefracTime[s_off];
+	return 0;
+}
+
+int logRateLIF(void *data, const char *name)
+{
+	char filename[512];
+	sprintf(filename, "rate_%s_%s.log", name, "LIF");
+	FILE *f = fopen_c(filename, "w+");
+	LIFData *d = static_cast<LIFData*>(data);
+	log_array(f, d->_fire_count, d->num);
+	fclose_c(f);
 	return 0;
 }

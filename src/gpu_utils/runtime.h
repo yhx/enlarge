@@ -51,9 +51,9 @@ extern __constant__ real DT;
 //extern __device__ int *gSynapsesLogTable;
 
 // Log Arrays
-extern __device__ uinteger_t *gLayerInput;
-extern __device__ real *gXInput;
-extern __device__ int *gFireCount;
+// extern __device__ uinteger_t *gLayerInput;
+// extern __device__ real *gXInput;
+// extern __device__ int *gFireCount;
 
 // Connection
 // extern __device__ Connection *gConnection;

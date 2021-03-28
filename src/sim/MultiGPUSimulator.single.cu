@@ -10,7 +10,7 @@
 #include "../utils/utils.h"
 #include "../gpu_utils/helper_gpu.h"
 #include "../gpu_utils/runtime.h"
-#include "../gpu_utils/GBuffers.h"
+// #include "../gpu_utils/GBuffers.h"
 #include "../net/Network.h"
 #include "../neuron/lif/LIFData.h"
 
@@ -50,7 +50,8 @@ int MultiGPUSimulator::run_single(real time)
 
 	GNetwork **c_pNetGPU =  (GNetwork **)malloc(sizeof(GNetwork*)*device_count);
 
-	GBuffers **buffers = (GBuffers **)malloc(sizeof(GBuffers*)*device_count);
+	// GBuffers **buffers = (GBuffers **)malloc(sizeof(GBuffers*)*device_count);
+	Buffer **buffers = new Buffer*[device_count]();
 
 	BlockSize **updateSize = (BlockSize **)malloc(sizeof(BlockSize*)*device_count);
 	integer_t **c_g_idx2index = malloc_c<integer_t*>(device_count);
@@ -88,7 +89,8 @@ int MultiGPUSimulator::run_single(real time)
 		int minDelay = pNetCPU->ppConnections[0]->minDelay;
 		printf("Thread %d MaxDelay: %d MinDelay: %d\n", node_nets[d]._nodeIdx, maxDelay,  minDelay);
 
-		buffers[d] = alloc_buffers(allNeuronNum, nodeSynapseNum, pNetCPU->ppConnections[0]->maxDelay, node_nets[d]._dt);
+		// buffers[d] = alloc_buffers(allNeuronNum, nodeSynapseNum, pNetCPU->ppConnections[0]->maxDelay, node_nets[d]._dt);
+		buffers[d] = new Buffer(pNetCPU->bufferOffsets[nTypeNum], allNeuronNum, pNetCPU->ppConnections[0]->maxDelay, 0);
 
 		updateSize[d] = getBlockSize(allNeuronNum, nodeSynapseNum);
 
@@ -126,11 +128,11 @@ int MultiGPUSimulator::run_single(real time)
 		for (int d=0; d<device_count; d++) {
 			int allNeuronNum = node_nets[d]._network->ppConnections[0]->nNum;
 			int maxDelay = node_nets[d]._network->ppConnections[0]->maxDelay;
-			update_time<<<1, 1>>>(buffers[d]->c_gFiredTableSizes, maxDelay, time);
+			update_time<<<1, 1>>>(buffers[d]->_fired_sizes, maxDelay, time);
 
 			for (int i=0; i<c_pNetGPU[d]->nTypeNum; i++) {
 				assert(c_pNetGPU[d]->pNeuronNums[i+1]-c_pNetGPU[d]->pNeuronNums[i] > 0);
-				cudaUpdateType[c_pNetGPU[d]->pNTypes[i]](c_pNetGPU[d]->ppConnections[0], c_pNetGPU[d]->ppNeurons[i], buffers[d]->c_gNeuronInput, buffers[d]->c_gFiredTable, buffers[d]->c_gFiredTableSizes, allNeuronNum, c_pNetGPU[d]->pNeuronNums[i+1]-c_pNetGPU[d]->pNeuronNums[i], c_pNetGPU[d]->pNeuronNums[i], time, &updateSize[d][c_pNetGPU[d]->pNTypes[i]]);
+				cudaUpdateType[c_pNetGPU[d]->pNTypes[i]](c_pNetGPU[d]->ppConnections[0], c_pNetGPU[d]->ppNeurons[i], buffers[d]->_data, buffers[d]->_fire_table, buffers[d]->_fired_sizes, allNeuronNum, c_pNetGPU[d]->pNeuronNums[i+1]-c_pNetGPU[d]->pNeuronNums[i], c_pNetGPU[d]->pNeuronNums[i], time, &updateSize[d][c_pNetGPU[d]->pNTypes[i]]);
 			}
 
 			cudaMemset(c_g_fired_n_num[d], 0, sizeof(int)*node_nets[d]._nodeNum);
@@ -148,7 +150,7 @@ int MultiGPUSimulator::run_single(real time)
 		for (int d=0; d<device_count; d++) {
 			int allNeuronNum = node_nets[d]._network->ppConnections[0]->nNum;
 			int maxDelay = node_nets[d]._network->ppConnections[0]->maxDelay;
-			cudaDeliverNeurons<<<(allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(buffers[d]->c_gFiredTable, buffers[d]->c_gFiredTableSizes, c_g_idx2index[d], c_g_cross_index2idx[d], c_g_global_cross_data[d], c_g_fired_n_num[d], maxDelay, node_nets[d]._nodeNum, time);
+			cudaDeliverNeurons<<<(allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(buffers[d]->_fire_table, buffers[d]->_fired_sizes, c_g_idx2index[d], c_g_cross_index2idx[d], c_g_global_cross_data[d], c_g_fired_n_num[d], maxDelay, node_nets[d]._nodeNum, time);
 
 			checkCudaErrors(cudaMemcpy(gCrossDataGPU->_firedNum + node_nets[d]._nodeIdx * node_nets[d]._nodeNum, c_g_fired_n_num[d], sizeof(int)*node_nets[d]._nodeNum, cudaMemcpyDeviceToHost));
 		}
@@ -168,9 +170,9 @@ int MultiGPUSimulator::run_single(real time)
 		for (int d=0; d<device_count; d++) {
 			int currentIdx = time%(c_pNetGPU[d]->ppConnections[0]->maxDelay+1);
 
-			copyFromGPU(&copySize[d], buffers[d]->c_gFiredTableSizes + currentIdx, 1);
+			copyFromGPU(&copySize[d], buffers[d]->_fired_sizes + currentIdx, 1);
 			if (copySize[d] > 0) {
-				copyFromGPU(buffers[d]->c_neuronsFired, buffers[d]->c_gFiredTable + (c_pNetGPU[d]->ppConnections[0]->nNum*currentIdx), copySize[d]);
+				copyFromGPU(buffers[d]->_neurons, buffers[d]->_fire_table + (c_pNetGPU[d]->ppConnections[0]->nNum*currentIdx), copySize[d]);
 			}
 
 			if (copy_idx[d] >= 0 && (c_pNetGPU[d]->pNeuronNums[copy_idx[d]+1]-c_pNetGPU[d]->pNeuronNums[copy_idx[d]]) > 0) {
@@ -183,7 +185,7 @@ int MultiGPUSimulator::run_single(real time)
 			for (int i=0; i<c_pNetGPU[d]->sTypeNum; i++) {
 				int allNeuronNum = node_nets[d]._network->ppConnections[0]->nNum;
 				assert(c_pNetGPU[d]->pSynapseNums[i+1]-c_pNetGPU[d]->pSynapseNums[i] > 0);
-				cudaUpdateType[c_pNetGPU[d]->pSTypes[i]](c_pNetGPU[d]->ppConnections[i], c_pNetGPU[d]->ppSynapses[i], buffers[d]->c_gNeuronInput, buffers[d]->c_gFiredTable, buffers[d]->c_gFiredTableSizes, allNeuronNum, c_pNetGPU[d]->pSynapseNums[i+1]-c_pNetGPU[d]->pSynapseNums[i], c_pNetGPU[d]->pSynapseNums[i], time, &updateSize[d][c_pNetGPU[d]->pSTypes[i]]);
+				cudaUpdateType[c_pNetGPU[d]->pSTypes[i]](c_pNetGPU[d]->ppConnections[i], c_pNetGPU[d]->ppSynapses[i], buffers[d]->_data, buffers[d]->_fire_table, buffers[d]->_fired_sizes, allNeuronNum, c_pNetGPU[d]->pSynapseNums[i+1]-c_pNetGPU[d]->pSynapseNums[i], c_pNetGPU[d]->pSynapseNums[i], time, &updateSize[d][c_pNetGPU[d]->pSTypes[i]]);
 			}
 		}		
 		cudaDeviceSynchronize();
@@ -199,7 +201,7 @@ int MultiGPUSimulator::run_single(real time)
 				int i2idx = node_nets[d]._nodeIdx + node_nets[d]._nodeNum * i;
 				if (gCrossDataGPU->_firedNum[i2idx] > 0) {
 					int num = gCrossDataGPU->_firedNum[i2idx];
-					cudaAddCrossNeurons<<<(num+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(buffers[d]->c_gFiredTable, buffers[d]->c_gFiredTableSizes, gCrossDataGPU->_firedArrays[i2idx], gCrossDataGPU->_firedNum[i2idx], maxDelay, time);
+					cudaAddCrossNeurons<<<(num+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(buffers[d]->_fire_table, buffers[d]->_fired_sizes, gCrossDataGPU->_firedArrays[i2idx], gCrossDataGPU->_firedNum[i2idx], maxDelay, time);
 				}
 			}
 		}
@@ -207,7 +209,7 @@ int MultiGPUSimulator::run_single(real time)
 #ifdef LOG_DATA
 		for (int d=0; d<device_count; d++) {
 			for (int i=0; i<copySize[d]; i++) {
-				fprintf(log_file[d], "%d ", buffers[d]->c_neuronsFired[i]);
+				fprintf(log_file[d], "%d ", buffers[d]->_neurons[i]);
 			}
 			fprintf(log_file[d], "\n");
 
@@ -234,32 +236,26 @@ int MultiGPUSimulator::run_single(real time)
 	printf("Simulation finesed in %ld:%ld:%ld.%06lds\n", hours, minutes, seconds, uSeconds);
 
 	for (int d=0; d<device_count; d++) {
-		int nodeNeuronNum = c_pNetGPU[d]->pNeuronNums[c_pNetGPU[d]->nTypeNum];
-		int *rate = (int*)malloc(sizeof(int)*nodeNeuronNum);
-		copyFromGPU<int>(rate, buffers[d]->c_gFireCount, nodeNeuronNum);
 
 		char fire_filename[512];
-		sprintf(fire_filename, "fire_%d.gpu.count", node_nets[d]._nodeIdx); 
-		FILE *rate_file = fopen(fire_filename, "w+");
-		if (rate_file == NULL) {
-			printf("Open file Sim.log failed\n");
-			return -1;
-		}
+		sprintf(fire_filename, "gpu_%d", d); 
 
-		for (int i=0; i<nodeNeuronNum; i++) {
-			fprintf(rate_file, "%d \t", rate[i]);
+		GNetwork * net = node_nets[d]._network;
+
+		for (int i=0; i<net->nTypeNum; i++) {
+			cudaLogRateNeuron[net->pNTypes[i]](net->ppNeurons[i], c_pNetGPU[d]->ppNeurons[i], fire_filename);
 		}
-		free(rate);
-		fclose(rate_file);
 	}
 
 	for (int d=0; d<device_count; d++) {
 		fclose(log_file[d]);
 		fclose(v_file[d]);
 
-		free_buffers(buffers[d]);
+		// free_buffers(buffers[d]);
+		delete buffers[d];
 		freeGNetworkGPU(c_pNetGPU[d]);
 	}
+	delete buffers;
 
 	return 0;
 }

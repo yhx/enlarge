@@ -58,6 +58,11 @@ bool (*isEqualType[])(void *p1, void *p2, size_t num, size_t *shuffle1, size_t *
 	isEqualStatic
 };
 
+int (*logRateNeuron[])(void *p1, const char *name) = {
+	logRateLIF,
+	NULL
+};
+
 int (*sendType[])(void *data, int dest, int tag, MPI_Comm comm) = {
 	sendLIF,
 	sendStatic
