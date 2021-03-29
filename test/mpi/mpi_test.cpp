@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 		real * weight1 = loadArray(W1_NAME, N*N);
 		real * weight2 = loadArray(W2_NAME, N*N);
 		real * delay1 = loadArray(D1_NAME, N*N);
-		real * delay2 = loadArray(D2_NAME, N*N);
+		// real * delay2 = loadArray(D2_NAME, N*N);
 
 		SpikeType type=Inh;
 		SpikeType *ii = getConstArray(type, N*N);

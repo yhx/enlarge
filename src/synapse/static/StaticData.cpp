@@ -94,7 +94,7 @@ void *loadStatic(size_t num, FILE *f)
 	return p;
 }
 
-bool isEqualStatic(void *p1, void *p2, size_t num, size_t *shuffle1, size_t *shuffle2)
+bool isEqualStatic(void *p1, void *p2, size_t num, uinteger_t *shuffle1, uinteger_t *shuffle2)
 {
 	StaticData *t1 = (StaticData*)p1;
 	StaticData *t2 = (StaticData*)p2;
@@ -106,4 +106,20 @@ bool isEqualStatic(void *p1, void *p2, size_t num, size_t *shuffle1, size_t *shu
 
 	return ret;
 }
+
+int shuffleStatic(void *p, uinteger_t *shuffle, size_t num)
+{
+	StaticData *d = static_cast<StaticData *>(p);
+	assert(num == d->num);
+
+	real *tmp = malloc_c<real>(d->num);
+	memcpy_c(tmp, d->pWeight, d->num);
+
+	for (size_t i=0; i<num; i++) {
+		d->pWeight[i] = tmp[shuffle[i]];
+	}
+
+	return num;
+}
+
 

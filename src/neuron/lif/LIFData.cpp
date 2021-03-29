@@ -188,7 +188,7 @@ void *loadLIF(size_t num, FILE *f)
 	return p;
 }
 
-bool isEqualLIF(void *p1, void *p2, size_t num, size_t *shuffle1, size_t *shuffle2)
+bool isEqualLIF(void *p1, void *p2, size_t num, uinteger_t *shuffle1, uinteger_t *shuffle2)
 {
 	LIFData *t1 = (LIFData*)p1;
 	LIFData *t2 = (LIFData*)p2;

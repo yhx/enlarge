@@ -1,10 +1,16 @@
 
+
+#include <iostream>
+
 #include "../base/TypeFunc.h"
 #include "../utils/proc_info.h"
 #include "../utils/utils.h"
 #include "../../include/Synapses.h"
 #include "Network.h"
 #include "Network.h"
+
+using std::cout;
+using std::endl;
 
 void Network::update_status_splited()
 {
@@ -45,6 +51,22 @@ void Network::update_status_splited()
 			count += iter->second * _neurons[iter->first]->buffer_size();
 		}
 		_buffer_offsets[node][TYPESIZE] = count;
+	}
+
+	cout << "Neuron:" << endl;
+	for (auto iter=_neuron_nums.begin(); iter!=_neuron_nums.end(); iter++) {
+		cout << "Node " << iter->first << ":" << endl;
+		for (auto j=iter->second.begin(); j!=iter->second.end(); j++) {
+			cout << "Type " << j->first << " num: " << j->second << endl;
+		}
+	}
+
+	cout << "Synapse:" << endl;
+	for (auto iter=_synapse_nums.begin(); iter!=_synapse_nums.end(); iter++) {
+		cout << "Node " << iter->first << ":" << endl;
+		for (auto j=iter->second.begin(); j!=iter->second.end(); j++) {
+			cout << "Type " << j->first << " num: " << j->second << endl;
+		}
 	}
 }
 

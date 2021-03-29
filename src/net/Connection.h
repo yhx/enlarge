@@ -8,6 +8,8 @@
 #include <mpi.h>
 #include <stdio.h>
 
+#include "../base/constant.h"
+
 #define access_(array, a, b) ((array)[a*num + b])
 
 struct Connection {
@@ -19,14 +21,14 @@ struct Connection {
 	unsigned int maxDelay;
 	unsigned int minDelay;
 
-    size_t *pDelayStart;
-	size_t *pDelayNum;
-	size_t *pSidMap;
-    size_t *dst;
+    uinteger_t *pDelayStart;
+	uinteger_t *pDelayNum;
+	uinteger_t *pSidMap;
+    uinteger_t *dst;
 
-	size_t *pDelayStartRev;
-	size_t *pDelayNumRev; 
-	size_t *pSidMapRev;
+	uinteger_t *pDelayStartRev;
+	uinteger_t *pDelayNumRev; 
+	uinteger_t *pSidMapRev;
 };
 
 Connection * allocConnection(size_t nNum, size_t sNum, unsigned int maxDelay, unsigned int minDelay);

@@ -79,7 +79,18 @@ void delArray(T *value)
 }
 
 template<typename T>
-bool isEqualArray(T const & a, T const & b, size_t size, size_t *shuffle1=NULL, size_t *shuffle2=NULL)
+bool isEqualArray(T const & a, T const & b, size_t size)
+{
+	for (size_t i=0; i<size; i++) {
+		if (fabs(a[i] - b[i]) > 1e-10) {
+			return false;
+		}
+	}
+	return true;
+}
+
+template<typename T, typename T1>
+bool isEqualArray(T const & a, T const & b, size_t size, T1 *shuffle1=NULL, T1 *shuffle2=NULL)
 {
 	for (size_t i=0; i<size; i++) {
 		if (shuffle1 != NULL && shuffle2 !=NULL)  {

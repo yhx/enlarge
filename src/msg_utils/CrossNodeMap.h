@@ -29,5 +29,7 @@ int compareCNM(CrossNodeMap *m1, CrossNodeMap *m2);
 int sendMap(CrossNodeMap * network, int dest, int tag, MPI_Comm comm);
 CrossNodeMap * recvMap(int src, int tag, MPI_Comm comm);
 
+CrossNodeMap * to_gpu(CrossNodeMap *cpu);
+
 
 #endif // CROSSNODEMAP_H

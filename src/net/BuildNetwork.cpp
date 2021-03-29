@@ -3,12 +3,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/sysinfo.h>
+#include <iostream>
 #include <algorithm>
 
 #include "../utils/helper_c.h"
 #include "../utils/utils.h"
 #include "../base/TypeFunc.h"
 #include "Network.h"
+
+using std::cout;
+using std::endl;
 
 void Network::update_status()
 {
@@ -46,6 +50,16 @@ void Network::update_status()
 		}
 		_buffer_offsets[0][TYPESIZE] = count;
 	}
+
+	printf("All neuron num: %ld, all synapse num: %ld\n", _neuron_num, _synapse_num);
+	for (auto iter=_neurons.begin(); iter!=_neurons.end(); iter++) {
+		cout << "Neuron type " << iter->first << " num: " << iter->second->size() << endl;
+	}
+	for (auto iter=_synapses.begin(); iter!=_synapses.end(); iter++) {
+		cout << "Synapse type " << iter->first << " num: " << iter->second->size() << endl;
+	}
+	printf("Max delay: %d, min delay: %d\n", _max_delay, _min_delay);
+
 }
 
 GNetwork* Network::buildNetwork(const SimInfo &info)

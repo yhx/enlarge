@@ -53,7 +53,7 @@ void (*updateType[])(Connection *, void *, real *, uinteger_t *, uinteger_t*,  s
 	updateStatic
 };
 
-bool (*isEqualType[])(void *p1, void *p2, size_t num, size_t *shuffle1, size_t *shuffle2) = {
+bool (*isEqualType[])(void *p1, void *p2, size_t num, uinteger_t *shuffle1, uinteger_t *shuffle2) = {
 	isEqualLIF,
 	isEqualStatic
 };
@@ -61,6 +61,11 @@ bool (*isEqualType[])(void *p1, void *p2, size_t num, size_t *shuffle1, size_t *
 int (*logRateNeuron[])(void *p1, const char *name) = {
 	logRateLIF,
 	NULL
+};
+
+int (*shuffleSynapse[])(void *p1, uinteger_t *shuffle1, size_t num) = {
+	NULL,
+	shuffleStatic
 };
 
 int (*sendType[])(void *data, int dest, int tag, MPI_Comm comm) = {

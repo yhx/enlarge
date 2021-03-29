@@ -61,4 +61,10 @@ void  memset_c(T *array, int c, size_t size = 1)
 	memset(array, c, sizeof(T) * (size));
 }
 
+template<typename T>
+void  memcpy_c(T *dst, T *src, size_t size = 1)
+{
+	memcpy(dst, src, sizeof(T) * (size));
+}
+
 #endif // HELPER_C_H

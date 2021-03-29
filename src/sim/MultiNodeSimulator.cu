@@ -90,10 +90,12 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 	int node_num = network->_nodeNum;
 
-	integer_t * c_g_idx2index = copyToGPU(network->_crossnodeMap->_idx2index, allNeuronNum);
-	integer_t * c_g_cross_index2idx = copyToGPU(network->_crossnodeMap->_crossnodeIndex2idx, network->_crossnodeMap->_crossSize);
-	int * c_g_global_cross_data = gpuMalloc<int>(allNeuronNum * node_num);
-	int * c_g_fired_n_num = gpuMalloc<int>(node_num);
+	CrossNodeMap *cnm_gpu = to_gpu(network->_crossnodeMap);
+
+	// integer_t * c_g_idx2index = copyToGPU(network->_crossnodeMap->_idx2index, allNeuronNum);
+	// integer_t * c_g_cross_index2idx = copyToGPU(network->_crossnodeMap->_crossnodeIndex2idx, network->_crossnodeMap->_crossSize);
+	// int * c_g_global_cross_data = gpuMalloc<int>(allNeuronNum * node_num);
+	// int * c_g_fired_n_num = gpuMalloc<int>(node_num);
 
 	vector<int> firedInfo;
 	double ts, te;
@@ -118,7 +120,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 #ifdef PROF
 		t1 = MPI_Wtime();
 #endif
-		update_time<<<1, 1>>>(g_buffer->_fired_sizes, c_pNetGPU->ppConnections[0]->maxDelay, time);
+		update_time<<<1, 1>>>(g_buffer->_fired_sizes, maxDelay, time);
 
 		for (int i=0; i<nTypeNum; i++) {
 			assert(c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i] > 0);
@@ -130,7 +132,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 		comp_time += t2-t1;
 #endif
 		int curr_delay = time % cnd->_min_delay;
-		cudaGenerateCND(c_g_idx2index, c_g_cross_index2idx, cnd_gpu, g_buffer->_fire_table, g_buffer->_fired_sizes, allNeuronNum, maxDelay, cnd_gpu->_min_delay, node_num, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
+		cudaGenerateCND(cnm_gpu->_idx2index, cnm_gpu->_crossnodeIndex2idx, cnd_gpu, g_buffer->_fire_table, g_buffer->_fired_sizes, allNeuronNum, maxDelay, cnd_gpu->_min_delay, node_num, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
 
 		// checkCudaErrors(cudaMemcpy(gCrossDataGPU->_firedNum + network->_nodeIdx * node_num, c_g_fired_n_num, sizeof(int)*node_num, cudaMemcpyDeviceToHost));
 		MPI_Request request_t;
