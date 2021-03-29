@@ -177,7 +177,7 @@ __global__ void update_all_lif_neuron(Connection *connection, LIFData *data, rea
 		bool fired = false;
 		uinteger_t testLoc = 0;
 
-	    size_t nid = idx;
+		size_t nid = idx;
 		size_t gnid = offset + idx; 
 		bool actived = data->pRefracStep[idx] <= 0;
 
@@ -206,44 +206,45 @@ __global__ void update_all_lif_neuron(Connection *connection, LIFData *data, rea
 				data->pI_e[nid] += buffer[gnid];
 				data->pI_i[nid] += buffer[gnid+num];
 			}
-
-			__syncthreads();
-			if (fire_cnt >= MAX_BLOCK_SIZE) {
-				commit2globalTable(fire_table_t, static_cast<uinteger_t>(MAX_BLOCK_SIZE), firedTable, &firedTableSizes[currentIdx], static_cast<uinteger_t>(firedTableCap*currentIdx));
-				if (threadIdx.x == 0) {
-					fire_cnt = 0;
-				}
-			}
-
-			__syncthreads();
-
-			if (fired) {
-				testLoc = atomicAdd((uinteger_t*)&fire_cnt, 1);
-				if (testLoc < MAX_BLOCK_SIZE) {
-					fire_table_t[testLoc] = gnid;
-					fired = false;
-				}
-			}
-			__syncthreads();
-			if (fire_cnt >= MAX_BLOCK_SIZE) {
-				commit2globalTable(fire_table_t, static_cast<uinteger_t>(MAX_BLOCK_SIZE), firedTable, &firedTableSizes[currentIdx], static_cast<uinteger_t>(firedTableCap*currentIdx));
-				if (threadIdx.x == 0) {
-					fire_cnt = 0;
-				}
-			}
-			__syncthreads();
-
-			if (fire_cnt > 0) {
-				commit2globalTable(fire_table_t, fire_cnt, firedTable, &firedTableSizes[currentIdx], static_cast<uinteger_t>(firedTableCap*currentIdx));
-				if (threadIdx.x == 0) {
-					fire_cnt = 0;
-				}
-			}
 		} else {
 			data->pRefracStep[idx] = data->pRefracStep[idx] - 1;
 		}
+
 		buffer[gnid] = 0;
 		buffer[gnid+num] = 0;
+
+		__syncthreads();
+		if (fire_cnt >= MAX_BLOCK_SIZE) {
+			commit2globalTable(fire_table_t, static_cast<uinteger_t>(MAX_BLOCK_SIZE), firedTable, &firedTableSizes[currentIdx], static_cast<uinteger_t>(firedTableCap*currentIdx));
+			if (threadIdx.x == 0) {
+				fire_cnt = 0;
+			}
+		}
+
+		__syncthreads();
+
+		if (fired) {
+			testLoc = atomicAdd((uinteger_t*)&fire_cnt, 1);
+			if (testLoc < MAX_BLOCK_SIZE) {
+				fire_table_t[testLoc] = gnid;
+				fired = false;
+			}
+		}
+		__syncthreads();
+		if (fire_cnt >= MAX_BLOCK_SIZE) {
+			commit2globalTable(fire_table_t, static_cast<uinteger_t>(MAX_BLOCK_SIZE), firedTable, &firedTableSizes[currentIdx], static_cast<uinteger_t>(firedTableCap*currentIdx));
+			if (threadIdx.x == 0) {
+				fire_cnt = 0;
+			}
+		}
+		__syncthreads();
+
+	}
+	if (fire_cnt > 0) {
+		commit2globalTable(fire_table_t, fire_cnt, firedTable, &firedTableSizes[currentIdx], static_cast<uinteger_t>(firedTableCap*currentIdx));
+		if (threadIdx.x == 0) {
+			fire_cnt = 0;
+		}
 	}
 	__syncthreads();
 }
