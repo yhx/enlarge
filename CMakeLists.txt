@@ -31,6 +31,11 @@ MESSAGE(STATUS "BLAS Libraries: ${BLAS_LIBRARIES}")
 IF(NOT IS_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/googletest-src")
 	MESSAGE(STATUS "Download and unpack googletest at configure time")
 	CONFIGURE_FILE(CMakeLists.gtest.txt googletest-download/CMakeLists.txt)
+ELSE(NOT IS_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/googletest-src")
+	CONFIGURE_FILE(CMakeLists.gtest.local.txt googletest-download/CMakeLists.txt)
+ENDIF()
+
+IF(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/googletest-download/CMakeLists.txt")
 	EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
 		RESULT_VARIABLE result
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
@@ -38,6 +43,7 @@ IF(NOT IS_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/googletest-src")
 		MESSAGE(FATAL_ERROR "CMake step for googletest failed: ${result}")
 	ENDIF()
 ENDIF()
+
 IF(NOT EXISTS "${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/libgtestd.a")
 	MESSAGE(STATUS "Build googletest")
 	EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} --build .
