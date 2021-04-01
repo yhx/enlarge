@@ -38,12 +38,12 @@ int (*freeTypePara[])(void *pCPU) = {
 	freeStaticPara
 };
 
-int (*saveType[])(void *pCPU, size_t num, FILE *f) = {
+int (*saveType[])(void *pCPU, size_t num, const string &path) = {
 	saveLIF,
 	saveStatic
 };
 
-void* (*loadType[])(size_t num, FILE *f) = {
+void* (*loadType[])(size_t num, const string &path) = {
 	loadLIF,
 	loadStatic
 };

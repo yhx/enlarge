@@ -45,8 +45,11 @@ int freeConnection(Connection *pCPU)
 	return 0;
 }
 
-int saveConnection(Connection *conn, FILE *f)
+int saveConnection(Connection *conn, const string &path, const Type &type)
 {
+	string filename = path + "/" + std::to_string(type) + ".conn";
+	FILE *f = fopen_c(filename.c_str(), "w");
+	
 	fwrite_c(&(conn->nNum), 1, f);
 	fwrite_c(&(conn->sNum), 1, f);
 	fwrite_c(&(conn->maxDelay), 1, f);
@@ -63,29 +66,28 @@ int saveConnection(Connection *conn, FILE *f)
 	fwrite_c(conn->pDelayNumRev, length, f);
 	fwrite_c(conn->pSidMapRev, conn->sNum, f);
 
+	fclose_c(f);
+
 	return 0;
 }
 
-Connection * loadConnection(FILE *f)
+Connection * loadConnection(const string &path, const Type &type)
 {
-	Connection *conn = (Connection *)malloc(sizeof(Connection));
+	string filename = path + "/" + std::to_string(type) + ".conn";
+	FILE *f = fopen_c(filename.c_str(), "r");
 
-	fread_c(&(conn->nNum), 1, f);
-	fread_c(&(conn->sNum), 1, f);
-	fread_c(&(conn->maxDelay), 1, f);
-	fread_c(&(conn->minDelay), 1, f);
+
+	size_t n_num = 0, s_num = 0;
+	unsigned int  max_delay = 0, min_delay = 0;
+
+	fread_c(&n_num, 1, f);
+	fread_c(&s_num, 1, f);
+	fread_c(&max_delay, 1, f);
+	fread_c(&min_delay, 1, f);
+
+	Connection *conn = allocConnection(n_num, s_num, max_delay, min_delay);
 
 	size_t length = (conn->maxDelay - conn->minDelay + 1) * conn->nNum;
-	size_t sNum = conn->sNum;
-
-	conn->pDelayStart = malloc_c<uinteger_t>(length+1);
-	conn->pDelayNum = malloc_c<uinteger_t>(length);
-	conn->pSidMap = malloc_c<uinteger_t>(sNum);
-	conn->dst = malloc_c<uinteger_t>(sNum);
-
-	conn->pDelayStartRev = malloc_c<uinteger_t>(length+1);
-	conn->pDelayNumRev = malloc_c<uinteger_t>(length);
-	conn->pSidMapRev = malloc_c<uinteger_t>(sNum);
 
 	fread_c(conn->pDelayStart, length+1, f);
 	fread_c(conn->pDelayNum, length, f);
@@ -95,6 +97,8 @@ Connection * loadConnection(FILE *f)
 	fread_c(conn->pDelayStartRev, length+1, f);
 	fread_c(conn->pDelayNumRev, length, f);
 	fread_c(conn->pSidMapRev, conn->sNum, f);
+
+	fclose_c(f);
 
 	return conn;
 }
@@ -115,6 +119,7 @@ bool isEqualConnection(Connection *c1, Connection *c2)
 	// ret = ret && isEqualArray(c1->pSidMap, c2->pSidMap, c1->sNum);
 	ret = ret && isEqualArray(c1->dst, c2->dst, c1->sNum);
 
+	// TODO revert conn
 	// ret = ret && isEqualArray(c1->pDelayStartRev, c2->pDelayStartRev, length+1);
 	// ret = ret && isEqualArray(c1->pDelayNumRev, c2->pDelayNumRev, length);
 

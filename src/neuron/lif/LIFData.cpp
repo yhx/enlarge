@@ -128,8 +128,10 @@ int freeLIF(void *pCPU)
 	return 0;
 }
 
-int saveLIF(void *pCPU, size_t num, FILE *f)
+int saveLIF(void *pCPU, size_t num, const string &path)
 {
+	string name = path + "/lif.neuron";
+	FILE *f = fopen(name.c_str(), "w");
 
 	LIFData *p = (LIFData*)pCPU;
 	assert(num <= p->num);
@@ -156,11 +158,16 @@ int saveLIF(void *pCPU, size_t num, FILE *f)
 	fwrite(p->pC_i, sizeof(real), num, f);
 	fwrite_c(p->_fire_count, num, f);
 
+	fclose_c(f);
+
 	return 0;
 }
 
-void *loadLIF(size_t num, FILE *f)
+void *loadLIF(size_t num, const string &path)
 {
+	string name = path + "/lif.neuron";
+	FILE *f = fopen(name.c_str(), "r");
+
 	LIFData *p = (LIFData*)allocLIF(num);
 
 	fread_c(&(p->num), 1, f);
@@ -184,6 +191,8 @@ void *loadLIF(size_t num, FILE *f)
 	fread_c(p->pC_m, num, f);
 	fread_c(p->pC_i, num, f);
 	fread_c(p->_fire_count, num, f);
+
+	fclose_c(f);
 
 	return p;
 }

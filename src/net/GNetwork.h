@@ -5,8 +5,12 @@
 #ifndef GNETWORK_H
 #define GNETWORK_H
 
+#include <string>
+
 #include "../base/type.h"
 #include "Connection.h"
+
+using std::string;
 
 struct GNetwork {
 	//Numbers of types
@@ -45,8 +49,8 @@ GNetwork * deepcopyGNetwork(GNetwork *net);
 void freeGNetwork(GNetwork * network);
 
 // Save and Load
-int saveGNetwork(GNetwork *net, FILE *f);
-GNetwork *loadGNetwork(FILE *f);
+int saveGNetwork(GNetwork *net, const string &path);
+GNetwork *loadGNetwork(const string &path);
 bool compareGNetwork(GNetwork *n1, GNetwork *n2);
 
 // Transfer GNetwork between CPU and GPU

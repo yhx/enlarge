@@ -121,7 +121,7 @@ CrossNodeData * recvCND(int src, int tag, MPI_Comm comm)
 	cnd->_recv_num =   malloc_c<integer_t>(cnd->_node_num);
 
 	cnd->_send_start = malloc_c<integer_t>(size + cnd->_node_num);
-	cnd->_send_num =   malloc_c<integer_t>(cnd->_node_num);
+	cnd->_send_num = malloc_c<integer_t>(cnd->_node_num);
 
 	// resetCND(cnd);
 	allocDataCND(cnd);
@@ -130,14 +130,59 @@ CrossNodeData * recvCND(int src, int tag, MPI_Comm comm)
 }
 
 
-int saveCND(CrossNodeData *data, FILE *f)
+int saveCND(CrossNodeData *data, const string &path)
 {
+	string name = path + "/cross.data";
+	FILE *f = fopen_c(name.c_str(), "w");
+
+	fwrite_c(&(data->_node_num), 1, f);
+	fwrite_c(&(data->_min_delay), 1, f);
+
+	int size = data->_min_delay * data->_node_num;
+	int num_p_1 = data->_node_num + 1;
+
+	fwrite_c(data->_recv_offset, num_p_1, f);
+	fwrite_c(data->_recv_start, size+data->_node_num, f);
+	fwrite_c(data->_recv_num, data->_node_num, f);
+
+	fwrite_c(data->_send_offset, num_p_1, f);
+	fwrite_c(data->_send_start, size+data->_node_num, f);
+	fwrite_c(data->_send_num, data->_node_num, f);
+
+	fwrite_c(data->_recv_data, data->_recv_offset[data->_node_num], f);
+	fwrite_c(data->_send_data, data->_send_offset[data->_node_num], f);
+
+	fclose_c(f);
 	return 0;
 }
 
-CrossNodeData * loadCND(FILE *f)
+CrossNodeData * loadCND(const string &path)
 {
-	CrossNodeData *cnd = (CrossNodeData *)malloc(sizeof(CrossNodeData));
+	string name = path + "/cross.data";
+	FILE *f = fopen_c(name.c_str(), "r");
+
+	int num = 0, delay = 0;
+	fread_c(&(num), 1, f);
+	fread_c(&(delay), 1, f);
+
+	CrossNodeData *cnd = malloc_c<CrossNodeData>(1);
+	allocParaCND(cnd, num, delay);
+
+	int size = delay * num;
+
+	fread_c(cnd->_recv_offset, num+1, f);
+	fread_c(cnd->_recv_start, size+num, f);
+	fread_c(cnd->_recv_num, num, f);
+
+	fread_c(cnd->_send_offset, num+1, f);
+	fread_c(cnd->_send_start, size+num, f);
+	fread_c(cnd->_send_num, num, f);
+
+	allocDataCND(cnd);
+	fread_c(cnd->_recv_data, cnd->_recv_offset[num], f);
+	fread_c(cnd->_send_data, cnd->_send_offset[num], f);
+
+	fclose_c(f);
 
 	return cnd;
 }
@@ -240,3 +285,26 @@ int log_cnd(CrossNodeData *cnd, int time, FILE *sfile, FILE *rfile)
 	fflush(rfile);
 	return 0;
 }
+
+bool isEqualCND(CrossNodeData *data1, CrossNodeData *data2)
+{
+	bool ret = true;
+	ret = ret && (data1->_node_num == data2->_node_num);
+	ret = ret && (data1->_min_delay== data2->_min_delay);
+
+	int size = data1->_min_delay * data1->_node_num;
+	int num_p_1 = data1->_node_num + 1;
+
+	ret = ret && isEqualArray(data1->_recv_offset, data2->_recv_offset, num_p_1);
+	ret = ret && isEqualArray(data1->_recv_start, data2->_recv_start, size+data1->_node_num);
+	ret = ret && isEqualArray(data1->_recv_num, data2->_recv_num, data1->_node_num);
+	ret = ret && isEqualArray(data1->_recv_data, data2->_recv_data, data1->_recv_offset[data1->_node_num]);
+
+	ret = ret && isEqualArray(data1->_send_offset, data2->_send_offset, num_p_1);
+	ret = ret && isEqualArray(data1->_send_start, data2->_send_start, size+data1->_node_num);
+	ret = ret && isEqualArray(data1->_send_num, data2->_send_num, data2->_node_num);
+	ret = ret && isEqualArray(data1->_send_data, data2->_send_data, data1->_send_offset[data1->_node_num]);
+	
+	return ret;
+}
+

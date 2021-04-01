@@ -16,11 +16,11 @@ int main(int argc, char **argv)
 	int node_id = 0;
 	MPI_Comm_rank(MPI_COMM_WORLD, &node_id);
 
-	bool load = false;
+	// bool load = false;
 
-	if ((argc > 1) && (0==strcmp(argv[1], "load"))) {
-		load = true;
-	}
+	// if ((argc > 1) && (0==strcmp(argv[1], "load"))) {
+	// 	load = true;
+	// }
 
 	const int N = 500;
 
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 		real * weight1 = NULL;
 		real * weight2 = NULL;
 		real * delay1 = NULL;
-		real * delay2 = NULL;
+		// real * delay2 = NULL;
 
 		weight0 = (real*)malloc_c<real>(N * N);
 		weight1 = (real*)malloc_c<real>(N * N);
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 		}
 
 		delay1 = getConstArray((real)1e-4, N*N);
-		delay2 = getConstArray((real)2e-4, N*N);
+		// delay2 = getConstArray((real)2e-4, N*N);
 
 		enum SpikeType type=Inh;
 		SpikeType *ii = getConstArray(type, N*N);

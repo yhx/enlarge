@@ -2,10 +2,13 @@
 #ifndef CROSSNODEDATA_H
 #define CROSSNODEDATA_H
 
+#include <string>
 #include "mpi.h"
 
 #include "../base/constant.h"
 #include "../net/Connection.h"
+
+using std::string;
 
 // Assuming node number is N, then the offset and num parameter both have N elements. offset[i] means the offset location on data array for ith node, num[i] records the actual data recived from/sended to the ith node. offset[N] is the size of data array.
 struct CrossNodeData {
@@ -36,12 +39,13 @@ void allocDataCND(CrossNodeData *data);
 void resetCND(CrossNodeData *data);
 void freeCND(CrossNodeData *data);
 
+bool isEqualCND(CrossNodeData *data1, CrossNodeData *data2);
 
 int sendCND(CrossNodeData *data, int dst, int tag, MPI_Comm comm);
 CrossNodeData * recvCND(int src, int tag, MPI_Comm comm);
 
-int saveCND(CrossNodeData *data, FILE *f);
-CrossNodeData * loadCND(FILE *f);
+int saveCND(CrossNodeData *data, const string &path);
+CrossNodeData * loadCND(const string &path);
 
 CrossNodeData * copyCNDtoGPU(CrossNodeData * data);
 int freeCNDGPU(CrossNodeData *data);

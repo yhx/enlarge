@@ -108,8 +108,11 @@ void freeGNetwork(GNetwork * network)
 	network = NULL;
 }
 
-int saveGNetwork(GNetwork *net, FILE *f)
+int saveGNetwork(GNetwork *net, const string &path)
 {
+	string filename = path + "/main.net";
+	FILE *f = fopen_c(filename.c_str(), "w");
+
 	fwrite_c(&(net->nTypeNum), 1, f);
 	fwrite_c(&(net->sTypeNum), 1, f);
 	// fwrite_c(&(net->maxDelay), 1, f);
@@ -122,23 +125,28 @@ int saveGNetwork(GNetwork *net, FILE *f)
 
 	fwrite_c(net->bufferOffsets, net->nTypeNum+1, f);
 
+	fclose_c(f);
+
 	for (size_t i=0; i<net->nTypeNum; i++) {
-		saveType[net->pNTypes[i]](net->ppNeurons[i], net->pNeuronNums[i+1]-net->pNeuronNums[i], f);
+		saveType[net->pNTypes[i]](net->ppNeurons[i], net->pNeuronNums[i+1]-net->pNeuronNums[i], path);
 	}
 	for (size_t i=0; i<net->sTypeNum; i++) {
-		saveType[net->pSTypes[i]](net->ppSynapses[i], net->pSynapseNums[i+1]-net->pSynapseNums[i], f);
+		saveType[net->pSTypes[i]](net->ppSynapses[i], net->pSynapseNums[i+1]-net->pSynapseNums[i], path);
 	}
 
 	for (size_t i=0; i<net->sTypeNum; i++) {
-		saveConnection(net->ppConnections[i], f);
+		saveConnection(net->ppConnections[i], path, net->pSTypes[i]);
 	}
+
 	return 0;
 }
 
-GNetwork *loadGNetwork(FILE *f)
+GNetwork *loadGNetwork(const string &path)
 {
-	size_t nTypeNum = 0, sTypeNum = 0;
+	string filename = path + "/main.net";
+	FILE *f = fopen_c(filename.c_str(), "r");
 
+	size_t nTypeNum = 0, sTypeNum = 0;
 	fread_c(&nTypeNum, 1, f);
 	fread_c(&sTypeNum, 1, f);
 
@@ -154,16 +162,18 @@ GNetwork *loadGNetwork(FILE *f)
 
 	fread_c(net->bufferOffsets, net->nTypeNum+1, f);
 
+	fclose_c(f);
+
 	for (size_t i=0; i<net->nTypeNum; i++) {
-		net->ppNeurons[i] = loadType[net->pNTypes[i]](net->pNeuronNums[i+1]-net->pNeuronNums[i], f);
+		net->ppNeurons[i] = loadType[net->pNTypes[i]](net->pNeuronNums[i+1]-net->pNeuronNums[i], path);
 	}
 	for (size_t i=0; i<net->sTypeNum; i++) {
-		net->ppSynapses[i] = loadType[net->pSTypes[i]](net->pSynapseNums[i+1]-net->pSynapseNums[i], f);
+		net->ppSynapses[i] = loadType[net->pSTypes[i]](net->pSynapseNums[i+1]-net->pSynapseNums[i], path);
 	}
 
 	net->ppConnections = malloc_c<Connection*>(sTypeNum);
 	for (size_t i=0; i<net->sTypeNum; i++) {
-		net->ppConnections[i] = loadConnection(f);
+		net->ppConnections[i] = loadConnection(path, net->pSTypes[i]);
 	}
 
 	return net;

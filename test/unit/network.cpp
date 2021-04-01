@@ -432,13 +432,10 @@ TEST(NetworkTest, BuildTest2) {
 }
 
 TEST(NetworkTest, SaveLoadTest) {
-	FILE *f = fopen_c("tmp.net", "w+");
-	saveGNetwork(net, f);
-	fflush(f);
-	rewind(f);
-	GNetwork *t = loadGNetwork(f);
+	system("mkdir tmp");
+	saveGNetwork(net, "./tmp");
+	GNetwork *t = loadGNetwork("./tmp");
 	ASSERT_TRUE(compareGNetwork(net, t));
-	fclose_c(f);
 }
 
 // TEST(NetworkTest, RunTest) {

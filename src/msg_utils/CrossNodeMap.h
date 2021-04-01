@@ -4,9 +4,12 @@
 
 #include <cstdio>
 #include <cstdint>
+#include <string>
 #include "mpi.h"
 
 #include "../base/constant.h"
+
+using std::string;
 
 struct CrossNodeMap {
 	// ID of neurons on this node to index in this map 
@@ -21,9 +24,10 @@ struct CrossNodeMap {
 };
 
 CrossNodeMap * allocCNM(size_t num, size_t cross_num, unsigned node_num);
+CrossNodeMap * allocCNM(size_t num, size_t cross_size);
 
-int saveCNM(CrossNodeMap *map, FILE *f);
-CrossNodeMap *loadCNM(FILE *f); 
+int saveCNM(CrossNodeMap *map, const string &path);
+CrossNodeMap *loadCNM(const string &path); 
 int compareCNM(CrossNodeMap *m1, CrossNodeMap *m2);
 
 int sendMap(CrossNodeMap * network, int dest, int tag, MPI_Comm comm);

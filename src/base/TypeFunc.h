@@ -6,11 +6,14 @@
 #define TYPEFUNC_H
 
 #include <stdio.h>
+#include <string>
 #include "mpi.h"
 
 #include "type.h"
 #include "../net/Connection.h"
 #include "../utils/BlockSize.h"
+
+using std::string;
 
 extern size_t (*getTypeSize[TYPESIZE])();
 extern void* (*mallocType[TYPESIZE])();
@@ -19,8 +22,8 @@ extern int (*freeType[TYPESIZE])(void *pCPU);
 extern int (*allocTypePara[TYPESIZE])(void *pCPU, size_t num);
 extern int (*freeTypePara[TYPESIZE])(void *pCPU);
 
-extern int (*saveType[TYPESIZE])(void *pCPU, size_t num, FILE *f);
-extern void* (*loadType[TYPESIZE])(size_t num, FILE *f);
+extern int (*saveType[TYPESIZE])(void *pCPU, size_t num, const string &path);
+extern void* (*loadType[TYPESIZE])(size_t num, const string &path);
 
 // extern int (*addTypeConnection[TYPESIZE])(void *, int *);
 extern void (*updateType[TYPESIZE])(Connection *, void *, real *, uinteger_t *, uinteger_t*,  size_t, size_t, size_t, int);

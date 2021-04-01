@@ -5,6 +5,7 @@
 
 #include <sys/time.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <pthread.h>
 #include <iostream>
@@ -22,12 +23,29 @@ MultiNodeSimulator::MultiNodeSimulator(Network *network, real dt) : Simulator(ne
 {
 	_node_nets = NULL;
 	_node_datas = NULL;
+	_network_data = NULL;
+	_data = NULL;
 	MPI_Comm_rank(MPI_COMM_WORLD, &_node_id);
 	MPI_Comm_size(MPI_COMM_WORLD, &_node_num);
 	char processor_name[MPI_MAX_PROCESSOR_NAME];
 	int name_len;
 	MPI_Get_processor_name(processor_name, &name_len);
 	printf("Processor %s, rank %d out of %d processors\n", processor_name, _node_id, _node_num);
+}
+
+MultiNodeSimulator::MultiNodeSimulator(const string &path) : Simulator(NULL, 1e-4)
+{
+	_node_nets = NULL;
+	_node_datas = NULL;
+	_network_data = NULL;
+	_data = NULL;
+	MPI_Comm_rank(MPI_COMM_WORLD, &_node_id);
+	MPI_Comm_size(MPI_COMM_WORLD, &_node_num);
+	char processor_name[MPI_MAX_PROCESSOR_NAME];
+	int name_len;
+	MPI_Get_processor_name(processor_name, &name_len);
+	printf("Processor %s, rank %d out of %d processors\n", processor_name, _node_id, _node_num);
+	load_net(path);
 }
 
 MultiNodeSimulator::~MultiNodeSimulator()
@@ -77,27 +95,28 @@ int MultiNodeSimulator::build_net()
 	return 0;
 }
 
-int MultiNodeSimulator::save_net(const char *name)
+int MultiNodeSimulator::save_net(const string &path)
 {
-	if (_node_nets && _node_datas) {
-		char name_t[512];
-		sprintf(name_t, "%s.num", name);
-		FILE *f = fopen_c(name_t, "w+");
-		fwrite_c(&(_node_num), 1, f);
-		fclose_c(f);
+	string cmd = "mkdir -p " + path;
+	system(cmd.c_str());
+	string name = path + "/meta.data";
+	FILE *f = fopen_c(name.c_str(), "w");
+	fwrite_c(&(_node_num), 1, f);
+	fclose_c(f);
 
+	if (_network && _data) {
+			string path_i = path + "/" + std::to_string(_node_id);
+			cmd = "mkdir -p " + path_i;
+			system(cmd.c_str());
+			saveDistriNet(_network_data, path_i);
+			saveCND(_data, path_i);
+	} else if (_node_nets && _node_datas) {
 		for (int i=0; i<_node_num; i++) {
-			sprintf(name_t, "%s_%d.net", name, i);
-			f = fopen_c(name_t, "w+");
-			saveDistriNet(&(_node_nets[i]), f);
-			fclose_c(f);
-		}
-
-		for (int i=0; i<_node_num; i++) {
-			sprintf(name_t, "%s_%d.cnd", name, i);
-			f = fopen_c(name_t, "w+");
-			saveCND(&(_node_datas[i]), f);
-			fclose_c(f);
+			string path_i = path + "/" + std::to_string(i);
+			cmd = "mkdir -p " + path_i;
+			system(cmd.c_str());
+			saveDistriNet(&(_node_nets[i]), path_i);
+			saveCND(&(_node_datas[i]), path_i);
 		}
 	} else {
 		printf("Before save, build the net first\n");
@@ -107,12 +126,27 @@ int MultiNodeSimulator::save_net(const char *name)
 	return 0;
 }
 
-int MultiNodeSimulator::load_net(const char *name)
+int MultiNodeSimulator::load_net(const string &path)
 {
+	string name = path + "/meta.data";
+	int node_num;
+	FILE *f = fopen_c(name.c_str(), "r");
+	fread_c(&(node_num), 1, f);
+	fclose_c(f);
+
+	if (_node_num != node_num) {
+		printf("Error: node num mismatch network data\n");
+		exit(-1);
+	}
+
+	string path_i = path + "/" + std::to_string(_node_id);
+	_network_data = loadDistriNet(path_i);
+    _data = loadCND(path_i);
+	
 	return 0;
 }
 
-int MultiNodeSimulator::distribute(DistriNetwork **pp_net, CrossNodeData **pp_data, SimInfo &info, int sim_cycle)
+int MultiNodeSimulator::distribute(SimInfo &info, int sim_cycle)
 {
 
 	if (_node_id == 0) {
@@ -135,9 +169,9 @@ int MultiNodeSimulator::distribute(DistriNetwork **pp_net, CrossNodeData **pp_da
 	MPI_Barrier(MPI_COMM_WORLD);
 
 	if (_node_id == 0) {
-		*pp_net = &(_node_nets[0]);
-		*pp_data = &(_node_datas[0]);
-		allocDataCND(*pp_data);
+		_network_data = &(_node_nets[0]);
+		_data = &(_node_datas[0]);
+		allocDataCND(_data);
 		// print_mem("AllocData CND");
 
 		for (int i=1; i<_node_num; i++) {
@@ -156,9 +190,9 @@ int MultiNodeSimulator::distribute(DistriNetwork **pp_net, CrossNodeData **pp_da
 		// data = NULL;
 	} else {
 		printf("%d recv from %d, tag: %d\n", _node_id, 0, DATA_TAG);
-		*pp_net = recvDistriNet(0, DATA_TAG, MPI_COMM_WORLD);
+		_network_data = recvDistriNet(0, DATA_TAG, MPI_COMM_WORLD);
 		printf("%d recv DistriNet from %d, tag: %d\n", _node_id, 0, DATA_TAG);
-		*pp_data = recvCND(0, DATA_TAG + DNET_TAG, MPI_COMM_WORLD);
+		_data = recvCND(0, DATA_TAG + DNET_TAG, MPI_COMM_WORLD);
 		printf("%d recv CND from %d, tag: %d\n", _node_id, 0, DATA_TAG);
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
@@ -175,26 +209,19 @@ int MultiNodeSimulator::run(real time, FireInfo &log, bool gpu)
 	SimInfo info(_dt);
 	info.save_mem = true;
 
-	DistriNetwork *network = NULL;
-	CrossNodeData *data = NULL;
 
 	to_attach();
 
 	printf("Rank %d, before distribute\n", _node_id);
-	distribute(&network, &data, info, sim_cycle);
 
-#ifdef LOG_DATA
-	char filename[512];
-	sprintf(filename, "net_%d.save", network->_nodeIdx); 
-	FILE *net_file = fopen_c(filename, "w+");
-	saveDistriNet(network, net_file);
-#endif
-
+	if (!(_network_data && _data)) {
+		distribute(info, sim_cycle);
+	} 
 
 	if (gpu) {
-		run_node_gpu(network, data);
+		run_node_gpu(_network_data, _data);
 	} else {
-		run_node_cpu(network, data);
+		run_node_cpu(_network_data, _data);
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Finalize();

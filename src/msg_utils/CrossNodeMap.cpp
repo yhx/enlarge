@@ -8,20 +8,25 @@
 
 CrossNodeMap * allocCNM(size_t num, size_t cross_num, unsigned node_num)
 {
-	CrossNodeMap* ret = (CrossNodeMap*)malloc(sizeof(CrossNodeMap));
+	return allocCNM(num, cross_num * node_num);
+}
+
+CrossNodeMap * allocCNM(size_t num, size_t cross_size)
+{
+	CrossNodeMap* ret = malloc_c<CrossNodeMap>(1);
 	assert(ret != NULL);
 	ret->_num = num;
 
 	ret->_idx2index = malloc_c<integer_t>(num);
 	std::fill(ret->_idx2index, ret->_idx2index + num, -1);
 
-	if (cross_num > 0) {
-		ret->_crossnodeIndex2idx = malloc_c<integer_t>(cross_num * node_num);
-		std::fill(ret->_crossnodeIndex2idx, ret->_crossnodeIndex2idx + (cross_num*node_num), -1);
+	ret->_crossSize = cross_size;
+	if (ret->_crossSize > 0) {
+		ret->_crossnodeIndex2idx = malloc_c<integer_t>(cross_size);
+		std::fill(ret->_crossnodeIndex2idx, ret->_crossnodeIndex2idx + cross_size, -1);
 	} else {
 		ret->_crossnodeIndex2idx = NULL;
 	}
-	ret->_crossSize = node_num * cross_num;
 
 	return ret;
 }
@@ -55,25 +60,39 @@ CrossNodeMap * recvMap(int src, int tag, MPI_Comm comm)
 	return net;
 }
 
-int saveCNM(CrossNodeMap *map, FILE *f)
+int saveCNM(CrossNodeMap *map, const string &path)
 {
+	string name = path + "/cross.map";
+	FILE *f = fopen_c(name.c_str(), "w");
+
 	fwrite_c(&(map->_num), 1, f);
 	fwrite_c(&(map->_crossSize), 1, f);
 	fwrite_c(map->_idx2index, map->_num, f);
-	fwrite_c(map->_crossnodeIndex2idx, map->_crossSize, f);
+	if (map->_crossSize > 0) {
+		fwrite_c(map->_crossnodeIndex2idx, map->_crossSize, f);
+	}
+
+	fclose_c(f);
 
 	return 0;
 }
 
-CrossNodeMap *loadCNM(FILE *f)
+CrossNodeMap *loadCNM(const string &path)
 {
-	CrossNodeMap *map = (CrossNodeMap*)malloc(sizeof(CrossNodeMap));
-	fread_c(&(map->_num), 1, f);
-	fread_c(&(map->_crossSize), 1, f);
-	map->_idx2index = malloc_c<integer_t>(map->_num);
-	map->_crossnodeIndex2idx = malloc_c<integer_t>(map->_crossSize);
+	string name = path + "/cross.map";
+	FILE *f = fopen_c(name.c_str(), "r");
+
+	size_t num = 0, cross_size = 0;
+	fread_c(&(num), 1, f);
+	fread_c(&(cross_size), 1, f);
+
+	CrossNodeMap *map = allocCNM(num, cross_size);
 	fread_c(map->_idx2index, map->_num, f);
-	fread_c(map->_crossnodeIndex2idx, map->_crossSize, f);
+	if (cross_size > 0) {
+		fread_c(map->_crossnodeIndex2idx, map->_crossSize, f);
+	}
+
+	fclose_c(f);
 
 	return map;
 }

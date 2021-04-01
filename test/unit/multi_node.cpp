@@ -102,6 +102,12 @@ TEST(MPITEST, MSGTest) {
 	}
 }
 
+TEST(MPITEST, SAVE_LOAD_TEST) {
+	MNSim mn("multi_node_test");
+	ASSERT_TRUE(compareDistriNet(mn._network_data, network));
+	ASSERT_TRUE(isEqualCND(mn._data, data));
+}
+
 int main(int argc, char **argv)
 {
 	MPI_Init(&argc, &argv);
@@ -151,7 +157,10 @@ int main(int argc, char **argv)
 	int sim_cycle = 100;
 
 	to_attach();
-	sg.distribute(&network, &data, info, sim_cycle);
+	sg.distribute(info, sim_cycle);
+	network = sg._network_data;
+	data = sg._data;
+
 
 	uinteger_t fire_tbl[12] = {0, 1, 2, 3, 2, 3, 0, 0, 3, 1, 0, 0};
 	uinteger_t fire_tbl_size[3] = {4, 2, 3};
@@ -174,6 +183,8 @@ int main(int argc, char **argv)
 
 		MPI_Barrier(MPI_COMM_WORLD);
 	}
+
+	sg.save_net("multi_node_test");
 	MPI_Barrier(MPI_COMM_WORLD);
 
 	::testing::InitGoogleMock(&argc, argv);

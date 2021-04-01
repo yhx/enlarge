@@ -3,6 +3,7 @@
  * 四 三月 09 2017
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 
@@ -10,9 +11,11 @@
 #include "GNetwork.h"
 #include "DistriNetwork.h"
 
+using std::string;
+
 DistriNetwork* initDistriNet(int num, real dt)
 {
-	DistriNetwork * ret_net = (DistriNetwork*)malloc(sizeof(DistriNetwork) * num);
+	DistriNetwork * ret_net = malloc_c<DistriNetwork>(num);
 
 	for (int i=0; i<num; i++) {
 		ret_net[i]._simCycle = 0;
@@ -73,26 +76,45 @@ DistriNetwork *recvDistriNet(int src, int tag, MPI_Comm comm)
 	return net;
 }
 
-int saveDistriNet(DistriNetwork *net, FILE * f)
+int saveDistriNet(DistriNetwork *net, const string &path)
 {
-	fwrite_c(&(net->_simCycle), 1, f);
-	fwrite_c(&(net->_nodeIdx), 1, f);
+	string filename = path + "/distr.net";
+	FILE *f = fopen_c(filename.c_str(), "w");
+
 	fwrite_c(&(net->_nodeNum), 1, f);
 	fwrite_c(&(net->_dt), 1, f);
-	saveGNetwork(net->_network, f);
-	saveCNM(net->_crossnodeMap, f);
+
+	fwrite_c(&(net->_simCycle), 1, f);
+	fwrite_c(&(net->_nodeIdx), 1, f);
+
+	fclose_c(f);
+
+	saveGNetwork(net->_network, path);
+	saveCNM(net->_crossnodeMap, path);
 
 	return 0;
 }
 
-DistriNetwork * loadDistriNet(FILE *f) {
-	DistriNetwork *net = (DistriNetwork*)malloc(sizeof(DistriNetwork));
+DistriNetwork * loadDistriNet(const string &path) {
+	string filename = path + "/distr.net";
+	FILE *f = fopen_c(filename.c_str(), "r");
+
+	int num = 0;
+	real dt = 1e-4;
+
+	fread_c(&(num), 1, f);
+	fread_c(&(dt), 1, f);
+
+	DistriNetwork *net = initDistriNet(num, dt);
+
 	fread_c(&(net->_simCycle), 1, f);
 	fread_c(&(net->_nodeIdx), 1, f);
-	fread_c(&(net->_nodeNum), 1, f);
-	fread_c(&(net->_dt), 1, f);
-	net->_network = loadGNetwork(f);
-	net->_crossnodeMap = loadCNM(f);
+
+	fclose_c(f);
+
+	net->_network = loadGNetwork(path);
+	net->_crossnodeMap = loadCNM(path);
+
 	return net;
 }
 

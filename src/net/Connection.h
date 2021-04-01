@@ -7,8 +7,12 @@
 
 #include <mpi.h>
 #include <stdio.h>
+#include <string>
 
 #include "../base/constant.h"
+#include "../base/type.h"
+
+using std::string;
 
 #define access_(array, a, b) ((array)[a*num + b])
 
@@ -39,8 +43,8 @@ Connection * cudaAllocConnection(Connection * pCPU);
 int cudaFetchConnection(Connection *pCPU, Connection *pGPU);
 int cudaFreeConnection(Connection *pGPU);
 
-int saveConnection(Connection *conn, FILE *f);
-Connection * loadConnection(FILE *f);
+int saveConnection(Connection *conn, const string &path, const Type &type);
+Connection * loadConnection(const string &path, const Type &type);
 
 bool isEqualConnection(Connection *c1, Connection *c2);
 

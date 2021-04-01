@@ -64,8 +64,10 @@ int freeStatic(void *pCPU)
 	return 0;
 }
 
-int saveStatic(void *pCPU, size_t num, FILE *f)
+int saveStatic(void *pCPU, size_t num, const string &path)
 {
+	string name = path + "/static.synapse";
+	FILE *f = fopen_c(name.c_str(), "w");
 
 	StaticData *p = (StaticData*)pCPU;
 	assert(num <= p->num);
@@ -77,11 +79,16 @@ int saveStatic(void *pCPU, size_t num, FILE *f)
 	// fwrite(p->pDst, sizeof(int), num, f);
 	fwrite(p->pWeight, sizeof(real), num, f);
 
+	fclose_c(f);
+
 	return 0;
 }
 
-void *loadStatic(size_t num, FILE *f)
+void *loadStatic(size_t num, const string &path)
 {
+	string name = path + "/static.synapse";
+	FILE *f = fopen_c(name.c_str(), "r");
+
 	StaticData *p = (StaticData*)allocStatic(num);
 
 
@@ -90,6 +97,8 @@ void *loadStatic(size_t num, FILE *f)
 
 	// fread(p->pDst, sizeof(int), num, f);
 	fread(p->pWeight, sizeof(real), num, f);
+
+	fclose_c(f);
 
 	return p;
 }
