@@ -234,13 +234,13 @@ int Network::arrangeCross(DistriNetwork *net, CrossTypeInfo_t & type_offset, Cro
 DistriNetwork* Network::buildNetworks(const SimInfo &info, SplitType split, bool auto_splited)
 {
 	print_mem("Before build");
-	printf("===================Update Status================================\n");
+	printf("===Update Status\n");
 	update_status();
 
 	assert(_node_num >= 1);
 	DistriNetwork * net = initDistriNet(_node_num, _dt);
 
-	printf("=====================Split Network=============================\n");
+	printf("===Split Network\n");
 	if (auto_splited && _node_num > 1) {
 		splitNetwork(split);
 	}
@@ -261,12 +261,12 @@ DistriNetwork* Network::buildNetworks(const SimInfo &info, SplitType split, bool
 	// CrossInfo_t n_num;
 
 
-	printf("=====================Arrange Networ============================\n");
+	printf("===Arrange Network\n");
 	arrangeNet(net, type_offset, neuron_offset, neuron_count, synapse_offset, synapse_count); 
 
-	printf("=====================Arrange Neuron============================\n");
+	printf("===Arrange Neuron\n");
 	arrangeNeuron(net, type_offset, neuron_offset, neuron_count); 
-	printf("===================Arrange Connection==========================\n");
+	printf("===Arrange Connection\n");
 	for (auto d=_min_delay; d<_max_delay+1; d++) {
 		arrangeLocal(net, type_offset, neuron_offset, synapse_offset, neuron_count, synapse_count, n2s_count, d);
 		arrangeCross(net, type_offset, synapse_count, n2s_count, cross_idx, node_n_offset, d);

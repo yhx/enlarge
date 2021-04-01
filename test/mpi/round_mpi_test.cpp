@@ -77,7 +77,7 @@ int main(int argc, char **argv)
 						fthreshold,
 						i_offset, dt));  
 
-		Population *p1 = c.createPopulation(0, n0, 
+		Population *p1 = c.createPopulation(0, n1, 
 				LIFNeuron(
 						fv,
 						v_rest,

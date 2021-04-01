@@ -41,9 +41,11 @@ def main(argv):
         inputfile, outputfile = column_merge.find_series_files(file2)
         print('Column Merge: ' + ' '.join(str(e) for e in inputfile) + " to " + str(outputfile))
         column_merge.column_merge(inputfile, outputfile)
-        column_sub(file1, outputfile);
+        diff = column_sub(file1, outputfile);
     else:
-        column_sub(file1, file2);
+        diff = column_sub(file1, file2);
+
+    return diff < 1e-5
 
 
 if __name__ == "__main__":

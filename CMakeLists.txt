@@ -197,9 +197,12 @@ FOREACH(exec_path ${UNIT_TEST_CPU})
 	GET_FILENAME_COMPONENT(exec_file ${exec_path} NAME_WE)
 	ADD_EXECUTABLE(${exec_file} ${exec_path})
 	TARGET_LINK_LIBRARIES(${exec_file} ${TARGET_LIB} ${MPI_LIBRARIES} blas ${BLAS_LIBRARIES} ${PYTHON_LIBRARIES} gmock_main)
-	ADD_TEST(NAME ${exec_file}_test COMMAND ${exec_file}) 
+	IF (${exec_file} MATCHES "multi_node")
+		ADD_TEST(NAME ${exec_file}_test COMMAND mpirun -n 2 $<TARGET_FILE:${exec_file}>) 
+	ELSE()
+		ADD_TEST(NAME ${exec_file}_test COMMAND ${exec_file}) 
+	ENDIF()
 ENDFOREACH()
-
 
 
 FOREACH(exec_path ${TOOL})

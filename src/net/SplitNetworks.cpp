@@ -6,7 +6,7 @@ void Network::splitNetwork(SplitType split)
 	switch (split) {
 		case NeuronBalance:
 			{
-				printf("===========NEU_BASE==========\n");
+				printf("===NEU_BASE\n");
 				int node_idx = 0;
 				size_t neuron_count = 0;
 				size_t neuron_per_node = _neuron_num/_node_num;
@@ -30,7 +30,7 @@ void Network::splitNetwork(SplitType split)
 			break;
 		case RoundRobin:
 			{
-				printf("===========ROUND_ROBIN==========\n");
+				printf("===ROUND_ROBIN\n");
 				size_t neuron_count = 0;
 				for (auto t_iter = _neurons.begin(); t_iter != _neurons.end(); t_iter++) {
 					Type t = t_iter->first;
@@ -50,12 +50,12 @@ void Network::splitNetwork(SplitType split)
 			break;
 		case Balanced:
 			{
-				printf("===========BALANCED==========\n");
+				printf("===BALANCED\n");
 			}
 			break;
 		default:
 			{
-				printf("===========SYN_BASE==========\n");
+				printf("===SYN_BASE\n");
 				int node_idx = 0;
 				size_t synapse_count = 0;
 				size_t synapse_per_node = _synapse_num/_node_num;

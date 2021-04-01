@@ -116,7 +116,6 @@ int MultiNodeSimulator::distribute(DistriNetwork **pp_net, CrossNodeData **pp_da
 {
 
 	if (_node_id == 0) {
-#if 1
 		// print_mem("Finish Network");
 		// print_mem("Finish CND");
 		if (!(_node_nets && _node_datas)) {
@@ -129,50 +128,41 @@ int MultiNodeSimulator::distribute(DistriNetwork **pp_net, CrossNodeData **pp_da
 			_node_nets[i]._nodeNum = _node_num;
 			_node_nets[i]._dt = _dt;
 		}
+	} else {
+	printf("Rank %d, Wait for network build\n", _node_id);
+	}
 
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	if (_node_id == 0) {
 		*pp_net = &(_node_nets[0]);
 		*pp_data = &(_node_datas[0]);
 		allocDataCND(*pp_data);
 		// print_mem("AllocData CND");
 
 		for (int i=1; i<_node_num; i++) {
-#ifdef DEBUG
 			printf("Send to %d, tag: %d\n", i, DATA_TAG);
-#endif
 			sendDistriNet(&(_node_nets[i]), i, DATA_TAG, MPI_COMM_WORLD);
-#ifdef DEBUG
 			printf("Send DistriNet to %d, tag: %d\n", i, DATA_TAG);
-#endif
 			sendCND(&(_node_datas[i]), i, DATA_TAG + DNET_TAG, MPI_COMM_WORLD);
-#ifdef DEBUG
 			printf("Send CND to %d, tag: %d\n", i, DATA_TAG);
-#endif
 		}
-#else
-		network = initDistriNet(1, _dt);
-		network->_network = _network->buildNetwork(info);
-		network->_simCycle = sim_cycle;
-		network->_nodeIdx = 0;
-		network->_nodeNum = node_num;
-		network->_dt = _dt;
-		data = NULL;
-#endif
+		// network = initDistriNet(1, _dt);
+		// network->_network = _network->buildNetwork(info);
+		// network->_simCycle = sim_cycle;
+		// network->_nodeIdx = 0;
+		// network->_nodeNum = node_num;
+		// network->_dt = _dt;
+		// data = NULL;
 	} else {
-#if 1
-#ifdef DEBUG
 		printf("%d recv from %d, tag: %d\n", _node_id, 0, DATA_TAG);
-#endif
 		*pp_net = recvDistriNet(0, DATA_TAG, MPI_COMM_WORLD);
-#ifdef DEBUG
 		printf("%d recv DistriNet from %d, tag: %d\n", _node_id, 0, DATA_TAG);
-#endif
 		*pp_data = recvCND(0, DATA_TAG + DNET_TAG, MPI_COMM_WORLD);
-#ifdef DEBUG
 		printf("%d recv CND from %d, tag: %d\n", _node_id, 0, DATA_TAG);
-#endif
-#endif
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
+
 	return 0;
 }
 
@@ -190,6 +180,7 @@ int MultiNodeSimulator::run(real time, FireInfo &log, bool gpu)
 
 	to_attach();
 
+	printf("Rank %d, before distribute\n", _node_id);
 	distribute(&network, &data, info, sim_cycle);
 
 #ifdef LOG_DATA
