@@ -32,6 +32,7 @@ IF(NOT IS_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/googletest-src")
 	MESSAGE(STATUS "Download and unpack googletest at configure time")
 	CONFIGURE_FILE(CMakeLists.gtest.txt googletest-download/CMakeLists.txt)
 ELSE(NOT IS_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/googletest-src")
+	MESSAGE(STATUS "Googletest at configure")
 	CONFIGURE_FILE(CMakeLists.gtest.local.txt googletest-download/CMakeLists.txt)
 ENDIF()
 
