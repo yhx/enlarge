@@ -91,7 +91,7 @@ real *loadArray(const char *filename, int size)
 		printf("ERROR: Open file %s failed\n", filename);
 		return res;
 	}
-	fread(res, sizeof(real), size, logFile);
+	fread_c(res, size, logFile);
 
 	fflush(logFile);
 	fclose(logFile);

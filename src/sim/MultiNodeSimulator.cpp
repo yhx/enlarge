@@ -71,14 +71,17 @@ int MultiNodeSimulator::run(real time, FireInfo &log)
 	return 0;
 }
 
-int MultiNodeSimulator::build_net()
+int MultiNodeSimulator::build_net(int num)
 {
 
 	SimInfo info(_dt);
 	info.save_mem = true;
 
 	if (!_node_nets) {
-		_network->set_node_num(_node_num);
+		if (num <= 1) {
+			num = _node_num;
+		}
+		_network->set_node_num(num);
 		_node_nets = _network->buildNetworks(info);
 		for (int i=0; i<_node_num; i++) {
 			_node_nets[i]._simCycle = 0;

@@ -75,9 +75,9 @@ int saveStatic(void *pCPU, size_t num, const string &path)
 		num = p->num;
 	}
 
-	fwrite(&(num), sizeof(size_t), 1, f);
+	fwrite_c(&(num), 1, f);
 	// fwrite(p->pDst, sizeof(int), num, f);
-	fwrite(p->pWeight, sizeof(real), num, f);
+	fwrite_c(p->pWeight, num, f);
 
 	fclose_c(f);
 
@@ -92,11 +92,11 @@ void *loadStatic(size_t num, const string &path)
 	StaticData *p = (StaticData*)allocStatic(num);
 
 
-	fread(&(p->num), sizeof(size_t), 1, f);
+	fread_c(&(p->num), 1, f);
 	assert(num == p->num);
 
 	// fread(p->pDst, sizeof(int), num, f);
-	fread(p->pWeight, sizeof(real), num, f);
+	fread_c(p->pWeight, num, f);
 
 	fclose_c(f);
 
