@@ -4,14 +4,18 @@
  */
 
 #include <iostream>
+
+#include "../third_party/util/mem.h"
 #include "utils.h"
 #include "proc_info.h"
 
 void print_mem(const char *info)
 {
-	proc_info pinfo;
-	get_proc_info(&pinfo);
-	printf("%s, MEM used: %lfGB\n", info, static_cast<double>(pinfo.mem_used/1024.0/1024.0));
+	// Proc_info pinfo;
+	// Get_proc_info(&pinfo);
+	// printf("%s, MEM used: %lfGB\n", info, static_cast<double>(pinfo.mem_used/1024.0/1024.0));
+	size_t mem_used = getCurrentRSS();
+	printf("%s, MEM used: %lfGB\n", info, static_cast<double>(mem_used/1024.0/1024.0/1024.0));
 }
 
 double realRandom(double range)

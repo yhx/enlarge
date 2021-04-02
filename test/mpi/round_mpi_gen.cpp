@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 	const real frefractory=0;
 	const real fv=-74e-3;
 
-	const real run_time=1000e-3;
+	// const real run_time=1000e-3;
 	const real dt=1e-4;
 
 	Network c(dt);
