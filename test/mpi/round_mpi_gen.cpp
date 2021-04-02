@@ -13,10 +13,10 @@ int main(int argc, char **argv)
 
 	time_t start,end;
 	start=clock(); //time(NULL);
-	if(argc !=5)
+	if(argc !=6)
 	{
 		if (node_id == 0) {
-			printf("Need 4 paras. For example\n FR 1%%: %s n0 n1 fire_rate delay\n", argv[0]);
+			printf("Need 5 paras. For example\n FR 1%%: %s n0 n1 fire_rate delay net_parts\n", argv[0]);
 		}
 		return 0;
 	}
@@ -25,6 +25,8 @@ int main(int argc, char **argv)
 
 	const int fr = atoi(argv[3]);
 	const int delay_step = atoi(argv[4]);
+
+	const int parts = atoi(argv[5]);
 
 	real w1=0.0;
 	real w2=0.0;
@@ -88,6 +90,7 @@ int main(int argc, char **argv)
 						tau_syn_e,tau_syn_i, 
 						fthreshold,
 						0, dt));  
+		print_mem("After build neuron");
 
 		real * weight01 = getConstArray((real)(1e-9)*w1/n0, n0*n1);
 		real * weight10 = getConstArray((real)(1e-9)*w2/n1, n0*n1);
@@ -99,14 +102,18 @@ int main(int argc, char **argv)
 		c.connect(p0, p1, weight01, delay, NULL, n0*n1);
 		c.connect(p1, p0, weight10, delay, ii, n0*n1);
 
+		print_mem("After build synapse");
+
 		delArray(weight01);
 		delArray(weight10);
 		delArray(delay);
 		delArray(ii);
+
+		print_mem("After delete array");
 	}
 
 	MNSim mn(&c, dt);	//gpu
-	mn.build_net(4);
+	mn.build_net(parts);
 	mn.save_net("round_mpi_4_39999_39999_1_8");
 	// mn.run(run_time);	
 

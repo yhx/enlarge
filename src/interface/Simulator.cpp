@@ -11,7 +11,9 @@ GNetwork * Simulator::getNet()
 int Simulator::reset()
 {
 	SimInfo info(_dt);
-	_network->reset(info);
+	if (_network) {
+		_network->reset(info);
+	}
 
 	return 0;
 }

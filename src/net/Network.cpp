@@ -419,6 +419,10 @@ CrossNodeData* Network::arrangeCrossNodeData(const SimInfo &info)
 		// assert(cross_data[i]._recv_data != NULL || cross_data[i]._recv_offset[node_num] == 0);
 	}
 
+	for (int i=0; i<_node_num; i++) {
+		allocDataCND(&(cross_data[i]));
+	}
+
 	return cross_data;
 }
 

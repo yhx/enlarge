@@ -45,6 +45,7 @@ MultiNodeSimulator::MultiNodeSimulator(const string &path) : Simulator(NULL, 1e-
 	int name_len;
 	MPI_Get_processor_name(processor_name, &name_len);
 	printf("Processor %s, rank %d out of %d processors\n", processor_name, _node_id, _node_num);
+	to_attach();
 	load_net(path);
 }
 
@@ -80,6 +81,8 @@ int MultiNodeSimulator::build_net(int num)
 	if (!_node_nets) {
 		if (num <= 1) {
 			num = _node_num;
+		} else {
+			_node_num = num;
 		}
 		_network->set_node_num(num);
 		_node_nets = _network->buildNetworks(info);
@@ -174,7 +177,7 @@ int MultiNodeSimulator::distribute(SimInfo &info, int sim_cycle)
 	if (_node_id == 0) {
 		_network_data = &(_node_nets[0]);
 		_data = &(_node_datas[0]);
-		allocDataCND(_data);
+		// allocDataCND(_data);
 		// print_mem("AllocData CND");
 
 		for (int i=1; i<_node_num; i++) {
