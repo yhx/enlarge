@@ -98,8 +98,10 @@ int main(int argc, char **argv)
 
 		enum SpikeType type=Inh;
 		SpikeType *ii = getConstArray(type, n0*n1);
+		print_mem("After alloc data");
 
 		c.connect(p0, p1, weight01, delay, NULL, n0*n1);
+		print_mem("half build synapse");
 		c.connect(p1, p0, weight10, delay, ii, n0*n1);
 
 		print_mem("After build synapse");
