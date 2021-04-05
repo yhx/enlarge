@@ -69,27 +69,27 @@ int main(int argc, char **argv)
 
 		Population *p0 = c.createPopulation(0, n0, 
 				LIFNeuron(
-						fv,
-						v_rest,
-						freset, 
-						c_m,
-						tau_m, 
-						frefractory,
-						tau_syn_e,tau_syn_i, 
-						fthreshold,
-						i_offset, dt));  
+					fv,
+					v_rest,
+					freset, 
+					c_m,
+					tau_m, 
+					frefractory,
+					tau_syn_e,tau_syn_i, 
+					fthreshold,
+					i_offset, dt));  
 
 		Population *p1 = c.createPopulation(0, n1, 
 				LIFNeuron(
-						fv,
-						v_rest,
-						freset, 
-						c_m,
-						tau_m, 
-						frefractory,
-						tau_syn_e,tau_syn_i, 
-						fthreshold,
-						0, dt));  
+					fv,
+					v_rest,
+					freset, 
+					c_m,
+					tau_m, 
+					frefractory,
+					tau_syn_e,tau_syn_i, 
+					fthreshold,
+					0, dt));  
 		print_mem("After build neuron");
 
 		real * weight01 = getConstArray((real)(1e-9)*w1/n0, n0*n1);
@@ -115,9 +115,16 @@ int main(int argc, char **argv)
 	}
 
 	MNSim mn(&c, dt);	//gpu
-	mn.build_net(parts);
-	mn.save_net("round_mpi_4_39999_39999_1_8");
-	// mn.run(run_time);	
+
+	if (node_id == 0) {
+		mn.build_net(parts);
+		char name[1024];
+		sprintf(name, "%s_%d_%ld_%ld_%d_%d", "round_mpi", parts, n0, n1, fr, delay_step); 
+		mn.save_net(name);
+		// mn.run(run_time);	
+	}
+
+	MPI_Barrier(MPI_COMM_WORLD);
 
 	end=clock(); //time(NULL);
 	printf("exec time=%lf seconds\n",(double)(end-start) / CLOCKS_PER_SEC);
