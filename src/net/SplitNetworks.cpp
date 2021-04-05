@@ -3,6 +3,28 @@
 
 void Network::splitNetwork(SplitType split)
 {
+
+	map<Type, vector<vector<ID>>> n2s_rev;
+	for (auto iter = _neurons.begin(); iter != _neurons.end(); iter++) {
+		n2s_rev[iter->first].resize(iter->second->size());
+		_idx2node[iter->first].resize(iter->second->size());
+	}
+
+	for (auto iter = _synapses.begin(); iter != _synapses.end(); iter++) {
+		_idx2node[iter->first].resize(iter->second->size());
+	}
+
+	for (auto ti = _conn_s2n.begin(); ti != _conn_s2n.end(); ti++) {
+		for (size_t idx = 0; idx < ti->second.size(); idx++) {
+			ID &t = ti->second[idx];
+			n2s_rev[t.type()][t.id()].push_back(ID(ti->first, idx));
+		}
+	}
+
+	if (_node_num <= 1) {
+		return;
+	}
+
 	switch (split) {
 		case NeuronBalance:
 			{
@@ -14,12 +36,10 @@ void Network::splitNetwork(SplitType split)
 					Type t = t_iter->first;
 					for (size_t i=0; i<t_iter->second->size(); i++) {
 						ID id(t, 0, i);
-						_nid2node[id] = node_idx;
+						_idx2node[t][i] = node_idx;
 						neuron_count += 1;
-						for (auto iter = n2s_conn_rev[id].begin(); iter != n2s_conn_rev[id].end(); iter++) {
-							for (auto siter = iter->second.begin(); siter != iter->second.end(); siter++) {
-								_sid2node[*siter] = node_idx;
-							}
+						for (auto siter = n2s_rev[t][i].begin(); siter != n2s_rev[t][i].end(); siter++) {
+							_idx2node[siter->type()][siter->id()] = node_idx;
 						}
 						if (neuron_count>= (node_idx+1) * neuron_per_node && node_idx < _node_num - 1) {
 							node_idx++;	
@@ -37,12 +57,10 @@ void Network::splitNetwork(SplitType split)
 					for (size_t i=0; i<t_iter->second->size(); i++) {
 						ID id(t, 0, i);
 						int node_idx = neuron_count % _node_num;
-						_nid2node[id] = node_idx;
+						_idx2node[t][i] = node_idx;
 						neuron_count += 1;
-						for (auto iter = n2s_conn_rev[id].begin(); iter != n2s_conn_rev[id].end(); iter++) {
-							for (auto siter = iter->second.begin(); siter != iter->second.end(); siter++) {
-								_sid2node[*siter] = node_idx;
-							}
+						for (auto siter = n2s_rev[t][i].begin(); siter != n2s_rev[t][i].end(); siter++) {
+							_idx2node[siter->type()][siter->id()] = node_idx;
 						}
 					}
 				}
@@ -63,13 +81,11 @@ void Network::splitNetwork(SplitType split)
 					Type t = t_iter->first;
 					for (size_t i=0; i<t_iter->second->size(); i++) {
 						ID id(t, 0, i);
-						_nid2node[id] = node_idx;
-						for (auto iter = n2s_conn_rev[id].begin(); iter != n2s_conn_rev[id].end(); iter++) {
-							for (auto siter = iter->second.begin(); siter != iter->second.end(); siter++) {
-								_sid2node[*siter] = node_idx;
-							}
-							synapse_count += iter->second.size();
+						_idx2node[t][i] = node_idx;
+						for (auto siter = n2s_rev[t][i].begin(); siter != n2s_rev[t][i].end(); siter++) {
+							_idx2node[siter->type()][siter->id()] = node_idx;
 						}
+						synapse_count += n2s_rev[t][i].size();
 						if (synapse_count >= (node_idx+1) * synapse_per_node && node_idx < _node_num - 1) {
 							node_idx++;	
 						}
@@ -77,6 +93,8 @@ void Network::splitNetwork(SplitType split)
 				}
 			}
 	}
+
+	n2s_rev.clear();
 
 	return;
 }

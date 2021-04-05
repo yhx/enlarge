@@ -80,6 +80,8 @@ private:
 	// void mapIDtoIdx(GNetwork *net);
 	// bool checkIDtoIdx();
 	
+	size_t add_type_conn(Type type, size_t size);
+	
 	void splitNetwork(SplitType split);
 	void update_status();
 	void update_status_splited();
@@ -99,8 +101,10 @@ private:
 
 public:
 	/** Cross Node Data **/
-	map<ID, int> _nid2node;
-	map<ID, int> _sid2node;
+	map<Type, vector<int>> _idx2node;
+	// map<ID, int> _nid2node;
+	// map<ID, int> _sid2node;
+
 	CrossTypeInfo_t _neuron_nums;
 	CrossTypeInfo_t _synapse_nums;
 	CrossTypeInfo_t _buffer_offsets;
@@ -129,11 +133,13 @@ public:
 	map<Type, Synapse*> _synapses;
 	vector<Population *> _populations;
 
-	map<ID, map<unsigned int, vector<ID>>> n2s_conn;
-	map<ID, ID> s2n_conn;
+	map<Type, vector<map<unsigned int, vector<ID>>>> _conn_n2s;
+	map<Type, vector<ID>> _conn_s2n;
+	// map<ID, map<unsigned int, vector<ID>>> n2s_conn;
+	// map<ID, ID> s2n_conn;
 
-	map<ID, map<unsigned int, vector<ID>>> n2s_conn_rev;
-	map<ID, ID> s2n_conn_rev;
+	// map<ID, map<unsigned int, vector<ID>>> n2s_conn_rev;
+	// map<ID, ID> s2n_conn_rev;
 
 	int _max_delay;
 	int _min_delay;
@@ -177,6 +183,7 @@ Population * Network::createPopulation(size_t num, N templ)
 		neuron->append(&templ, num);
 		pp1 = new Population(neuron, num_t, num);
 	}
+	add_type_conn(type, num);
 
 	_populations.push_back(pp1);
 
@@ -198,6 +205,7 @@ int Network::connect(Population *p_src, Population *p_dst, S templ, SpikeType sp
 		offset = _synapses[type]->size();
 		_synapses[type]->append(&templ, size);
 	}
+	add_type_conn(type, size);
 
 	int count = 0;
 	for (size_t s=0; s<src_size; s++) {
@@ -223,6 +231,7 @@ int Network::connect(Population *p_src, size_t src, Population *p_dst, size_t ds
 		offset = _synapses[type]->size();
 		_synapses[type]->append(&templ);
 	}
+	add_type_conn(type, 1);
 
 	connect_(ID(p_src->type(), 0, p_src->offset()+src), ID(p_dst->type(), sp, p_dst->offset()+dst), ID(type, 0, offset), _synapses[type]->delay()[offset]);
 

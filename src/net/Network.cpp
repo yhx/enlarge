@@ -83,13 +83,37 @@ int Network::set_node_num(int node_num)
 	return _node_num;
 }
 
+size_t Network::add_type_conn(Type type, size_t size)
+{
+	if (type < Static) {
+		if (_conn_n2s.find(type) == _conn_n2s.end()) {
+			_conn_n2s[type].resize(size);
+		} else {
+			size_t tmp = _conn_n2s[type].size();
+			_conn_n2s[type].resize(tmp + size);
+		}
+		return _conn_n2s[type].size();
+	} else {
+		if (_conn_s2n.find(type) == _conn_s2n.end()) {
+			_conn_s2n[type].resize(size);
+		} else {
+			size_t tmp = _conn_s2n[type].size();
+			_conn_s2n[type].resize(tmp + size);
+		}
+		return _conn_s2n[type].size();
+	}
+
+}
+
 int Network::connect_(ID src, ID dst, ID syn, unsigned int delay)
 {
-	n2s_conn[src][delay].push_back(syn);
-	s2n_conn[syn] = dst;
+	_conn_n2s[src.type()][src.id()][delay].push_back(syn);
+	_conn_s2n[syn.type()][syn.id()] = dst;
+	// n2s_conn[src][delay].push_back(syn);
+	// s2n_conn[syn] = dst;
 
-	n2s_conn_rev[dst.mask_offset()][delay].push_back(syn);
-	s2n_conn_rev[syn] = src;
+	// n2s_conn_rev[dst.mask_offset()][delay].push_back(syn);
+	// s2n_conn_rev[syn] = src;
 	return 1;
 }
 
@@ -107,6 +131,7 @@ int Network::connect(Population *p_src, Population *p_dst, real weight, real del
 		StaticSynapse t(weight, delay, tau, _dt, size);
 		_synapses[type]->append(&t, size);
 	}
+	add_type_conn(type, size);
 
 	int count = 0;
 	for (size_t s=0; s<src_size; s++) {
@@ -137,6 +162,7 @@ int Network::connect(Population *p_src, Population *p_dst, real *weight, real *d
 		StaticSynapse t(weight, delay, tau, _dt, size);
 		_synapses[type]->append(&t, size);
 	}
+	add_type_conn(type, size);
 
 	int count = 0;
 	for (size_t s=0; s<src_size; s++) {
@@ -167,6 +193,7 @@ int Network::connect(Population *p_src, Population *p_dst, real *weight, real *d
 		StaticSynapse t(weight, delay, tau, _dt, size);
 		_synapses[type]->append(&t, size);
 	}
+	add_type_conn(type, size);
 
 	int count = 0;
 	for (size_t s=0; s<src_size; s++) {
@@ -197,6 +224,7 @@ int Network::connect(Population *p_src, Population *p_dst, real *weight, real *d
 		StaticSynapse t(weight, delay, 0.0, _dt, size);
 		_synapses[type]->append(&t, size);
 	}
+	add_type_conn(type, size);
 
 	int count = 0;
 	for (size_t s=0; s<src_size; s++) {
@@ -225,6 +253,7 @@ int Network::connect(Population *p_src, size_t src, Population *p_dst, size_t ds
 		StaticSynapse t(weight, delay, tau, _dt);
 		_synapses[type]->append(&t);
 	}
+	add_type_conn(type, 1);
 
 	size_t s_offset = offset;
 	connect_(ID(p_src->type(), 0, p_src->offset()+src), 

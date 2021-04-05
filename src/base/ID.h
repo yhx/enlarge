@@ -40,6 +40,10 @@ public:
 	ID(uint64_t id) {
 		_id = id;
 	}
+
+	ID(Type type, uint64_t id) : ID(type, 0, id) {
+	}
+
 	ID(Type type,  uint64_t offset, uint64_t id) {
 		_id = id;
 		set_type(type);
@@ -52,7 +56,8 @@ public:
 		_id = (_id & TYPE_MASK) + ((t<<(64-TYPE_BITS)) & TYPE_UNMASK);
 	}
 
-	Type type() {
+	Type type() const
+	{
 		return static_cast<Type>((_id >> (64-TYPE_BITS)) & TYPE_CAST);
 	}
 
@@ -61,15 +66,18 @@ public:
 		_id = (_id & OFFSET_MASK) + ((t<<(64-TYPE_BITS-OFFSET_BITS)) & OFFSET_UNMASK);
 	}
 
-	unsigned int offset() {
+	unsigned int offset() const
+	{
 		return ((_id >> (64-TYPE_BITS-OFFSET_BITS)) & OFFSET_CAST);
 	}
 
-	ID mask_offset() {
+	ID mask_offset() 
+	{
 		return ID(_id & OFFSET_MASK);
 	}
 
-	size_t id() {
+	size_t id() const 
+	{
 		return (_id & ID_UNMASK);
 	}
 

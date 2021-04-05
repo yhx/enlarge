@@ -113,12 +113,12 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 			for (size_t n=0; n<ret->pNeuronNums[i+1]-ret->pNeuronNums[i]; n++) {
 				ID nid(t, 0, n);
 				size_t n_offset = _neuron_num*(d-_min_delay) + _neurons_offset[t]+n;
-				for (auto s_iter = n2s_conn[nid][d].begin(); s_iter != n2s_conn[nid][d].end(); s_iter++) {
+				for (auto s_iter = _conn_n2s[t][n][d].begin(); s_iter != _conn_n2s[t][n][d].end(); s_iter++) {
 					int s_idx = tp2idx[s_iter->type()];
 					Connection * c = ret->ppConnections[s_idx];
 					c->pDelayStart[n_offset] = start[s_idx];
 					c->pSidMap[syn_idx[s_idx]] = s_iter->id();
-					ID target = s2n_conn[*s_iter];
+					ID target = _conn_s2n[s_iter->type()][s_iter->id()];
 					c->dst[syn_idx[s_idx]] = _buffer_offsets[0][target.type()] + target.offset() * _neurons[target.type()]->size() + target.id();
 					syn_idx[s_idx]++;
 				}
