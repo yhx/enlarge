@@ -13,7 +13,7 @@ using std::string;
 
 class MultiNodeSimulator : public Simulator {
 public:
-	MultiNodeSimulator(const string &path);
+	MultiNodeSimulator(const string &path, real dt);
 
 	MultiNodeSimulator(Network *network, real dt);
 	~MultiNodeSimulator();

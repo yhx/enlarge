@@ -66,7 +66,7 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 {
 	struct sysinfo sinfo;
 	sysinfo(&sinfo);
-	printf("Before build, MEM used: %lfGB\n", static_cast<double>((sinfo.totalram - sinfo.freeram)/1024.0/1024.0/1024.0));
+	print_mem("Before build");
 
 	update_status();
 
@@ -138,7 +138,7 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 	}
 
 	sysinfo(&sinfo);
-	printf("Finish build, MEM used: %lfGB\n", static_cast<double>((sinfo.totalram - sinfo.freeram)/1024.0/1024.0/1024.0));
+	print_mem("Finish build");
 
 	return ret;
 }

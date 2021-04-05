@@ -114,7 +114,8 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 	checkCudaErrors(cudaMemGetInfo(&fmem, &tmem));
 	printf("Thread %d, GPUMEM used: %lfGB\n", network->_nodeIdx, static_cast<double>((tmem - fmem)/1024.0/1024.0/1024.0));
 
-	// to_attach();
+	to_attach();
+	printf("Start runing for %d cycles\n", network->_simCycle);
 
 	for (int time=0; time<network->_simCycle; time++) {
 #ifdef PROF

@@ -33,7 +33,7 @@ MultiNodeSimulator::MultiNodeSimulator(Network *network, real dt) : Simulator(ne
 	printf("Processor %s, rank %d out of %d processors\n", processor_name, _node_id, _node_num);
 }
 
-MultiNodeSimulator::MultiNodeSimulator(const string &path) : Simulator(NULL, 1e-4)
+MultiNodeSimulator::MultiNodeSimulator(const string &path, real dt) : Simulator(NULL, dt)
 {
 	_node_nets = NULL;
 	_node_datas = NULL;
@@ -223,6 +223,10 @@ int MultiNodeSimulator::run(real time, FireInfo &log, bool gpu)
 	if (!(_network_data && _data)) {
 		distribute(info, sim_cycle);
 	} 
+
+	if (_network_data->_simCycle != sim_cycle) {
+		_network_data->_simCycle = sim_cycle;
+	}
 
 	if (gpu) {
 		run_node_gpu(_network_data, _data);

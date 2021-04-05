@@ -11,12 +11,13 @@ int main(int argc, char **argv)
 	int node_id = 0;
 	MPI_Comm_rank(MPI_COMM_WORLD, &node_id);
 
+	const real dt=1e-4;
 	const real run_time=1000e-3;
 
 
 	time_t start,end;
 	start=clock(); //time(NULL);
-	MNSim mn("round_mpi_4_39999_39999_1_8");	//gpu
+	MNSim mn("round_mpi_4_39999_39999_1_8", dt);	//gpu
 	mn.run(run_time);	
 
 	end=clock(); //time(NULL);

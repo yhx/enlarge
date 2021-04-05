@@ -19,6 +19,8 @@ const int NODE_NUM = 2;
 const int N = 2;
 const int DELAY = 3;
 
+const real dt = 1e-4;
+
 int node_id = -1;
 int node_num = -1;
 
@@ -103,7 +105,7 @@ TEST(MPITEST, MSGTest) {
 }
 
 TEST(MPITEST, SAVE_LOAD_TEST) {
-	MNSim mn("multi_node_test");
+	MNSim mn("multi_node_test", dt);
 	ASSERT_TRUE(compareDistriNet(mn._network_data, network));
 	ASSERT_TRUE(isEqualCND(mn._data, data));
 }
@@ -111,7 +113,6 @@ TEST(MPITEST, SAVE_LOAD_TEST) {
 int main(int argc, char **argv)
 {
 	MPI_Init(&argc, &argv);
-	real dt = 1e-4;
 	Network c(dt);
 
 	MPI_Comm_rank(MPI_COMM_WORLD, &node_id);
