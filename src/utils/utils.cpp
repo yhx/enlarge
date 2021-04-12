@@ -2,7 +2,30 @@
  * usually just for fun.
  * Mon March 14 2016
  */
+#if defined(_WIN32)
+#include <direct.h>
 
+// #elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
+// #include <unistd.h>
+// #include <sys/resource.h>
+// 
+// #if defined(__APPLE__) && defined(__MACH__)
+// #include <mach/mach.h>
+// 
+// #elif (defined(_AIX) || defined(__TOS__AIX__)) || (defined(__sun__) || defined(__sun) || defined(sun) && (defined(__SVR4) || defined(__svr4__)))
+// #include <fcntl.h>
+// #include <procfs.h>
+
+#elif defined(__linux__) || defined(__linux) || defined(linux) || defined(__gnu_linux__)
+#include<sys/stat.h>
+#include<sys/types.h>
+
+// #endif
+#else
+#error "Cannot include file for an unknown OS."
+#endif
+
+#include <errno.h>
 #include <iostream>
 
 #include "../third_party/util/mem.h"
@@ -173,3 +196,46 @@ void log_array_noendl(FILE *f, double *array, size_t size)
 	}
 }
 
+void system_c(const char *cmd)
+{
+	int status = system(cmd);
+	
+	if (-1 == status) {
+		printf("%s: system error\n", cmd);
+	} else {
+		// printf("%s: exit status value = [0x%x]\n", cmd, status);
+		if (WIFEXITED(status))
+		{
+			if (0 != WEXITSTATUS(status))
+			{
+				printf("%s: run shell script fail, script exit code: %d\n", cmd, WEXITSTATUS(status));
+			}
+		}
+		else
+		{
+			printf("%s: exit status = [%d]\n", cmd, WEXITSTATUS(status));
+		}
+	}
+}
+
+void mkdir(const char *dir) 
+{
+#if defined(_WIN32)
+	int status = _mkdir(dir);
+	if (-1 == status) {
+		printf("mkdir %s error %d\n", dir, errno);
+	}
+#elif defined(__linux__) || defined(__linux) || defined(linux) || defined(__gnu_linux__)
+	int status = 0;
+	struct stat st = {0};
+
+	if (stat(dir, &st) == -1) {
+		status = mkdir(dir, 0777);
+	}
+	if (-1 == status) {
+		printf("mkdir %s error %d\n", dir, errno);
+	}
+#else
+#error "Cannot define mkdir() for an unknown OS."
+#endif
+}

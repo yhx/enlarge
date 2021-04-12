@@ -1,4 +1,5 @@
 
+#include "../utils/utils.h"
 #include "Network.h"
 
 void Network::splitNetwork(SplitType split)
@@ -94,7 +95,9 @@ void Network::splitNetwork(SplitType split)
 			}
 	}
 
+	print_mem("before clear n2s_rev");
 	n2s_rev.clear();
+	print_mem("after clear n2s_rev");
 
 	return;
 }

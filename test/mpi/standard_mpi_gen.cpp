@@ -12,9 +12,9 @@ int main(int argc, char **argv)
 
 	time_t start,end;
 	start=clock(); //time(NULL);
-	if(argc !=4)
+	if(argc !=6 && argc != 7)
 	{
-		printf("Need 3 paras. For example\n FR 1%%: %s depth num_neuron fire_rate\n", argv[0]);
+		printf("Need 5/6 paras. For example\n FR 1%%: %s depth num_neuron fire_rate delay net_parts [algorithm]\n", argv[0]);
 		// printf("Need 7 paras. For example\n FR 1%%: %s depth num_neuron 0.7 0.5 0.6 0.3 6\n FR 5%%: %s depth num_neuron 0.7 0.9 0.6 0.2 6\n FR 20%%: %s depth num_neuron 1.3 1 2 1 50\n FR 50%%: %s depth num_neuron 2.7 3 2 1 20\n FR 65%%: %s depth num_neuron 4 2 5 3 20\n", argv[0], argv[0], argv[0], argv[0], argv[0]);
 		return 0;
 	}
@@ -22,11 +22,20 @@ int main(int argc, char **argv)
 	const int N=atoi(argv[2]);
 
 	const int fr = atoi(argv[3]);
+	const int delay_step = atoi(argv[4]);
+
+	const int parts = atoi(argv[5]);
+
 	real w1=0.0;
 	real w2=0.0;
 	real w3=0.0;
 	real w4=0.0;
 	int who=0;
+
+	SplitType split = SynapseBalance;
+	if (argc == 7) {
+		 split = (SplitType)atoi(argv[6]);
+	}
 
 	switch(fr) {
 		case 5:
@@ -101,7 +110,7 @@ int main(int argc, char **argv)
 		real * weight6_30 = getConstArray((real)(1e-9)*w2 /N, N*N);
 		real * weight5 = getConstArray((real)(1e-9)*w3 /N, N*N);
 		real * weight3 = getConstArray((real)(-1e-9)*w4 /N, N*N);
-		real * delay = getConstArray((real)0.1e-3, N*N);
+		real * delay = getConstArray((real)(delay_step * dt), N*N);
 
 		enum SpikeType type=Inh;
 		SpikeType *ii = getConstArray(type, N*N);
@@ -141,13 +150,21 @@ int main(int argc, char **argv)
 	}
 
 
-#if 0
-	STSim st(&c, dt);	// cpu
-	st.run(run_time);
-#else
 	MNSim mn(&c, dt);	//gpu
-	mn.run(run_time);	
-#endif
+	if (node_id == 0) {
+		char name[1024];
+		if (argc == 7) {
+			mn.build_net(parts, split);
+			sprintf(name, "%s_%d_%d_%d_%d_%d_%d", "standard_mpi", parts, depth, N, fr, delay_step, split); 
+		} else {
+			mn.build_net(parts);
+			sprintf(name, "%s_%d_%d_%d_%d_%d", "standard_mpi", parts, depth, N, fr, delay_step); 
+		}
+		mn.save_net(name);
+		// mn.run(run_time);	
+	}
+
+	MPI_Barrier(MPI_COMM_WORLD);
 
 	end=clock(); //time(NULL);
 	printf("exec time=%lf seconds\n",(double)(end-start) / CLOCKS_PER_SEC);

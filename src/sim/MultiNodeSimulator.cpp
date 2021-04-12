@@ -45,6 +45,7 @@ MultiNodeSimulator::MultiNodeSimulator(const string &path, real dt) : Simulator(
 	int name_len;
 	MPI_Get_processor_name(processor_name, &name_len);
 	printf("Processor %s, rank %d out of %d processors\n", processor_name, _node_id, _node_num);
+	printf("Data %s/%d\n", path.c_str(), _node_id);
 	to_attach();
 	load_net(path);
 }
@@ -72,7 +73,7 @@ int MultiNodeSimulator::run(real time, FireInfo &log)
 	return 0;
 }
 
-int MultiNodeSimulator::build_net(int num)
+int MultiNodeSimulator::build_net(int num, SplitType split)
 {
 
 	SimInfo info(_dt);
@@ -85,7 +86,7 @@ int MultiNodeSimulator::build_net(int num)
 			_node_num = num;
 		}
 		_network->set_node_num(num);
-		_node_nets = _network->buildNetworks(info);
+		_node_nets = _network->buildNetworks(info, split);
 		for (int i=0; i<_node_num; i++) {
 			_node_nets[i]._simCycle = 0;
 			_node_nets[i]._nodeIdx = i;
@@ -103,8 +104,7 @@ int MultiNodeSimulator::build_net(int num)
 
 int MultiNodeSimulator::save_net(const string &path)
 {
-	string cmd = "mkdir -p " + path;
-	system(cmd.c_str());
+	mkdir(path.c_str());
 	string name = path + "/meta.data";
 	FILE *f = fopen_c(name.c_str(), "w");
 	fwrite_c(&(_node_num), 1, f);
@@ -112,15 +112,13 @@ int MultiNodeSimulator::save_net(const string &path)
 
 	if (_network && _data) {
 			string path_i = path + "/" + std::to_string(_node_id);
-			cmd = "mkdir -p " + path_i;
-			system(cmd.c_str());
+			mkdir(path_i.c_str());
 			saveDistriNet(_network_data, path_i);
 			saveCND(_data, path_i);
 	} else if (_node_nets && _node_datas) {
 		for (int i=0; i<_node_num; i++) {
 			string path_i = path + "/" + std::to_string(i);
-			cmd = "mkdir -p " + path_i;
-			system(cmd.c_str());
+			mkdir(path_i.c_str());
 			saveDistriNet(&(_node_nets[i]), path_i);
 			saveCND(&(_node_datas[i]), path_i);
 		}

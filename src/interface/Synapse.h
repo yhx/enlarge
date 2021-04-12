@@ -12,7 +12,7 @@
 
 class Synapse: public Model {
 public:
-	Synapse(Type type, int num, size_t offset=0, int buffer_size=0) : Model(type, num, offset, buffer_size) {}
+	Synapse(Type type, size_t num, size_t offset=0, int buffer_size=0) : Model(type, num, offset, buffer_size) {}
 	virtual ~Synapse() = 0;
 
 	const vector<unsigned int> & delay() {

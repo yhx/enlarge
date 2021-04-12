@@ -13,10 +13,10 @@ int main(int argc, char **argv)
 
 	time_t start,end;
 	start=clock(); //time(NULL);
-	if(argc !=6)
+	if(argc !=6 && argc != 7)
 	{
 		if (node_id == 0) {
-			printf("Need 5 paras. For example\n FR 1%%: %s n0 n1 fire_rate delay net_parts\n", argv[0]);
+			printf("Need 5/6 paras. For example\n FR 1%%: %s n0 n1 fire_rate delay net_parts [algorithm]\n", argv[0]);
 		}
 		return 0;
 	}
@@ -27,6 +27,11 @@ int main(int argc, char **argv)
 	const int delay_step = atoi(argv[4]);
 
 	const int parts = atoi(argv[5]);
+
+	SplitType split = SynapseBalance;
+	if (argc == 7) {
+		 split = (SplitType)atoi(argv[6]);
+	}
 
 	real w1=0.0;
 	real w2=0.0;
@@ -94,7 +99,7 @@ int main(int argc, char **argv)
 
 		real * weight01 = getConstArray((real)(1e-9)*w1/n0, n0*n1);
 		real * weight10 = getConstArray((real)(1e-9)*w2/n1, n0*n1);
-		real * delay = getConstArray((real)(delay_step * 0.1e-3), n0*n1);
+		real * delay = getConstArray((real)(delay_step * dt), n0*n1);
 
 		enum SpikeType type=Inh;
 		SpikeType *ii = getConstArray(type, n0*n1);
@@ -117,9 +122,15 @@ int main(int argc, char **argv)
 	MNSim mn(&c, dt);	//gpu
 
 	if (node_id == 0) {
-		mn.build_net(parts);
 		char name[1024];
-		sprintf(name, "%s_%d_%ld_%ld_%d_%d", "round_mpi", parts, n0, n1, fr, delay_step); 
+
+		if (argc == 7) {
+			mn.build_net(parts, split);
+			sprintf(name, "%s_%d_%ld_%ld_%d_%d_%d", "round_mpi", parts, n0, n1, fr, delay_step, split); 
+		} else {
+			mn.build_net(parts);
+			sprintf(name, "%s_%d_%ld_%ld_%d_%d", "round_mpi", parts, n0, n1, fr, delay_step); 
+		}
 		mn.save_net(name);
 		// mn.run(run_time);	
 	}

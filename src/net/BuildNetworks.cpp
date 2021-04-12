@@ -58,6 +58,7 @@ void Network::update_status_splited()
 		cout << "Node " << iter->first << ":" << endl;
 		for (auto j=iter->second.begin(); j!=iter->second.end(); j++) {
 			cout << "Type " << j->first << " num: " << j->second << endl;
+			assert(j->second <= INT_MAX);
 		}
 	}
 
@@ -66,6 +67,7 @@ void Network::update_status_splited()
 		cout << "Node " << iter->first << ":" << endl;
 		for (auto j=iter->second.begin(); j!=iter->second.end(); j++) {
 			cout << "Type " << j->first << " num: " << j->second << endl;
+			assert(j->second <= INT_MAX);
 		}
 	}
 }
@@ -263,14 +265,17 @@ DistriNetwork* Network::buildNetworks(const SimInfo &info, SplitType split, bool
 
 	printf("===Arrange Network\n");
 	arrangeNet(net, type_offset, neuron_offset, neuron_count, synapse_offset, synapse_count); 
+	print_mem("after arrange network");
 
 	printf("===Arrange Neuron\n");
 	arrangeNeuron(net, type_offset, neuron_offset, neuron_count); 
+	print_mem("after arrange neuron");
 	printf("===Arrange Connection\n");
 	for (auto d=_min_delay; d<_max_delay+1; d++) {
 		arrangeLocal(net, type_offset, neuron_offset, synapse_offset, neuron_count, synapse_count, n2s_count, d);
 		arrangeCross(net, type_offset, synapse_count, n2s_count, cross_idx, node_n_offset, d);
 	}
+	print_mem("after arrange connection");
 
 	for (auto node = _neuron_nums.begin(); node != _neuron_nums.end(); node++) {
 		for (auto t = node->second.begin(); t != node->second.end(); t++) {

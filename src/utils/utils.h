@@ -171,4 +171,8 @@ void shuffle(T1 * res, T1 *array, T2 *idx, size_t size)
 	}
 }
 
+void system_c(const char *cmd);
+
+void mkdir(const char *cmd);
+
 #endif /* UTILS_H */

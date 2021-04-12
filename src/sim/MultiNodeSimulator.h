@@ -20,7 +20,7 @@ public:
 
 	using Simulator::run;
 	int mpi_init(int *argc, char ***argv);
-	int build_net(int num = 0);
+	int build_net(int num = 0, SplitType split=SynapseBalance);
 	int save_net(const string &name);
 	int load_net(const string &name);
 	int distribute(SimInfo &, int);
