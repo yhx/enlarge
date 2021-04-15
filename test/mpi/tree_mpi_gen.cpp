@@ -60,13 +60,7 @@ int main(int argc, char **argv)
 			who = 6;
 	};
 
-	// const real w1=atof(argv[3]);
-	// const real w2=atof(argv[4]);
-	// const real w3=atof(argv[5]);
-	// const real w4=atof(argv[6]);
-	// const int who=atoi(argv[7]);
-
-	printf("depth=%d N=%d\n",depth,N);
+	printf("depth=%d N=%d\n", depth, N);
 	printf("w1=%f w2=%f w3=%f w4=%f who=%d\n", w1, w2, w3, w4, who);
 	const real fthreshold=-54e-3;
 	const real freset=-60e-3;
@@ -89,16 +83,17 @@ int main(int argc, char **argv)
 
 	if (node_id == 0) {
 
-		Population *g[depth+1];
+		int tree_size = (int)pow(2.0, depth+1) - 1;
+		Population **g = new Population *[tree_size];
 
-		g[1]=c.createPopulation(1, N, LIFNeuron(
+		g[0]=c.createPopulation(1, N, LIFNeuron(
 						fv,v_rest,freset,
 						c_m,tau_m,
 						frefractory,tau_syn_e,tau_syn_i,
 						fthreshold,i_offset, dt
 						));
 
-		for(int i=2;i<=depth;i++)
+		for(int i=1;i<=tree_size;i++)
 			g[i] = c.createPopulation(i, N, LIFNeuron(
 							fv,v_rest,freset,
 							c_m,tau_m,
@@ -106,45 +101,44 @@ int main(int argc, char **argv)
 							fthreshold,0, dt
 							));
 
-		real * weight6 = getConstArray((real)(1e-9)*w1 /N, N*N);
-		real * weight6_30 = getConstArray((real)(1e-9)*w2 /N, N*N);
-		real * weight5 = getConstArray((real)(1e-9)*w3 /N, N*N);
-		real * weight3 = getConstArray((real)(-1e-9)*w4 /N, N*N);
+		real * weight1 = getConstArray((real)(1e-9)*w1 /N, N*N);
+		real * weight2 = getConstArray((real)(1e-9)*w2 /N, N*N);
+		real * weight3 = getConstArray((real)(1e-9)*w3 /N, N*N);
+		real * weight4 = getConstArray((real)(-1e-9)*w4 /N, N*N);
 		real * delay = getConstArray((real)(delay_step * dt), N*N);
 
 		enum SpikeType type=Inh;
 		SpikeType *ii = getConstArray(type, N*N);
 
-		for(int i=2;i<=depth;i++)
+		for(int i=1;i<depth;i++)
 		{
-
-			c.connect(g[i-1], g[i], weight6, delay, NULL, N*N);
-			if (i % who ==0)
-				c.connect(g[1], g[i], weight6_30, delay, NULL, N*N);	
+			int start = (int)pow(2.0, i) - 1;
+			int end = (int)pow(2.0, i+1) - 1;
+			if (i%4 == 1) {
+				for (int j=start; j<end; j++) {
+					c.connect(g[(j-1)/2], g[j], weight1, delay, NULL, N*N);
+				}
+			} else if (i%4 == 2) {
+				for (int j=start; j<end; j++) {
+					c.connect(g[(j-1)/2], g[j], weight2, delay, NULL, N*N);
+				}
+			} else if (i%4 == 3) {
+				for (int j=start; j<end; j++) {
+					c.connect(g[(j-1)/2], g[j], weight3, delay, NULL, N*N);
+				}
+			} else {
+				for (int j=start; j<end; j++) {
+					c.connect(g[(j-1)/2], g[j], weight4, delay, NULL, N*N);
+					c.connect(g[0], g[j], weight1, delay, NULL, N*N);
+				}
+			}
 		}
 
-		Population *p[depth+1];
-		int i=1;
-		while(i+1<=depth)
-		{
-			p[i] = c.createPopulation(i+depth, N, LIFNeuron(
-							fv,v_rest,freset,
-							c_m,tau_m,
-							frefractory,tau_syn_e,tau_syn_i,
-							fthreshold,0, dt
-							));
-			c.connect(g[i], p[i], weight5, delay, NULL, N*N);
-			c.connect(p[i], g[i+1], weight3, delay, ii, N*N);
-			i+=4;
-
-
-		}
-		//Network.connect(population1, population2, weight_array, delay_array, Exec or Inhi array, num)
 		
-		delArray(weight6);
-		delArray(weight6_30);
-		delArray(weight5);
+		delArray(weight1);
+		delArray(weight2);
 		delArray(weight3);
+		delArray(weight4);
 		delArray(delay);
 		delArray(ii);
 	}

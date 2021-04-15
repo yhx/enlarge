@@ -67,6 +67,63 @@ void Network::splitNetwork(SplitType split)
 				}
 			}
 			break;
+		case GrpRR:
+			{
+				printf("Group RoundRobin\n");
+				size_t neuron_count = 0;
+				size_t node_idx = 0;
+				for (auto t_iter = _neurons.begin(); t_iter != _neurons.end(); t_iter++) {
+					Type t = t_iter->first;
+					for (size_t i=0; i<t_iter->second->size(); i++) {
+						ID id(t, 0, i);
+
+						_idx2node[t][i] = node_idx;
+						for (auto siter = n2s_rev[t][i].begin(); siter != n2s_rev[t][i].end(); siter++) {
+							_idx2node[siter->type()][siter->id()] = node_idx;
+						}
+
+						if (neuron_count % 32 == 31) {
+							node_idx = (node_idx+1) % _node_num;
+							neuron_count = 0;
+						} else {
+							neuron_count += 1;
+						}
+					}
+				}
+			}
+			break;
+		case SynBestFit:
+			{
+				printf("Synapse Bestfit\n");
+				vector<int> neu_count(_node_num, 0);
+				vector<int> syn_count(_node_num, 0);
+				const int alpha = 100;
+				for (auto t_iter = _neurons.begin(); t_iter != _neurons.end(); t_iter++) {
+					Type t = t_iter->first;
+					for (size_t i=0; i<t_iter->second->size(); i++) {
+						ID id(t, 0, i);
+
+						int node_idx = 0;
+						int count = INT_MAX;
+
+						for (int node = 0; node < _node_num; node++) {
+							int v = neu_count[node] * alpha + syn_count[node];
+							if (count > v) {
+								count = v;
+								node_idx = node;
+							}
+						}
+
+						_idx2node[t][i] = node_idx;
+						neu_count[node_idx]++;
+						for (auto siter = n2s_rev[t][i].begin(); siter != n2s_rev[t][i].end(); siter++) {
+							_idx2node[siter->type()][siter->id()] = node_idx;
+						}
+						syn_count[node_idx] += n2s_rev[t][i].size();
+					}
+				}
+			}
+			break;
 		case Balanced:
 			{
 				printf("===BALANCED\n");
