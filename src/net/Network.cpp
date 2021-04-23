@@ -420,8 +420,10 @@ void Network::save_graph()
 	for (auto ti = _conn_n2s.begin(); ti != _conn_n2s.end(); ti++) {
 		for (size_t idx = 0; idx < ti->second.size(); idx++) {
 			size_t nid = _neurons_offset[ti->first]+idx;
-			fwrite_c(&nid, 1, f); 
+			fwrite_c(&nid, 1, f);
 
+			size_t d_s = ti->second[idx].size();
+			fwrite_c(&d_s, 1, f);
 			for (auto di=ti->second[idx].begin();  di!=ti->second[idx].end(); di++) {
 				size_t count_t = di->second.size();
 				unsigned int delay_t = di->first;

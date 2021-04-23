@@ -138,6 +138,7 @@ FILE(GLOB GPU_TEST "test/gpu/*.cpp" "test/gpu/*.c" "test/gpu/*.cu")
 FILE(GLOB MPI_TEST "test/mpi/*.cpp" "test/mpi/*.c" "test/mpi/*.cu")
 FILE(GLOB UNIT_TEST_CPU "test/unit/*.cpp" "test/unit/*.c")
 FILE(GLOB UNIT_TEST_GPU "test/unit/*.cu")
+FILE(GLOB C_SCRIPTS "script/*.cpp" "script/*.c")
 FILE(GLOB TOOLS "test/tool/*.cpp" "test/tool/*.c")
 
 FILE(COPY ${PROJECT_SOURCE_DIR}/CLEAN_ALL.cmake DESTINATION ${CMAKE_BINARY_DIR})
@@ -230,6 +231,11 @@ FOREACH(exec_path ${MPI_TEST})
 ENDFOREACH()
 
 
+FOREACH(c_exe ${C_SCRIPTS})
+	GET_FILENAME_COMPONENT(exec_file ${c_exe} NAME_WE)
+	ADD_EXECUTABLE(${exec_file} ${c_exe})
+	# TARGET_LINK_LIBRARIES(${exec_file} ${TARGET_LIB} ${CUDA_CUFFT_LIBRARIES} ${CPU_LIB}  blas ${BLAS_LIBRARIES} ${PYTHON_LIBRARIES})
+ENDFOREACH()
 
 #ADD_CUSTOM_COMMAND(TARGET multi-gpusim_test
 #	POST_BUILD
