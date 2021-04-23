@@ -19,7 +19,6 @@ int to_metis(const char *in_name, const char *out_name)
 
 	fread_c(&neuron_num, 1, in);
 	fread_c(&synapse_num, 1, in);
-	fprintf(out, "%ld %ld\n", neuron_num, synapse_num);
 
 	conn.resize(neuron_num);
 	for (size_t n=0; n<neuron_num; n++) {
@@ -41,12 +40,11 @@ int to_metis(const char *in_name, const char *out_name)
 		}
 	}
 
-	int syn_num = synapse_num;
+	size_t syn_num = synapse_num;
 	for (size_t n=0; n<neuron_num; n++) {
 		for (auto di=conn[n].begin(); di!=conn[n].end(); di++) {
 			for (auto ti=di->second.begin(); ti!=di->second.end(); ti++) {
 				size_t tid = *ti;
-				fprintf(out, "%ld %u ", tid, di->first);
 				if (find(conn[tid][di->first].begin(), conn[tid][di->first].end(), n) == conn[tid][di->first].end()) {
 					conn[tid][di->first].push_back(n);
 				} else {
@@ -54,8 +52,21 @@ int to_metis(const char *in_name, const char *out_name)
 				}
 			}
 		}
+	}
+
+	fprintf(out, "%ld %ld\n", neuron_num, syn_num);
+	for (size_t n=0; n<neuron_num; n++) {
+		for (auto di=conn[n].begin(); di!=conn[n].end(); di++) {
+			for (auto ti=di->second.begin(); ti!=di->second.end(); ti++) {
+				size_t tid = *ti;
+				fprintf(out, "%ld %u ", tid, di->first);
+			}
+		}
 		fprintf(out, "\n");
 	}
+
+	// fseek(out, 0, SEEK_SET);
+	// fprintf(out, "%ld %ld\n", neuron_num, synapse_num);
 
 	fclose_c(in);
 	fclose_c(out);
