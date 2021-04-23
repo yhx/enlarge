@@ -70,6 +70,10 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 
 	update_status();
 
+#ifdef DEBUG
+	log_graph();
+#endif
+
 	size_t n_type_num = _neurons.size();
 	size_t s_type_num = _synapses.size();
 	// int delta_delay = _max_delay - _min_delay + 1;

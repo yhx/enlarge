@@ -20,6 +20,10 @@ public:
 	virtual void * packup() override;
 	virtual int packup(void *data, size_t dst, size_t src) override;
 
+	virtual real weight(size_t idx) override {
+		return _weight[idx];
+	}
+
 protected:
 	vector<real> _weight;
 	// const static Type type;

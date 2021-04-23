@@ -369,7 +369,73 @@ int Network::reset(const SimInfo &info)
 }
  
 
-void Network::logMap() {
+void Network::logMap() 
+{
+}
+
+void Network::log_graph() 
+{
+	FILE * f1 = fopen_c("n2s.info", "w+");
+	FILE * f2 = fopen_c("n2n.info", "w+");
+	fprintf(f1, "%lu %lu\n", _neuron_num, _synapse_num);
+	fprintf(f2, "%lu %lu\n", _neuron_num, _synapse_num);
+	for (auto ti = _conn_n2s.begin(); ti != _conn_n2s.end(); ti++) {
+		for (size_t idx = 0; idx < ti->second.size(); idx++) {
+			fprintf(f1, "%d_%lu: ", ti->first, idx); 
+			fprintf(f2, "%d_%lu: ", ti->first, idx); 
+			for (auto di=ti->second[idx].begin();  di!=ti->second[idx].end(); di++) {
+				for (auto si=di->second.begin(); si!=di->second.end(); si++) {
+					ID &t = _conn_s2n[si->type()][si->id()];
+					fprintf(f1, "%d_%lu_%e ", si->type(), si->id(), _synapses[si->type()]->weight(si->id())); 
+					fprintf(f2, "%d_%lu ", t.type(), t.id()); 
+				}
+			}
+			fprintf(f1, "\n");
+			fprintf(f2, "\n");
+		}
+	}
+	fclose_c(f1);
+	fclose_c(f2);
+
+	FILE * f = fopen_c("s2n.info", "w+");
+	fprintf(f, "%lu %lu\n", _neuron_num, _synapse_num);
+	for (auto ti = _conn_s2n.begin(); ti != _conn_s2n.end(); ti++) {
+		for (size_t idx = 0; idx < ti->second.size(); idx++) {
+			ID &t = ti->second[idx];
+			fprintf(f, "%d_%lu: %d_%d_%lu\n", ti->first, idx, t.type(), t.offset(), t.id()); 
+		}
+	}
+	fclose_c(f);
+}
+
+void Network::save_graph() 
+{
+	if (_neurons_offset.size() == 0) {
+		update_status();
+	}
+
+	FILE * f = fopen_c("n2n.graph", "w+");
+	fwrite_c(&_neuron_num, 1, f);
+	fwrite_c(&_synapse_num, 1, f);
+	for (auto ti = _conn_n2s.begin(); ti != _conn_n2s.end(); ti++) {
+		for (size_t idx = 0; idx < ti->second.size(); idx++) {
+			size_t nid = _neurons_offset[ti->first]+idx;
+			fwrite_c(&nid, 1, f); 
+
+			for (auto di=ti->second[idx].begin();  di!=ti->second[idx].end(); di++) {
+				size_t count_t = di->second.size();
+				unsigned int delay_t = di->first;
+				fwrite_c(&delay_t, 1, f); 
+				fwrite_c(&count_t, 1, f); 
+				for (auto si=di->second.begin(); si!=di->second.end(); si++) {
+					ID &t = _conn_s2n[si->type()][si->id()];
+					size_t nid_d = _neurons_offset[t.type()] + t.id();
+					fwrite_c(&nid_d, 1, f);
+				}
+			}
+		}
+	}
+	fclose_c(f);
 }
 
 // CrossThreadData* Network::arrangeCrossThreadData(int node_num)

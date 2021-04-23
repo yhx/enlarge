@@ -66,6 +66,8 @@ public:
 	int reset(const SimInfo &info);
 
 	void logMap();
+	void log_graph();
+	void save_graph();
 	void status();
 
 	GNetwork* buildNetwork(const SimInfo &info);
@@ -144,8 +146,10 @@ public:
 	int _max_delay;
 	int _min_delay;
 
-	uint64_t _neuron_num;
-	uint64_t _synapse_num;
+	// uint64_t _neuron_num;
+	// uint64_t _synapse_num;
+	size_t _neuron_num;
+	size_t _synapse_num;
 	map<Type, size_t> _neurons_offset;
 	map<Type, size_t> _synapses_offset;
 	int _node_num;

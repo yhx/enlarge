@@ -42,12 +42,14 @@ int main(int argc, char **argv)
 			who = 50;
 			break;
 		default:
-			w1 = 0.7;
-			w2 = 0.5;
-			w3 = 0.6;
-			w4 = 0.3;
+			w1 = 3.5;
+			w2 = 0.2;
+			w3 = 2.5;
+			w4 = 1.1;
 			who = 6;
 	};
+
+	const real i_offset =0.5e-9;//*nA
 
 	printf("depth=%d N=%d\n", depth, N);
 	printf("w1=%f w2=%f w3=%f w4=%f who=%d\n", w1, w2, w3, w4, who);
@@ -60,7 +62,6 @@ int main(int argc, char **argv)
 
 	//# 论文没有这些参数
 	const real tau_m=10e-3;//*ms
-	const real i_offset =2e-9;//*nA
 	const real frefractory=0;
 	const real fv=-74e-3;
 
@@ -81,7 +82,7 @@ int main(int argc, char **argv)
 				fthreshold,i_offset, dt
 				));
 
-	for(int i=1;i<=tree_size;i++)
+	for(int i=1;i<tree_size;i++)
 		g[i] = c.createPopulation(i, N, LIFNeuron(
 					fv,v_rest,freset,
 					c_m,tau_m,
@@ -102,21 +103,19 @@ int main(int argc, char **argv)
 	{
 		int start = (int)pow(2.0, i) - 1;
 		int end = (int)pow(2.0, i+1) - 1;
-		if (i%4 == 1) {
-			for (int j=start; j<end; j++) {
-				c.connect(g[(j-1)/2], g[j], weight1, delay, NULL, N*N);
-			}
-		} else if (i%4 == 2) {
+		if ((i-1)%3 == 1) {
 			for (int j=start; j<end; j++) {
 				c.connect(g[(j-1)/2], g[j], weight2, delay, NULL, N*N);
 			}
-		} else if (i%4 == 3) {
+		} else if ((i-1)%3 == 2) {
 			for (int j=start; j<end; j++) {
 				c.connect(g[(j-1)/2], g[j], weight3, delay, NULL, N*N);
 			}
 		} else {
 			for (int j=start; j<end; j++) {
-				c.connect(g[(j-1)/2], g[j], weight4, delay, NULL, N*N);
+				if (depth > 1) {
+					c.connect(g[(j-1)/2], g[j], weight4, delay, ii, N*N);
+				}
 				c.connect(g[0], g[j], weight1, delay, NULL, N*N);
 			}
 		}
@@ -131,10 +130,11 @@ int main(int argc, char **argv)
 	delArray(ii);
 
 
-	SGSim sg(&c, dt);	//gpu
-	sg.run(run_time);	
+	// SGSim sg(&c, dt);	//gpu
+	// sg.run(run_time);	
 
-	MPI_Barrier(MPI_COMM_WORLD);
+	STSim st(&c, dt);	//gpu
+	st.run(run_time);	
 
 	end=clock(); //time(NULL);
 	printf("exec time=%lf seconds\n",(double)(end-start) / CLOCKS_PER_SEC);

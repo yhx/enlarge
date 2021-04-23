@@ -28,6 +28,9 @@ public:
 	// }
 	
 	virtual int append(const Synapse *s, size_t num=0) = 0;
+	virtual real weight(size_t idx) {
+		return 0.0;
+	}
 
 protected:
 	// vector<real> _weight;
