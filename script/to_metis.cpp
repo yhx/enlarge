@@ -41,6 +41,7 @@ int to_metis(const char *in_name, const char *out_name)
 	}
 
 	size_t syn_num = synapse_num;
+	size_t nid =0;
 	for (size_t n=0; n<neuron_num; n++) {
 		for (auto di=conn[n].begin(); di!=conn[n].end(); di++) {
 			for (auto ti=di->second.begin(); ti!=di->second.end(); ti++) {
@@ -48,7 +49,9 @@ int to_metis(const char *in_name, const char *out_name)
 				if (find(conn[tid][di->first].begin(), conn[tid][di->first].end(), n) == conn[tid][di->first].end()) {
 					conn[tid][di->first].push_back(n);
 				} else {
-					syn_num--;
+					if (tid > n) {
+						syn_num--;
+					}
 				}
 			}
 		}
@@ -59,7 +62,7 @@ int to_metis(const char *in_name, const char *out_name)
 		for (auto di=conn[n].begin(); di!=conn[n].end(); di++) {
 			for (auto ti=di->second.begin(); ti!=di->second.end(); ti++) {
 				size_t tid = *ti;
-				fprintf(out, "%ld %u ", tid, di->first);
+				fprintf(out, "%ld %u ", tid+1, di->first);
 			}
 		}
 		fprintf(out, "\n");
@@ -76,10 +79,10 @@ int to_metis(const char *in_name, const char *out_name)
 
 int main(int argc, char **argv)
 {
-	if (argc != 2) {
-		printf("Usuage: to_metis inputfile\n");
+	if (argc != 3) {
+		printf("Usuage: to_metis inputfile outputfile\n");
 	}
 
 
-	return to_metis(argv[1], "grpah.metis");
+	return to_metis(argv[1], argv[2]);
 }

@@ -73,7 +73,7 @@ int MultiNodeSimulator::run(real time, FireInfo &log)
 	return 0;
 }
 
-int MultiNodeSimulator::build_net(int num, SplitType split)
+int MultiNodeSimulator::build_net(int num, SplitType split, const char *name)
 {
 
 	SimInfo info(_dt);
@@ -86,7 +86,7 @@ int MultiNodeSimulator::build_net(int num, SplitType split)
 			_node_num = num;
 		}
 		_network->set_node_num(num);
-		_node_nets = _network->buildNetworks(info, split);
+		_node_nets = _network->buildNetworks(info, split, name);
 		for (int i=0; i<_node_num; i++) {
 			_node_nets[i]._simCycle = 0;
 			_node_nets[i]._nodeIdx = i;

@@ -72,7 +72,7 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 
 #ifdef DEBUG
 	log_graph();
-	save_graph();
+	save_graph("graph.test");
 #endif
 
 	size_t n_type_num = _neurons.size();

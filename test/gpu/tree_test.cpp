@@ -42,14 +42,14 @@ int main(int argc, char **argv)
 			who = 50;
 			break;
 		default:
-			w1 = 3.5;
-			w2 = 0.2;
-			w3 = 2.5;
-			w4 = 1.1;
+			w1 = 2.5;
+			w2 = 0.8;
+			w3 = 1.5;
+			w4 = 2.1;
 			who = 6;
 	};
 
-	const real i_offset =0.5e-9;//*nA
+	const real i_offset =6.5e-9;//*nA
 
 	printf("depth=%d N=%d\n", depth, N);
 	printf("w1=%f w2=%f w3=%f w4=%f who=%d\n", w1, w2, w3, w4, who);

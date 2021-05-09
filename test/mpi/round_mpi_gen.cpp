@@ -125,11 +125,11 @@ int main(int argc, char **argv)
 		char name[1024];
 
 		if (argc == 7) {
-			mn.build_net(parts, split);
 			sprintf(name, "%s_%d_%ld_%ld_%d_%d_%d", "round_mpi", parts, n0, n1, fr, delay_step, split); 
+			mn.build_net(parts, split, name);
 		} else {
-			mn.build_net(parts);
 			sprintf(name, "%s_%d_%ld_%ld_%d_%d", "round_mpi", parts, n0, n1, fr, delay_step); 
+			mn.build_net(parts);
 		}
 		mn.save_net(name);
 		// mn.run(run_time);	

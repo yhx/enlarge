@@ -408,13 +408,13 @@ void Network::log_graph()
 	fclose_c(f);
 }
 
-void Network::save_graph() 
+void Network::save_graph(const char *name) 
 {
 	if (_neurons_offset.size() == 0) {
 		update_status();
 	}
 
-	FILE * f = fopen_c("n2n.graph", "w+");
+	FILE * f = fopen_c(name, "w+");
 	fwrite_c(&_neuron_num, 1, f);
 	fwrite_c(&_synapse_num, 1, f);
 	for (auto ti = _conn_n2s.begin(); ti != _conn_n2s.end(); ti++) {

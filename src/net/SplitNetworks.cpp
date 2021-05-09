@@ -2,9 +2,10 @@
 #include "../utils/utils.h"
 #include "Network.h"
 
-void Network::splitNetwork(SplitType split)
+void Network::splitNetwork(SplitType split, const char *name)
 {
 
+	print_mem("before n2s_rev");
 	map<Type, vector<vector<ID>>> n2s_rev;
 	for (auto iter = _neurons.begin(); iter != _neurons.end(); iter++) {
 		n2s_rev[iter->first].resize(iter->second->size());
@@ -21,6 +22,7 @@ void Network::splitNetwork(SplitType split)
 			n2s_rev[t.type()][t.id()].push_back(ID(ti->first, idx));
 		}
 	}
+	print_mem("after n2s_rev");
 
 	if (_node_num <= 1) {
 		return;
@@ -124,6 +126,36 @@ void Network::splitNetwork(SplitType split)
 				}
 			}
 			break;
+		case Metis:
+			{
+				string s(name);
+				string s1 = s + ".metis";
+				FILE *f = fopen(s1.c_str(), "rb");
+				if (!f) {
+					string s2 = s + ".graph";
+					printf("===Metis 0\n");
+					save_graph(s2.c_str());
+					exit(0);
+				} else {
+					printf("===Metis\n");
+					size_t n_num = 0;
+					fread_c(&n_num, 1, f);
+					assert(n_num == _neuron_num);
+					size_t node_idx = 0;
+					for (auto t_iter = _neurons.begin(); t_iter != _neurons.end(); t_iter++) {
+						Type t = t_iter->first;
+						for (size_t i=0; i<t_iter->second->size(); i++) {
+							fread_c(&node_idx, 1, f);
+							_idx2node[t][i] = node_idx;
+							for (auto siter = n2s_rev[t][i].begin(); siter != n2s_rev[t][i].end(); siter++) {
+								_idx2node[siter->type()][siter->id()] = node_idx;
+							}
+						}
+					}
+					fclose_c(f);
+				}
+			}
+			break;
 		case Balanced:
 			{
 				printf("===BALANCED\n");
@@ -153,6 +185,17 @@ void Network::splitNetwork(SplitType split)
 	}
 
 	print_mem("before clear n2s_rev");
+
+	// for (auto iter = n2s_rev.begin(); iter != n2s_rev.end(); iter++) {
+	// 	for (auto siter = iter->second.begin(); siter != iter->second.end(); siter++) {
+	// 		siter->clear();
+	// 		vector<ID> tmp;
+	// 		siter->swap(tmp);
+	// 	}
+	// 	iter->second.clear();
+	// 	vector<vector<ID>> tmp;
+	// 	iter->second.swap(tmp);
+	// }
 	n2s_rev.clear();
 	print_mem("after clear n2s_rev");
 
