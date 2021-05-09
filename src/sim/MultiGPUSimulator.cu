@@ -157,9 +157,10 @@ void * run_thread_gpu(void *para) {
 	}
 
 	//int * c_g_cross_id = gpuMalloc<int>(global_cross_data[dataIdx]._max_n_num); 
+	CrossNodeMap *cnm_gpu = to_gpu(network->_crossnodeMap);
 
-	integer_t * c_g_idx2index = copyToGPU(network->_crossnodeMap->_idx2index, allNeuronNum);
-	integer_t * c_g_cross_index2idx = copyToGPU(network->_crossnodeMap->_crossnodeIndex2idx, network->_crossnodeMap->_crossSize);
+	// integer_t * c_g_idx2index = copyToGPU(network->_crossnodeMap->_idx2index, allNeuronNum);
+	// integer_t * c_g_cross_index2idx = copyToGPU(network->_crossnodeMap->_crossnodeIndex2idx, network->_crossnodeMap->_crossSize);
 	uinteger_t * c_g_global_cross_data = gpuMalloc<uinteger_t>(allNeuronNum * network->_nodeNum);
 	uinteger_t * c_g_fired_n_num = gpuMalloc<uinteger_t>(network->_nodeNum);
 
@@ -192,10 +193,10 @@ void * run_thread_gpu(void *para) {
 		//	}
 		//}
 
-		cudaDeliverNeurons<<<(allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(g_buffer->_fire_table, g_buffer->_fired_sizes, c_g_idx2index, c_g_cross_index2idx, c_g_global_cross_data, c_g_fired_n_num, maxDelay, network->_nodeNum, time);
+		cudaDeliverNeurons<<<(allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(g_buffer->_fire_table, g_buffer->_fired_sizes, cnm_gpu->_idx2index, cnm_gpu->_crossnodeIndex2idx, c_g_global_cross_data, c_g_fired_n_num, maxDelay, network->_nodeNum, time);
 
-		copyFromGPU(gCrossDataGPU->_firedNum + network->_nodeIdx * network->_nodeNum, c_g_fired_n_num, sizeof(int)*network->_nodeNum);
-		checkCudaErrors(cudaMemcpy(gCrossDataGPU->_firedNum + network->_nodeIdx * network->_nodeNum, c_g_fired_n_num, sizeof(int)*network->_nodeNum, cudaMemcpyDeviceToHost));
+		copyFromGPU(gCrossDataGPU->_firedNum + network->_nodeIdx * network->_nodeNum, c_g_fired_n_num, network->_nodeNum);
+		// checkCudaErrors(cudaMemcpy(gCrossDataGPU->_firedNum + network->_nodeIdx * network->_nodeNum, c_g_fired_n_num, sizeof(int)*network->_nodeNum, cudaMemcpyDeviceToHost));
 		//gettimeofday(&t3, NULL);
 
 		for (int i=0; i< network->_nodeNum; i++) {
