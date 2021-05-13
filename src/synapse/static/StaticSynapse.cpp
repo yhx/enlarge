@@ -7,104 +7,111 @@
 #include "StaticSynapse.h"
 #include "StaticData.h"
 
-const Type StaticSynapse::type = Static;
+// const Type StaticSynapse::type = Static;
 
-StaticSynapse::StaticSynapse(real weight, real delay, real tau_syn)
-	: Synapse(0, weight, delay), _tau_syn(tau_syn)
+StaticSynapse::StaticSynapse(real weight, real delay, real tau_syn, real dt, size_t num)
+	: Synapse(Static, num)
 {
-	// this->monitored = false;
+	int delay_steps = static_cast<int>(round(delay/dt));
+	assert(fabs(tau_syn) > ZERO);
+	if (fabs(tau_syn) > ZERO) {
+		real c1 = exp(-(delay-dt*delay_steps)/tau_syn);
+		weight = weight * c1;
+	}
+
+	_weight.insert(_weight.end(), num, weight);
+	_delay.insert(_delay.end(), num, delay_steps);
+	assert(_num == _weight.size());
 }
 
-StaticSynapse::StaticSynapse(const StaticSynapse &synapse) : Synapse()
+StaticSynapse::StaticSynapse(const real *weight, const real *delay, const real *tau_syn, real dt, size_t num)
+	: Synapse(Static, num)
 {
-	this->_weight = synapse._weight;
-	this->_delay = synapse._delay;
-	this->_tau_syn = synapse._tau_syn;
-	// this->monitored = false;
+	_weight.resize(num);
+	_delay.resize(num);
+
+	for (size_t i=0; i<num; i++) {
+		int delay_steps = static_cast<int>(round(delay[i]/dt));
+		assert(fabs(tau_syn[i]) > ZERO);
+		real w = weight[i];
+		if (fabs(tau_syn[i]) > ZERO) {
+			real c1 = exp(-(delay[i]-dt*delay_steps)/tau_syn[i]);
+			w = w * c1;
+		}
+		_weight[i] = w;
+		_delay[i] = delay_steps;
+	}
+
+	assert(_num == _weight.size());
+}
+
+StaticSynapse::StaticSynapse(const real *weight, const real *delay, const real tau_syn, real dt, size_t num)
+	: Synapse(Static, num)
+{
+	_weight.resize(num);
+	_delay.resize(num);
+
+	for (size_t i=0; i<num; i++) {
+		int delay_steps = static_cast<int>(round(delay[i]/dt));
+		real w = weight[i];
+		if (fabs(tau_syn) > ZERO) {
+			real c1 = exp(-(delay[i]-dt*delay_steps)/tau_syn);
+			w = w * c1;
+		}
+		_weight[i] = w;
+		_delay[i] = delay_steps;
+	}
+
+	assert(_num == _weight.size());
+}
+
+StaticSynapse::StaticSynapse(const StaticSynapse &s, size_t num) : Synapse(Static, 0)
+{
+	append(dynamic_cast<const Synapse *>(&s), num);
 }
 
 StaticSynapse::~StaticSynapse()
 {
-	// delay_queue.clear();
+	_num = 0;
+	_delay.clear();
+	_weight.clear();
 }
 
-// int StaticSynapse::recv()
-// {
-// 	delay_queue.push_back(_delay_steps);
-// 
-// 	return 0;
-// }
-
-Type StaticSynapse::getType() const
+int StaticSynapse::append(const Synapse *syn, size_t num) 
 {
-	return type;
-}
-
-// int StaticSynapse::reset(SimInfo &info)
-// {
-// 	real dt = info.dt;
-// 	_delay_steps = static_cast<int>(round(_delay/dt));
-// 	assert(fabs(_tau_syn) > ZERO || fabs(_delay-dt*_delay_steps) < ZERO);
-// 	if (fabs(_tau_syn) > ZERO && fabs(_delay-dt*_delay_steps) > ZERO) {
-// 		real _C1 = expf(-(_delay-dt*_delay_steps)/_tau_syn);
-// 		this->_weight = this->_weight * _C1;
-// 	}
-// 
-// 	return 0;
-// }
-
-// int StaticSynapse::update(SimInfo &info)
-// {
-// 	list<int>::iterator iter;
-// 
-// 	while (!delay_queue.empty() && (delay_queue.front() <= 0)) {
-// 		this->_p_dst->recv(_weight);
-// 		delay_queue.pop_front();
-// 	}
-// 
-// 	for (iter = delay_queue.begin(); iter != delay_queue.end(); iter++) {
-// 		*iter = *iter - 1;
-// 	}
-// 
-// 	return 0;
-// }
-
-// void StaticSynapse::monitor(SimInfo &info)
-// {
-// }
-
-// size_t StaticSynapse::getSize()
-// {
-// 	return sizeof(GStaticSynapses);
-// }
-// 
-// int StaticSynapse::getData(void *data)
-// {
-// 	Json::Value *p = (Json::Value *)data;
-// 	(*p)["id"] = getID();
-// 	(*p)["weight"] = _weight;
-// 
-// 	return 0;
-// }
-
-int StaticSynapse::hardCopy(void * data, int idx, int base, const SimInfo &info)
-{
-	StaticData *p = (StaticData *) data;
-
-	real dt = info.dt;
-	int delay_steps = static_cast<int>(round(_delay/dt));
-	real weight = this->_weight;
-	assert(fabs(_tau_syn) > ZERO);
-	if (fabs(_tau_syn) > ZERO) {
-		real c1 = exp(-(_delay-dt*delay_steps)/_tau_syn);
-		weight = weight * c1;
+	const StaticSynapse *s = dynamic_cast<const StaticSynapse *>(syn);
+	size_t ret = 0;
+	if ((num > 0) && (num != s->size())) {
+		ret = num;
+		_weight.insert(_weight.end(), num, s->_weight[0]);
+		_delay.insert(_delay.end(), num, s->_delay[0]);
+	} else {
+		ret = s->_num;
+		_weight.insert(_weight.end(), s->_weight.begin(), s->_weight.end());
+		_delay.insert(_delay.end(), s->_delay.begin(), s->_delay.end());
 	}
-	setID(idx+base);
+	_num += ret;
+	assert(_num == _weight.size());
 
-	p->pWeight[idx] = weight;
-	//p->p_src[idx] = this->getSrc()->getID();
-	p->pDst[idx] = this->getDst()->getID();
-
-	return 1;
+	return ret;
 }
 
+void * StaticSynapse::packup()
+{
+	StaticData *p = static_cast<StaticData *>(mallocStatic());
+
+	p->num = _num;
+	p->pWeight = _weight.data();
+	p->is_view = true;
+
+	return p;
+}
+
+int StaticSynapse::packup(void *data, size_t dst, size_t src)
+{
+	StaticData *p = static_cast<StaticData *>(data);
+
+	p->pWeight[dst] = _weight[src];
+
+	return 0;
+}

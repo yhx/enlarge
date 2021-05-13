@@ -4,12 +4,12 @@
 
 #include "LIFData.h"
 
-void updateLIF(Connection *connection, void *_data, real *currentE, real *currentI, int *firedTable, int *firedTableSizes, int firedTableCap, int num, int offset, int time)
+void updateLIF(Connection *connection, void *_data, real *buffer, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t offset, int time)
 {
 	LIFData *data = (LIFData *)_data;
 	int currentIdx = time % (connection->maxDelay+1);
-	for (int nid=0; nid<num; nid++) {
-		int gnid = offset + nid; 
+	for (size_t nid=0; nid<num; nid++) {
+		size_t gnid = offset + nid; 
 
 		if (data->pRefracStep[nid] <= 0) {
 			data->pV_m[nid] = data->pC_m[nid] * data->pV_m[nid] + data->pV_tmp[nid] + data->pI_e[nid] * data->pC_e[nid] + data->pI_i[nid] * data->pC_i[nid];
@@ -20,7 +20,7 @@ void updateLIF(Connection *connection, void *_data, real *currentE, real *curren
 			data->pI_i[nid] *= data->pCi[nid];
 
 			bool fired = data->pV_m[nid] >= data->pV_thresh[nid];
-			c_gFiredCount[gnid] += fired;
+			data->_fire_count[gnid] += fired;
 
 			if (fired) {
 				firedTable[firedTableSizes[currentIdx] + firedTableCap * currentIdx] = gnid;
@@ -29,15 +29,15 @@ void updateLIF(Connection *connection, void *_data, real *currentE, real *curren
 				data->pRefracStep[nid] = data->pRefracTime[nid] - 1;
 				data->pV_m[nid] = data->pV_reset[nid];
 			} else {
-				data->pI_e[nid] += currentE[gnid];
-				data->pI_i[nid] += currentI[gnid];
+				data->pI_e[nid] += buffer[gnid];
+				data->pI_i[nid] += buffer[num + gnid];
 			}
 	
 		} else {
 			data->pRefracStep[nid]--;
 		}
-		currentE[gnid] = 0;
-		currentI[gnid] = 0;
+		buffer[gnid] = 0;
+		buffer[num + gnid] = 0;
 	}
 }
 

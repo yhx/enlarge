@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-#include "../../third_party/cuda/helper_cuda.h"
+#include "../../gpu_utils/helper_gpu.h"
 #include "LIFData.h"
 
 void *cudaMallocLIF()
@@ -11,7 +11,7 @@ void *cudaMallocLIF()
 	return ret;
 }
 
-void *cudaAllocLIF(void *pCPU, int num)
+void *cudaAllocLIF(void *pCPU, size_t num)
 {
 	void *ret = cudaMallocLIF();
 	void *tmp = cudaAllocLIFPara(pCPU, num);
@@ -21,7 +21,7 @@ void *cudaAllocLIF(void *pCPU, int num)
 	return ret;
 }
 
-void *cudaAllocLIFPara(void *pCPU, int num)
+void *cudaAllocLIFPara(void *pCPU, size_t num)
 {
 	LIFData *p = (LIFData*)pCPU;
 	LIFData *ret = (LIFData*)malloc(sizeof(LIFData)*1);
@@ -37,18 +37,18 @@ void *cudaAllocLIFPara(void *pCPU, int num)
 	checkCudaErrors(cudaMalloc((void**)&(ret->pI_e), sizeof(real)*num));
 	checkCudaErrors(cudaMemset(ret->pI_e, 0, sizeof(real)*num));
 	checkCudaErrors(cudaMemcpy(ret->pI_e, p->pI_e, sizeof(real)*num, cudaMemcpyHostToDevice));
-	checkCudaErrors(cudaMalloc((void**)&(ret->pV_i), sizeof(real)*num));
-	checkCudaErrors(cudaMemset(ret->pV_i, 0, sizeof(real)*num));
-	checkCudaErrors(cudaMemcpy(ret->pV_i, p->pV_i, sizeof(real)*num, cudaMemcpyHostToDevice));
+	// checkCudaErrors(cudaMalloc((void**)&(ret->pV_i), sizeof(real)*num));
+	// checkCudaErrors(cudaMemset(ret->pV_i, 0, sizeof(real)*num));
+	// checkCudaErrors(cudaMemcpy(ret->pV_i, p->pV_i, sizeof(real)*num, cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMalloc((void**)&(ret->pCe), sizeof(real)*num));
 	checkCudaErrors(cudaMemset(ret->pCe, 0, sizeof(real)*num));
 	checkCudaErrors(cudaMemcpy(ret->pCe, p->pCe, sizeof(real)*num, cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMalloc((void**)&(ret->pV_reset), sizeof(real)*num));
 	checkCudaErrors(cudaMemset(ret->pV_reset, 0, sizeof(real)*num));
 	checkCudaErrors(cudaMemcpy(ret->pV_reset, p->pV_reset, sizeof(real)*num, cudaMemcpyHostToDevice));
-	checkCudaErrors(cudaMalloc((void**)&(ret->pV_e), sizeof(real)*num));
-	checkCudaErrors(cudaMemset(ret->pV_e, 0, sizeof(real)*num));
-	checkCudaErrors(cudaMemcpy(ret->pV_e, p->pV_e, sizeof(real)*num, cudaMemcpyHostToDevice));
+	// checkCudaErrors(cudaMalloc((void**)&(ret->pV_e), sizeof(real)*num));
+	// checkCudaErrors(cudaMemset(ret->pV_e, 0, sizeof(real)*num));
+	// checkCudaErrors(cudaMemcpy(ret->pV_e, p->pV_e, sizeof(real)*num, cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMalloc((void**)&(ret->pV_tmp), sizeof(real)*num));
 	checkCudaErrors(cudaMemset(ret->pV_tmp, 0, sizeof(real)*num));
 	checkCudaErrors(cudaMemcpy(ret->pV_tmp, p->pV_tmp, sizeof(real)*num, cudaMemcpyHostToDevice));
@@ -74,10 +74,12 @@ void *cudaAllocLIFPara(void *pCPU, int num)
 	checkCudaErrors(cudaMemset(ret->pC_i, 0, sizeof(real)*num));
 	checkCudaErrors(cudaMemcpy(ret->pC_i, p->pC_i, sizeof(real)*num, cudaMemcpyHostToDevice));
 
+	ret->_fire_count = copyToGPU(p->_fire_count, num);
+
 	return ret;
 }
 
-int cudaFetchLIF(void *pCPU, void *pGPU, int num)
+int cudaFetchLIF(void *pCPU, void *pGPU, size_t num)
 {
 	LIFData *pTmp = (LIFData*)malloc(sizeof(LIFData)*1);
 	memset(pTmp, 0, sizeof(LIFData)*1);
@@ -87,7 +89,7 @@ int cudaFetchLIF(void *pCPU, void *pGPU, int num)
 	return 0;
 }
 
-int cudaLIFParaToGPU(void *pCPU, void *pGPU, int num)
+int cudaLIFParaToGPU(void *pCPU, void *pGPU, size_t num)
 {
 	LIFData *pC = (LIFData*)pCPU;
 	LIFData *pG = (LIFData*)pGPU;
@@ -96,10 +98,10 @@ int cudaLIFParaToGPU(void *pCPU, void *pGPU, int num)
 	checkCudaErrors(cudaMemcpy(pG->pRefracStep, pC->pRefracStep, sizeof(int)*num, cudaMemcpyHostToDevice));
 
 	checkCudaErrors(cudaMemcpy(pG->pI_e, pC->pI_e, sizeof(real)*num, cudaMemcpyHostToDevice));
-	checkCudaErrors(cudaMemcpy(pG->pV_i, pC->pV_i, sizeof(real)*num, cudaMemcpyHostToDevice));
+	// checkCudaErrors(cudaMemcpy(pG->pV_i, pC->pV_i, sizeof(real)*num, cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemcpy(pG->pCe, pC->pCe, sizeof(real)*num, cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemcpy(pG->pV_reset, pC->pV_reset, sizeof(real)*num, cudaMemcpyHostToDevice));
-	checkCudaErrors(cudaMemcpy(pG->pV_e, pC->pV_e, sizeof(real)*num, cudaMemcpyHostToDevice));
+	// checkCudaErrors(cudaMemcpy(pG->pV_e, pC->pV_e, sizeof(real)*num, cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemcpy(pG->pV_tmp, pC->pV_tmp, sizeof(real)*num, cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemcpy(pG->pI_i, pC->pI_i, sizeof(real)*num, cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemcpy(pG->pV_thresh, pC->pV_thresh, sizeof(real)*num, cudaMemcpyHostToDevice));
@@ -109,10 +111,12 @@ int cudaLIFParaToGPU(void *pCPU, void *pGPU, int num)
 	checkCudaErrors(cudaMemcpy(pG->pC_m, pC->pC_m, sizeof(real)*num, cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemcpy(pG->pC_i, pC->pC_i, sizeof(real)*num, cudaMemcpyHostToDevice));
 
+	copyToGPU(pG->_fire_count, pC->_fire_count, num);
+
 	return 0;
 }
 
-int cudaLIFParaFromGPU(void *pCPU, void *pGPU, int num)
+int cudaLIFParaFromGPU(void *pCPU, void *pGPU, size_t num)
 {
 	LIFData *pC = (LIFData*)pCPU;
 	LIFData *pG = (LIFData*)pGPU;
@@ -121,10 +125,10 @@ int cudaLIFParaFromGPU(void *pCPU, void *pGPU, int num)
 	checkCudaErrors(cudaMemcpy(pC->pRefracStep, pG->pRefracStep, sizeof(int)*num, cudaMemcpyDeviceToHost));
 
 	checkCudaErrors(cudaMemcpy(pC->pI_e, pG->pI_e, sizeof(real)*num, cudaMemcpyDeviceToHost));
-	checkCudaErrors(cudaMemcpy(pC->pV_i, pG->pV_i, sizeof(real)*num, cudaMemcpyDeviceToHost));
+	// checkCudaErrors(cudaMemcpy(pC->pV_i, pG->pV_i, sizeof(real)*num, cudaMemcpyDeviceToHost));
 	checkCudaErrors(cudaMemcpy(pC->pCe, pG->pCe, sizeof(real)*num, cudaMemcpyDeviceToHost));
 	checkCudaErrors(cudaMemcpy(pC->pV_reset, pG->pV_reset, sizeof(real)*num, cudaMemcpyDeviceToHost));
-	checkCudaErrors(cudaMemcpy(pC->pV_e, pG->pV_e, sizeof(real)*num, cudaMemcpyDeviceToHost));
+	// checkCudaErrors(cudaMemcpy(pC->pV_e, pG->pV_e, sizeof(real)*num, cudaMemcpyDeviceToHost));
 	checkCudaErrors(cudaMemcpy(pC->pV_tmp, pG->pV_tmp, sizeof(real)*num, cudaMemcpyDeviceToHost));
 	checkCudaErrors(cudaMemcpy(pC->pI_i, pG->pI_i, sizeof(real)*num, cudaMemcpyDeviceToHost));
 	checkCudaErrors(cudaMemcpy(pC->pV_thresh, pG->pV_thresh, sizeof(real)*num, cudaMemcpyDeviceToHost));
@@ -133,6 +137,8 @@ int cudaLIFParaFromGPU(void *pCPU, void *pGPU, int num)
 	checkCudaErrors(cudaMemcpy(pC->pC_e, pG->pC_e, sizeof(real)*num, cudaMemcpyDeviceToHost));
 	checkCudaErrors(cudaMemcpy(pC->pC_m, pG->pC_m, sizeof(real)*num, cudaMemcpyDeviceToHost));
 	checkCudaErrors(cudaMemcpy(pC->pC_i, pG->pC_i, sizeof(real)*num, cudaMemcpyDeviceToHost));
+
+	copyFromGPU(pC->_fire_count, pG->_fire_count, num);
 
 	return 0;
 }
@@ -160,14 +166,14 @@ int cudaFreeLIFPara(void *pGPU)
 
 	cudaFree(p->pI_e);
 	p->pI_e = NULL;
-	cudaFree(p->pV_i);
-	p->pV_i = NULL;
+	// cudaFree(p->pV_i);
+	// p->pV_i = NULL;
 	cudaFree(p->pCe);
 	p->pCe = NULL;
 	cudaFree(p->pV_reset);
 	p->pV_reset = NULL;
-	cudaFree(p->pV_e);
-	p->pV_e = NULL;
+	// cudaFree(p->pV_e);
+	// p->pV_e = NULL;
 	cudaFree(p->pV_tmp);
 	p->pV_tmp = NULL;
 	cudaFree(p->pI_i);
@@ -185,6 +191,18 @@ int cudaFreeLIFPara(void *pGPU)
 	cudaFree(p->pC_i);
 	p->pC_i = NULL;
 
+	gpuFree(p->_fire_count);
+
 	return 0;
+}
+
+int cudaLogRateLIF(void *cpu, void *gpu, const char *name)
+{
+	LIFData *c = static_cast<LIFData *>(cpu);
+	LIFData *g = static_cast<LIFData *>(gpu);
+
+	LIFData *t = copyFromGPU(g, 1);
+	copyFromGPU(c->_fire_count, t->_fire_count, c->num);
+	return logRateLIF(cpu, name);
 }
 

@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-#include "../../third_party/cuda/helper_cuda.h"
+#include "../../gpu_utils/helper_gpu.h"
 #include "StaticData.h"
 
 void *cudaMallocStatic()
@@ -11,7 +11,7 @@ void *cudaMallocStatic()
 	return ret;
 }
 
-void *cudaAllocStatic(void *pCPU, int num)
+void *cudaAllocStatic(void *pCPU, size_t num)
 {
 	void *ret = cudaMallocStatic();
 	void *tmp = cudaAllocStaticPara(pCPU, num);
@@ -21,15 +21,15 @@ void *cudaAllocStatic(void *pCPU, int num)
 	return ret;
 }
 
-void *cudaAllocStaticPara(void *pCPU, int num)
+void *cudaAllocStaticPara(void *pCPU, size_t num)
 {
 	StaticData *p = (StaticData*)pCPU;
 	StaticData *ret = (StaticData*)malloc(sizeof(StaticData)*1);
 	memset(ret, 0, sizeof(StaticData)*1);
 
-	checkCudaErrors(cudaMalloc((void**)&(ret->pDst), sizeof(int)*num));
-	checkCudaErrors(cudaMemset(ret->pDst, 0, sizeof(int)*num));
-	checkCudaErrors(cudaMemcpy(ret->pDst, p->pDst, sizeof(int)*num, cudaMemcpyHostToDevice));
+	// checkCudaErrors(cudaMalloc((void**)&(ret->pDst), sizeof(int)*num));
+	// checkCudaErrors(cudaMemset(ret->pDst, 0, sizeof(int)*num));
+	// checkCudaErrors(cudaMemcpy(ret->pDst, p->pDst, sizeof(int)*num, cudaMemcpyHostToDevice));
 
 	checkCudaErrors(cudaMalloc((void**)&(ret->pWeight), sizeof(real)*num));
 	checkCudaErrors(cudaMemset(ret->pWeight, 0, sizeof(real)*num));
@@ -38,7 +38,7 @@ void *cudaAllocStaticPara(void *pCPU, int num)
 	return ret;
 }
 
-int cudaFetchStatic(void *pCPU, void *pGPU, int num)
+int cudaFetchStatic(void *pCPU, void *pGPU, size_t num)
 {
 	StaticData *pTmp = (StaticData*)malloc(sizeof(StaticData)*1);
 	memset(pTmp, 0, sizeof(StaticData)*1);
@@ -48,24 +48,24 @@ int cudaFetchStatic(void *pCPU, void *pGPU, int num)
 	return 0;
 }
 
-int cudaStaticParaToGPU(void *pCPU, void *pGPU, int num)
+int cudaStaticParaToGPU(void *pCPU, void *pGPU, size_t num)
 {
 	StaticData *pC = (StaticData*)pCPU;
 	StaticData *pG = (StaticData*)pGPU;
 
-	checkCudaErrors(cudaMemcpy(pG->pDst, pC->pDst, sizeof(int)*num, cudaMemcpyHostToDevice));
+	//checkCudaErrors(cudaMemcpy(pG->pDst, pC->pDst, sizeof(int)*num, cudaMemcpyHostToDevice));
 
 	checkCudaErrors(cudaMemcpy(pG->pWeight, pC->pWeight, sizeof(real)*num, cudaMemcpyHostToDevice));
 
 	return 0;
 }
 
-int cudaStaticParaFromGPU(void *pCPU, void *pGPU, int num)
+int cudaStaticParaFromGPU(void *pCPU, void *pGPU, size_t num)
 {
 	StaticData *pC = (StaticData*)pCPU;
 	StaticData *pG = (StaticData*)pGPU;
 
-	checkCudaErrors(cudaMemcpy(pC->pDst, pG->pDst, sizeof(int)*num, cudaMemcpyDeviceToHost));
+	// checkCudaErrors(cudaMemcpy(pC->pDst, pG->pDst, sizeof(int)*num, cudaMemcpyDeviceToHost));
 
 	checkCudaErrors(cudaMemcpy(pC->pWeight, pG->pWeight, sizeof(real)*num, cudaMemcpyDeviceToHost));
 
@@ -88,8 +88,8 @@ int cudaFreeStatic(void *pGPU)
 int cudaFreeStaticPara(void *pGPU)
 {
 	StaticData *p = (StaticData*)pGPU;
-	cudaFree(p->pDst);
-	p->pDst = NULL;
+	// cudaFree(p->pDst);
+	// p->pDst = NULL;
 
 	cudaFree(p->pWeight);
 	p->pWeight = NULL;

@@ -3,16 +3,42 @@
 #include <assert.h>
 
 #include "../utils/utils.h"
+#include "../utils/helper_c.h"
 #include "CrossNodeMap.h"
+
+CrossNodeMap * allocCNM(size_t num, size_t cross_num, unsigned node_num)
+{
+	return allocCNM(num, cross_num * node_num);
+}
+
+CrossNodeMap * allocCNM(size_t num, size_t cross_size)
+{
+	CrossNodeMap* ret = malloc_c<CrossNodeMap>(1);
+	assert(ret != NULL);
+	ret->_num = num;
+
+	ret->_idx2index = malloc_c<integer_t>(num);
+	std::fill(ret->_idx2index, ret->_idx2index + num, -1);
+
+	ret->_crossSize = cross_size;
+	if (ret->_crossSize > 0) {
+		ret->_crossnodeIndex2idx = malloc_c<integer_t>(cross_size);
+		std::fill(ret->_crossnodeIndex2idx, ret->_crossnodeIndex2idx + cross_size, -1);
+	} else {
+		ret->_crossnodeIndex2idx = NULL;
+	}
+
+	return ret;
+}
 
 int sendMap(CrossNodeMap *map_, int dest, int tag, MPI_Comm comm) 
 {
 	int ret = 0;
 	ret = MPI_Send(map_, sizeof(CrossNodeMap), MPI_UNSIGNED_CHAR, dest, tag, comm);
 	assert(ret == MPI_SUCCESS);
-	ret = MPI_Send(map_->_idx2index, map_->_num, MPI_INT, dest, tag+1, comm);
+	ret = MPI_Send(map_->_idx2index, map_->_num, MPI_INTEGER_T, dest, tag+1, comm);
 	assert(ret == MPI_SUCCESS);
-	ret = MPI_Send(map_->_crossnodeIndex2idx, map_->_crossSize, MPI_INT, dest, tag+2, comm);
+	ret = MPI_Send(map_->_crossnodeIndex2idx, map_->_crossSize, MPI_INTEGER_T, dest, tag+2, comm);
 	assert(ret == MPI_SUCCESS);
 	return ret;
 }
@@ -24,35 +50,49 @@ CrossNodeMap * recvMap(int src, int tag, MPI_Comm comm)
 	MPI_Status status;
 	ret = MPI_Recv(net, sizeof(CrossNodeMap), MPI_UNSIGNED_CHAR, src, tag, comm, &status);
 	assert(ret==MPI_SUCCESS);
-	net->_idx2index = (int *)malloc(sizeof(int)*net->_num);
-	ret = MPI_Recv(net->_idx2index, net->_num, MPI_INT, src, tag+1, comm, &status);
+	net->_idx2index = malloc_c<integer_t>(net->_num);
+	ret = MPI_Recv(net->_idx2index, net->_num, MPI_INTEGER_T, src, tag+1, comm, &status);
 	assert(ret==MPI_SUCCESS);
-	net->_crossnodeIndex2idx = (int *)malloc(sizeof(int)*(net->_crossSize));
-	ret = MPI_Recv(net->_crossnodeIndex2idx, net->_crossSize, MPI_INT, src, tag+2, comm, &status);
+	net->_crossnodeIndex2idx = malloc_c<integer_t>(net->_crossSize);
+	ret = MPI_Recv(net->_crossnodeIndex2idx, net->_crossSize, MPI_INTEGER_T, src, tag+2, comm, &status);
 	assert(ret==MPI_SUCCESS);
 
 	return net;
 }
 
-int saveCNM(CrossNodeMap *map, FILE *f)
+int saveCNM(CrossNodeMap *map, const string &path)
 {
-	fwrite(&(map->_num), sizeof(int), 1, f);
-	fwrite(&(map->_crossSize), sizeof(int), 1, f);
-	fwrite(map->_idx2index, sizeof(int), map->_num, f);
-	fwrite(map->_crossnodeIndex2idx, sizeof(int), map->_crossSize, f);
+	string name = path + "/cross.map";
+	FILE *f = fopen_c(name.c_str(), "w");
+
+	fwrite_c(&(map->_num), 1, f);
+	fwrite_c(&(map->_crossSize), 1, f);
+	fwrite_c(map->_idx2index, map->_num, f);
+	if (map->_crossSize > 0) {
+		fwrite_c(map->_crossnodeIndex2idx, map->_crossSize, f);
+	}
+
+	fclose_c(f);
 
 	return 0;
 }
 
-CrossNodeMap *loadCNM(FILE *f)
+CrossNodeMap *loadCNM(const string &path)
 {
-	CrossNodeMap *map = (CrossNodeMap*)malloc(sizeof(CrossNodeMap));
-	fread(&(map->_num), sizeof(int), 1, f);
-	fread(&(map->_crossSize), sizeof(int), 1, f);
-	map->_idx2index = (int*)malloc(sizeof(int) * map->_num);
-	map->_crossnodeIndex2idx = (int*)malloc(sizeof(int) * map->_crossSize);
-	fwrite(map->_idx2index, sizeof(int), map->_num, f);
-	fwrite(map->_crossnodeIndex2idx, sizeof(int), map->_crossSize, f);
+	string name = path + "/cross.map";
+	FILE *f = fopen_c(name.c_str(), "r");
+
+	size_t num = 0, cross_size = 0;
+	fread_c(&(num), 1, f);
+	fread_c(&(cross_size), 1, f);
+
+	CrossNodeMap *map = allocCNM(num, cross_size);
+	fread_c(map->_idx2index, map->_num, f);
+	if (cross_size > 0) {
+		fread_c(map->_crossnodeIndex2idx, map->_crossSize, f);
+	}
+
+	fclose_c(f);
 
 	return map;
 }

@@ -7,6 +7,7 @@
 
 #include "../utils/SimInfo.h"
 #include "../utils/runtime.h"
+#include "../utils/Buffer.h"
 #include "../net/Network.h"
 
 class Simulator {

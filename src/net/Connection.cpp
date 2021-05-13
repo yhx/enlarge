@@ -3,12 +3,11 @@
 #include <assert.h>
 #include <string.h>
 
+#include "../utils/helper_c.h"
 #include "../utils/utils.h"
-#include "../utils/FileOp.h"
-
 #include "Connection.h"
 
-Connection * allocConnection(int nNum, int sNum, int maxDelay, int minDelay)
+Connection * allocConnection(size_t nNum, size_t sNum, unsigned int maxDelay, unsigned int minDelay)
 {
 	Connection *ret = (Connection*)malloc(sizeof(Connection));
 	assert(ret != NULL);
@@ -18,24 +17,16 @@ Connection * allocConnection(int nNum, int sNum, int maxDelay, int minDelay)
 	ret->maxDelay = maxDelay;
 	ret->minDelay = minDelay;
 
-	int length = (maxDelay - minDelay + 1) * nNum;
+    size_t length = (maxDelay - minDelay + 1) * nNum;
 
-	ret->pDelayStart = (int*)malloc(sizeof(int)*length);
-	assert(ret->pDelayStart != NULL);
-	memset(ret->pDelayStart, 0, sizeof(int)*length);
-	ret->pDelayNum = (int*)malloc(sizeof(int)*length);
-	assert(ret->pDelayNum != NULL);
-	memset(ret->pDelayNum, 0, sizeof(int)*length);
+	ret->pDelayStart = malloc_c<uinteger_t>(length+1);
+	ret->pDelayNum = malloc_c<uinteger_t>(length);
+	ret->pSidMap = malloc_c<uinteger_t>(sNum);
+	ret->dst = malloc_c<uinteger_t>(sNum);
 
-	ret->pDelayStartRev = (int*)malloc(sizeof(int)*length);
-	assert(ret->pDelayStartRev != NULL);
-	memset(ret->pDelayStartRev, 0, sizeof(int)*length);
-	ret->pDelayNumRev = (int*)malloc(sizeof(int)*length);
-	assert(ret->pDelayNumRev != NULL);
-	memset(ret->pDelayNumRev, 0, sizeof(int)*length);
-	ret->pSidMapRev = (int*)malloc(sizeof(int)*sNum);
-	assert(ret->pSidMapRev != NULL);
-	memset(ret->pSidMapRev, 0, sizeof(int)*sNum);
+	ret->pDelayStartRev = malloc_c<uinteger_t>(length+1);
+	ret->pDelayNumRev = malloc_c<uinteger_t>(length);
+	ret->pSidMapRev = malloc_c<uinteger_t>(sNum);
 
 	return ret;
 }
@@ -44,6 +35,8 @@ int freeConnection(Connection *pCPU)
 {
 	free(pCPU->pDelayStart);
 	free(pCPU->pDelayNum);
+	free(pCPU->pSidMap);
+	free(pCPU->dst);
 	free(pCPU->pDelayStartRev);
 	free(pCPU->pDelayNumRev);
 	free(pCPU->pSidMapRev);
@@ -52,49 +45,60 @@ int freeConnection(Connection *pCPU)
 	return 0;
 }
 
-int saveConnection(Connection *conn, FILE *f)
+int saveConnection(Connection *conn, const string &path, const Type &type)
 {
-	fwrite_c(&(conn->nNum), sizeof(int), 1, f);
-	fwrite_c(&(conn->sNum), sizeof(int), 1, f);
-	fwrite_c(&(conn->maxDelay), sizeof(int), 1, f);
-	fwrite_c(&(conn->minDelay), sizeof(int), 1, f);
+	string filename = path + "/" + std::to_string(type) + ".conn";
+	FILE *f = fopen_c(filename.c_str(), "w");
+	
+	fwrite_c(&(conn->nNum), 1, f);
+	fwrite_c(&(conn->sNum), 1, f);
+	fwrite_c(&(conn->maxDelay), 1, f);
+	fwrite_c(&(conn->minDelay), 1, f);
 
-	int length = (conn->maxDelay - conn->minDelay + 1) * conn->nNum;
+	size_t length = (conn->maxDelay - conn->minDelay + 1) * conn->nNum;
 
-	fwrite_c(conn->pDelayStart, sizeof(int), length, f);
-	fwrite_c(conn->pDelayNum, sizeof(int), length, f);
+	fwrite_c(conn->pDelayStart, length+1, f);
+	fwrite_c(conn->pDelayNum, length, f);
+	fwrite_c(conn->pSidMap, conn->sNum, f);
+	fwrite_c(conn->dst, conn->sNum, f);
 
-	fwrite_c(conn->pDelayStartRev, sizeof(int), length, f);
-	fwrite_c(conn->pDelayNumRev, sizeof(int), length, f);
-	fwrite_c(conn->pSidMapRev, sizeof(int), conn->sNum, f);
+	fwrite_c(conn->pDelayStartRev, length+1, f);
+	fwrite_c(conn->pDelayNumRev, length, f);
+	fwrite_c(conn->pSidMapRev, conn->sNum, f);
+
+	fclose_c(f);
 
 	return 0;
 }
 
-Connection * loadConnection(FILE *f)
+Connection * loadConnection(const string &path, const Type &type)
 {
-	Connection *conn = (Connection *)malloc(sizeof(Connection));
+	string filename = path + "/" + std::to_string(type) + ".conn";
+	FILE *f = fopen_c(filename.c_str(), "r");
 
-	fread_c(&(conn->nNum), sizeof(int), 1, f);
-	fread_c(&(conn->sNum), sizeof(int), 1, f);
-	fread_c(&(conn->maxDelay), sizeof(int), 1, f);
-	fread_c(&(conn->minDelay), sizeof(int), 1, f);
 
-	int length = (conn->maxDelay - conn->minDelay + 1) * conn->nNum;
+	size_t n_num = 0, s_num = 0;
+	unsigned int  max_delay = 0, min_delay = 0;
 
-	conn->pDelayStart = (int*)malloc(sizeof(int)*length);
-	conn->pDelayNum = (int*)malloc(sizeof(int)*length);
+	fread_c(&n_num, 1, f);
+	fread_c(&s_num, 1, f);
+	fread_c(&max_delay, 1, f);
+	fread_c(&min_delay, 1, f);
 
-	conn->pDelayStartRev = (int*)malloc(sizeof(int)*length);
-	conn->pDelayNumRev = (int*)malloc(sizeof(int)*length);
-	conn->pSidMapRev = (int*)malloc(sizeof(int)*conn->sNum);
+	Connection *conn = allocConnection(n_num, s_num, max_delay, min_delay);
 
-	fread_c(conn->pDelayStart, sizeof(int), length, f);
-	fread_c(conn->pDelayNum, sizeof(int), length, f);
+	size_t length = (conn->maxDelay - conn->minDelay + 1) * conn->nNum;
 
-	fread_c(conn->pDelayStartRev, sizeof(int), length, f);
-	fread_c(conn->pDelayNumRev, sizeof(int), length, f);
-	fread_c(conn->pSidMapRev, sizeof(int), conn->sNum, f);
+	fread_c(conn->pDelayStart, length+1, f);
+	fread_c(conn->pDelayNum, length, f);
+	fread_c(conn->pSidMap, conn->sNum, f);
+	fread_c(conn->dst, conn->sNum, f);
+
+	fread_c(conn->pDelayStartRev, length+1, f);
+	fread_c(conn->pDelayNumRev, length, f);
+	fread_c(conn->pSidMapRev, conn->sNum, f);
+
+	fclose_c(f);
 
 	return conn;
 }
@@ -108,15 +112,18 @@ bool isEqualConnection(Connection *c1, Connection *c2)
 	ret = ret && (c1->maxDelay == c2->maxDelay);
 	ret = ret && (c1->minDelay == c2->minDelay);
 
-	int length = (c1->maxDelay - c1->minDelay + 1) * c1->nNum;
+	size_t length = (c1->maxDelay - c1->minDelay + 1) * c1->nNum;
 
-	ret = ret && isEqualArray(c1->pDelayStart, c2->pDelayStart, length);
+	ret = ret && isEqualArray(c1->pDelayStart, c2->pDelayStart, length+1);
 	ret = ret && isEqualArray(c1->pDelayNum, c2->pDelayNum, length);
+	// ret = ret && isEqualArray(c1->pSidMap, c2->pSidMap, c1->sNum);
+	ret = ret && isEqualArray(c1->dst, c2->dst, c1->sNum);
 
-	ret = ret && isEqualArray(c1->pDelayStartRev, c2->pDelayStartRev, length);
-	ret = ret && isEqualArray(c1->pDelayNumRev, c2->pDelayNumRev, length);
+	// TODO revert conn
+	// ret = ret && isEqualArray(c1->pDelayStartRev, c2->pDelayStartRev, length+1);
+	// ret = ret && isEqualArray(c1->pDelayNumRev, c2->pDelayNumRev, length);
 
-	ret = ret && isEqualArray(c1->pSidMapRev, c2->pSidMapRev, c1->sNum);
+	// ret = ret && isEqualArray(c1->pSidMapRev, c2->pSidMapRev, c1->sNum);
 
 	return ret;
 }
@@ -128,19 +135,24 @@ int sendConnection(Connection *conn, int dest, int tag, MPI_Comm comm)
 	ret = MPI_Send(conn, sizeof(Connection), MPI_UNSIGNED_CHAR, dest, tag, comm);
 	assert(ret == MPI_SUCCESS);
 
-	int length = (conn->maxDelay - conn->minDelay + 1) * conn->nNum;
+	unsigned int length = (conn->maxDelay - conn->minDelay + 1) * conn->nNum;
 
-	ret = MPI_Send(conn->pDelayStart, length, MPI_INT, dest, tag+1, comm);
+	ret = MPI_Send(conn->pDelayStart, length+1, MPI_UINTEGER_T, dest, tag+1, comm);
 	assert(ret == MPI_SUCCESS);
-	ret = MPI_Send(conn->pDelayNum, length, MPI_INT, dest, tag+2, comm);
-	assert(ret == MPI_SUCCESS);
-
-	ret = MPI_Send(conn->pDelayStartRev, length, MPI_INT, dest, tag+3, comm);
-	assert(ret == MPI_SUCCESS);
-	ret = MPI_Send(conn->pDelayNumRev, length, MPI_INT, dest, tag+4, comm);
+	ret = MPI_Send(conn->pDelayNum, length, MPI_UINTEGER_T, dest, tag+2, comm);
 	assert(ret == MPI_SUCCESS);
 
-	ret = MPI_Send(conn->pSidMapRev, conn->sNum, MPI_INT, dest, tag+5, comm);
+	ret = MPI_Send(conn->pSidMap, conn->sNum, MPI_UINTEGER_T, dest, tag+3, comm);
+	assert(ret == MPI_SUCCESS);
+	ret = MPI_Send(conn->dst, conn->sNum, MPI_UINTEGER_T, dest, tag+4, comm);
+	assert(ret == MPI_SUCCESS);
+
+	ret = MPI_Send(conn->pDelayStartRev, length+1, MPI_UINTEGER_T, dest, tag+5, comm);
+	assert(ret == MPI_SUCCESS);
+	ret = MPI_Send(conn->pDelayNumRev, length, MPI_UINTEGER_T, dest, tag+6, comm);
+	assert(ret == MPI_SUCCESS);
+
+	ret = MPI_Send(conn->pSidMapRev, conn->sNum, MPI_UINTEGER_T, dest, tag+7, comm);
 	assert(ret == MPI_SUCCESS);
 	
 	return ret;
@@ -157,25 +169,33 @@ Connection *recvConnection(int src, int tag, MPI_Comm comm)
 
 	int length = (conn->maxDelay - conn->minDelay + 1) * (conn->nNum);
 
-	conn->pDelayStart = (int *)malloc(sizeof(int) * length);
-	conn->pDelayNum = (int *)malloc(sizeof(int) * length);
+	conn->pDelayStart = malloc_c<uinteger_t>(length+1);
+	conn->pDelayNum = malloc_c<uinteger_t>(length);
 
-	ret = MPI_Recv(conn->pDelayStart, length, MPI_INT, src, tag+1, comm, &status);
+	ret = MPI_Recv(conn->pDelayStart, length+1, MPI_UINTEGER_T, src, tag+1, comm, &status);
 	assert(ret==MPI_SUCCESS);
-	ret = MPI_Recv(conn->pDelayNum, length, MPI_INT, src, tag+2, comm, &status);
-	assert(ret==MPI_SUCCESS);
-
-	conn->pDelayStartRev = (int *)malloc(sizeof(int) * length);
-	conn->pDelayNumRev = (int *)malloc(sizeof(int) * length);
-
-	ret = MPI_Recv(conn->pDelayStartRev, length, MPI_INT, src, tag+3, comm, &status);
-	assert(ret==MPI_SUCCESS);
-	ret = MPI_Recv(conn->pDelayNumRev, length, MPI_INT, src, tag+4, comm, &status);
+	ret = MPI_Recv(conn->pDelayNum, length, MPI_UINTEGER_T, src, tag+2, comm, &status);
 	assert(ret==MPI_SUCCESS);
 
-	conn->pSidMapRev = (int *)malloc(sizeof(int) * (conn->sNum));
+	conn->pSidMap = malloc_c<uinteger_t>(conn->sNum);
+	conn->dst = malloc_c<uinteger_t>(conn->sNum);
 
-	ret = MPI_Recv(conn->pSidMapRev, conn->sNum, MPI_INT, src, tag+5, comm, &status);
+	ret = MPI_Recv(conn->pSidMap, conn->sNum, MPI_UINTEGER_T, src, tag+3, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	ret = MPI_Recv(conn->dst, conn->sNum, MPI_UINTEGER_T, src, tag+4, comm, &status);
+	assert(ret==MPI_SUCCESS);
+
+	conn->pDelayStartRev = malloc_c<uinteger_t>(length+1);
+	conn->pDelayNumRev = malloc_c<uinteger_t>(length);
+
+	ret = MPI_Recv(conn->pDelayStartRev, length+1, MPI_UINTEGER_T, src, tag+5, comm, &status);
+	assert(ret==MPI_SUCCESS);
+	ret = MPI_Recv(conn->pDelayNumRev, length, MPI_UINTEGER_T, src, tag+6, comm, &status);
+	assert(ret==MPI_SUCCESS);
+
+	conn->pSidMapRev = malloc_c<uinteger_t>(conn->sNum);
+
+	ret = MPI_Recv(conn->pSidMapRev, conn->sNum, MPI_UINTEGER_T, src, tag+7, comm, &status);
 	assert(ret==MPI_SUCCESS);
 
 	return conn;

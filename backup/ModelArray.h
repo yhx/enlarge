@@ -52,8 +52,8 @@ public:
 	vector<Item*> _items;
 };
 
-typedef ModelArray<Neuron> Population;
-typedef ModelArray<Synapse> Projection;
+// typedef ModelArray<Neuron> Population;
+// typedef ModelArray<Synapse> Projection;
 
 template<class Item>
 ModelArray<Item>::ModelArray(size_t n, Type type, int node) : Model(node)

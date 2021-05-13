@@ -13,6 +13,7 @@ using ::testing::AtLeast;
 using ::testing::ElementsAreArray;
 
 GNetwork *net = NULL;
+GNetwork *net2 = NULL;
 
 TEST(NetworkTest, NeuronTest) {
 	ASSERT_EQ(net->nTypeNum, 1);
@@ -48,10 +49,10 @@ TEST(NetworkTest, NeuronTest) {
 			vector<real>(n->pV_tmp, n->pV_tmp + net->pNeuronNums[net->nTypeNum]), 
 			ElementsAreArray({0.00022465541388783095, 0.00022465541388783095, 0.00021357148557399341, 0.00021357148557399341, 0.00021357148557399341, 0.00020916842316864859})
 			);
-	ASSERT_THAT(
-			vector<real>(n->pV_e, n->pV_e + net->pNeuronNums[net->nTypeNum]), 
-			ElementsAreArray({0, 0, 0, 0, 0, 0})
-			);
+	// ASSERT_THAT(
+	// 		vector<real>(n->pV_e, n->pV_e + net->pNeuronNums[net->nTypeNum]), 
+	// 		ElementsAreArray({0, 0, 0, 0, 0, 0})
+	// 		);
 	ASSERT_THAT(
 			vector<real>(n->pC_i, n->pC_i + net->pNeuronNums[net->nTypeNum]), 
 			ElementsAreArray({7.6749377e-05, 7.6749377e-05, 4.3661708e-05, 4.3661708e-05, 4.3661708e-05, 3.0296025e-05})
@@ -84,11 +85,12 @@ TEST(NetworkTest, NeuronTest) {
 			vector<real>(n->pC_e, n->pC_e + net->pNeuronNums[net->nTypeNum]), 
 			ElementsAreArray({7.6514014e-05, 7.6514014e-05, 4.3661741e-05, 4.3661741e-05, 4.3661741e-05, 2.9845702e-05})
 			);
-	ASSERT_THAT(
-			vector<real>(n->pV_i, n->pV_i + net->pNeuronNums[net->nTypeNum]), 
-			ElementsAreArray({0, 0, 0, 0, 0, 0})
-			);
+	// ASSERT_THAT(
+	// 		vector<real>(n->pV_i, n->pV_i + net->pNeuronNums[net->nTypeNum]), 
+	// 		ElementsAreArray({0, 0, 0, 0, 0, 0})
+	// 		);
 }
+
 
 TEST(NetworkTest, SynapseTest) {
 	ASSERT_EQ(net->sTypeNum, 1);
@@ -104,16 +106,16 @@ TEST(NetworkTest, SynapseTest) {
 	StaticData *s = (StaticData*)net->ppSynapses[0];
 	ASSERT_THAT(
 			vector<real>(s->pWeight, s->pWeight + 9), 
-			ElementsAreArray({1.0, 1.2, 1.1, 1.4, 1.3, 1.5, 2.0, 2.1, 2.2})
+			ElementsAreArray({1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 2.0, 2.1, 2.2})
 			);
-	ASSERT_THAT(
-			vector<int>(s->pDst, s->pDst + 9), 
-			ElementsAreArray({2, 4, 3, 3, 2, 4, 5, 5, 5})
-			);
+	// ASSERT_THAT(
+	// 		vector<int>(s->pDst, s->pDst + 9), 
+	// 		ElementsAreArray({2, 4, 3, 3, 2, 4, 5, 5, 5})
+	// 		);
 }
  
 TEST(NetworkTest, ConnectionTest) {
-	Connection *c = net->pConnection;
+	Connection *c = net->ppConnections[0];
 
 	ASSERT_EQ(c->nNum, 6);
 	ASSERT_EQ(c->sNum, 9);
@@ -122,21 +124,39 @@ TEST(NetworkTest, ConnectionTest) {
 
 	ASSERT_THAT(
 			vector<int>(c->pDelayNum, c->pDelayNum + c->nNum * (c->maxDelay-c->minDelay+1)), 
-			ElementsAreArray({2, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0})
+			// ElementsAreArray({2, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0})
+			ElementsAreArray({2, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0})
 			);
 	ASSERT_THAT(
 			vector<int>(c->pDelayStart, c->pDelayStart + c->nNum * (c->maxDelay-c->minDelay+1)), 
-			ElementsAreArray({0, 2, 3, 3, 4, 5, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9})
+			// ElementsAreArray({0, 2, 3, 3, 4, 5, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9})
+			ElementsAreArray({0, 2, 3, 4, 4, 4, 4, 5, 6, 6, 7, 7, 7, 7, 8, 8, 8, 9})
 			);
+
+	ASSERT_THAT(
+			vector<int>(c->pSidMap, c->pSidMap + c->sNum), 
+			ElementsAreArray({0, 2, 4, 6, 1, 3, 7, 5, 8})
+			);
+
+	ASSERT_THAT(
+			vector<int>(c->dst, c->dst + c->sNum), 
+			ElementsAreArray({2, 4, 3, 5, 3, 2, 5, 4, 5})
+			// ElementsAreArray({2, 4, 3, 3, 2, 4, 5, 5, 5})
+			);
+}
+
+TEST(NetworkTest, NetTest) {
+	ASSERT_TRUE(compareGNetwork(net, net2));
 }
 
 
 int main(int argc, char **argv)
 {
-	Network c;
-	Population *pn0 = c.createPopulation(2, LIF_curr_exp(LIFNeuron(1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9), 1.6, 1.7));
-	Population *pn1 = c.createPopulation(3, LIF_curr_exp(LIFNeuron(2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9), 2.6, 2.7));
-	Population *pn2 = c.createPopulation(1, LIF_curr_exp(LIFNeuron(3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9), 3.6, 3.7));
+	real dt = 1.0e-4;
+	Network c(dt);
+	Population *pn0 = c.createPopulation(2, LIFNeuron(1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, dt));
+	Population *pn1 = c.createPopulation(3, LIFNeuron(2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, dt));
+	Population *pn2 = c.createPopulation(1, LIFNeuron(3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, dt));
 
 	real weight0[] = {1.0, 1.1, 1.2, 1.3, 1.4, 1.5};
 	real weight1[] = {2.0, 2.1, 2.2};
@@ -147,14 +167,15 @@ int main(int argc, char **argv)
 	c.connect(pn0, pn1, weight0, delay0, NULL, 6);
 	c.connect(pn1, pn2, weight1, delay1, NULL, 3);
 
-	SGSim sg(&c, 1.0e-4);
+	//SGSim sg(&c, 1.0e-4);
 
-	GNetwork * netCPU = sg.getNet();
-	GNetwork * netGPU = copyGNetworkToGPU(netCPU);
+	net = c.buildNetwork(SimInfo(dt));
+	GNetwork * netGPU = copyGNetworkToGPU(net);
 
-	net = deepcopyGNetwork(netCPU);
+	net2 = deepcopyGNetwork(net);
 
-	fetchGNetworkFromGPU(net, netGPU);
+	fetchGNetworkFromGPU(net2, netGPU);
+
 
 	::testing::InitGoogleMock(&argc, argv);
 	return RUN_ALL_TESTS();

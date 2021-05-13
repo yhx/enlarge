@@ -1,7 +1,7 @@
 
-#include "constant.h"
+#include "../base/constant.h"
 
-extern int *c_gFiredCount;
+// extern size_t *c_gFiredCount;
 
 // extern int cFiredTableCap;
 // extern real cDT;

@@ -7,25 +7,35 @@
 
 #include <mpi.h>
 #include <stdio.h>
+#include <string>
+
+#include "../base/constant.h"
+#include "../base/type.h"
+
+using std::string;
+
+#define access_(array, a, b) ((array)[a*num + b])
 
 struct Connection {
 	//int *pSynapsesIdx; 
 	//int synapsesNum; 
-	int nNum;
-	int sNum;
+	size_t nNum;
+	size_t sNum;
 
-	int maxDelay;
-	int minDelay;
+	unsigned int maxDelay;
+	unsigned int minDelay;
 
-	int *pDelayStart;
-	int *pDelayNum;
+    uinteger_t *pDelayStart;
+	uinteger_t *pDelayNum;
+	uinteger_t *pSidMap;
+    uinteger_t *dst;
 
-	int *pDelayStartRev;
-	int *pDelayNumRev; 
-	int *pSidMapRev;
+	uinteger_t *pDelayStartRev;
+	uinteger_t *pDelayNumRev; 
+	uinteger_t *pSidMapRev;
 };
 
-Connection * allocConnection(int nNum, int sNum, int maxDelay, int minDelay);
+Connection * allocConnection(size_t nNum, size_t sNum, unsigned int maxDelay, unsigned int minDelay);
 
 int freeConnection(Connection * pCPU);
 
@@ -33,8 +43,8 @@ Connection * cudaAllocConnection(Connection * pCPU);
 int cudaFetchConnection(Connection *pCPU, Connection *pGPU);
 int cudaFreeConnection(Connection *pGPU);
 
-int saveConnection(Connection *conn, FILE *f);
-Connection * loadConnection(FILE *f);
+int saveConnection(Connection *conn, const string &path, const Type &type);
+Connection * loadConnection(const string &path, const Type &type);
 
 bool isEqualConnection(Connection *c1, Connection *c2);
 

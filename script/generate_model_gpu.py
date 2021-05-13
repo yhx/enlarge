@@ -97,8 +97,7 @@ def generate_cu_file(paras, type_name, type_type, path_name):
     f = open(filename, "w+")
 
     f.write("\n")
-    f.write('#include "../third_party/cuda/helper_cuda.h"\n')
-    f.write('#include "../gpu_utils/mem_op.h"\n')
+    f.write('#include "../gpu_utils/helper_gpu.h"\n')
     f.write('#include "' + obj_type +'.h"\n')
     f.write("\n")
 

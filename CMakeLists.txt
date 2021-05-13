@@ -28,20 +28,31 @@ MESSAGE(STATUS "CUDA Version: " ${CUDA_VERSION})
 MESSAGE(STATUS "MPI Library: ${MPI_LIBRARIES}")
 MESSAGE(STATUS "BLAS Libraries: ${BLAS_LIBRARIES}")
 
-
-# Download and unpack googletest at configure time
-# CONFIGURE_FILE(CMakeLists.gtest.txt googletest-download/CMakeLists.txt)
-EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-	RESULT_VARIABLE result
-	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
-IF(result)
-	MESSAGE(FATAL_ERROR "CMake step for googletest failed: ${result}")
+IF(NOT IS_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/googletest-src")
+	MESSAGE(STATUS "Download and unpack googletest at configure time")
+	CONFIGURE_FILE(CMakeLists.gtest.txt googletest-download/CMakeLists.txt)
+ELSE(NOT IS_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/googletest-src")
+	MESSAGE(STATUS "Googletest at configure")
+	CONFIGURE_FILE(CMakeLists.gtest.local.txt googletest-download/CMakeLists.txt)
 ENDIF()
-EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} --build .
-	RESULT_VARIABLE result
-	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
-IF(result)
-	MESSAGE(FATAL_ERROR "Build step for googletest failed: ${result}")
+
+IF(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/googletest-download/CMakeLists.txt")
+	EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+		RESULT_VARIABLE result
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
+	IF(result)
+		MESSAGE(FATAL_ERROR "CMake step for googletest failed: ${result}")
+	ENDIF()
+ENDIF()
+
+IF(NOT EXISTS "${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/libgtestd.a")
+	MESSAGE(STATUS "Build googletest")
+	EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} --build .
+		RESULT_VARIABLE result
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
+	IF(result)
+		MESSAGE(FATAL_ERROR "Build step for googletest failed: ${result}")
+	ENDIF()
 ENDIF()
 # Prevent overriding the parent project's compiler/linker
 # settings on Windows
@@ -77,6 +88,8 @@ IF(USE_PROF)
 	ADD_DEFINITIONS(-DPROF)
 ENDIF(USE_PROF)
 
+OPTION(USE_GPU "Use gpu" ON) # Disabled by default
+
 SET(CUDA_PROPAGATE_HOST_FLAGS OFF)
 SET(CUDA_SEPARABLE_COMPILATION ON)
 
@@ -108,8 +121,8 @@ SET(CPU_LIB bsim)
 SET(GPU_LIB bsim_gpu)
 
 # SET(AUTO_TIMESTAMP "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/.timestamp")
-SET(AUTO_CPU_SRC "${PROJECT_SOURCE_DIR}/src/utils/TypeFunc.cpp")
-SET(AUTO_GPU_SRC "${PROJECT_SOURCE_DIR}/src/utils/TypeFunc.cu")
+SET(AUTO_CPU_SRC "${PROJECT_SOURCE_DIR}/src/base/TypeFunc.cpp")
+SET(AUTO_GPU_SRC "${PROJECT_SOURCE_DIR}/src/base/TypeFunc.cu")
 
 SET(GEN_TYPE_FUNC_SCRIPT "${PROJECT_SOURCE_DIR}/script/generate_type_functions.py")
 # SET(GEN_DATA_FUNC_SCRIPT "${PROJECT_SOURCE_DIR}/bsim/data_generator.py")
@@ -123,7 +136,9 @@ LIST(REMOVE_ITEM GPU_SRC "${AUTO_GPU_SRC}")
 FILE(GLOB CPU_TEST "test/cpu/*.cpp" "test/cpu/*.c")
 FILE(GLOB GPU_TEST "test/gpu/*.cpp" "test/gpu/*.c" "test/gpu/*.cu")
 FILE(GLOB MPI_TEST "test/mpi/*.cpp" "test/mpi/*.c" "test/mpi/*.cu")
-FILE(GLOB UNIT_TEST "test/unit/*.cpp" "test/unit/*.c" "test/unit/*.cu")
+FILE(GLOB UNIT_TEST_CPU "test/unit/*.cpp" "test/unit/*.c")
+FILE(GLOB UNIT_TEST_GPU "test/unit/*.cu")
+FILE(GLOB C_SCRIPTS "script/*.cpp" "script/*.c")
 FILE(GLOB TOOLS "test/tool/*.cpp" "test/tool/*.c")
 
 FILE(COPY ${PROJECT_SOURCE_DIR}/CLEAN_ALL.cmake DESTINATION ${CMAKE_BINARY_DIR})
@@ -139,44 +154,72 @@ FILE(COPY ${PROJECT_SOURCE_DIR}/CLEAN_ALL.cmake DESTINATION ${CMAKE_BINARY_DIR})
 ADD_CUSTOM_COMMAND(OUTPUT ${AUTO_CPU_SRC} ${AUTO_GPU_SRC}
 	COMMAND echo "Generating ${AUTO_CPU_SRC} and ${AUTO_GPU_SRC}"
 	COMMAND python ${GEN_TYPE_FUNC_SCRIPT}
-	MAIN_DEPENDENCY src/utils/TypeFunc.h
-	DEPENDS src/utils/type.h # ${GEN_TYPE_FUNC_SCRIPT}
+	MAIN_DEPENDENCY src/base/TypeFunc.h
+	DEPENDS src/base/type.h # ${GEN_TYPE_FUNC_SCRIPT}
 	COMMENT "Generate type func"
 	)
 
 ADD_CUSTOM_TARGET(GEN_TYPE_FUNC_CPU DEPENDS ${AUTO_CPU_SRC})
 ADD_CUSTOM_TARGET(GEN_TYPE_FUNC_GPU DEPENDS ${AUTO_GPU_SRC})
 
-ADD_LIBRARY(${CPU_LIB} STATIC ${CPU_SRC} ${AUTO_CPU_SRC} ${AUTO_TIMESTAMP})
-SET_TARGET_PROPERTIES(${CPU_LIB} PROPERTIES LINKER_LANGUAGE CXX)
-ADD_DEPENDENCIES(${CPU_LIB} GEN_TYPE_FUNC_CPU) 
 
-CUDA_ADD_LIBRARY(${GPU_LIB} STATIC ${GPU_SRC} ${AUTO_GPU_SRC} ${AUTO_TIMESTAMP})
-ADD_DEPENDENCIES(${GPU_LIB} GEN_TYPE_FUNC_GPU)
+
+IF(USE_GPU)
+	ADD_DEFINITIONS(-DUSE_GPU)
+	CUDA_ADD_LIBRARY(${GPU_LIB} STATIC ${CPU_SRC} ${AUTO_CPU_SRC} ${GPU_SRC} ${AUTO_GPU_SRC} ${AUTO_TIMESTAMP})
+	ADD_DEPENDENCIES(${GPU_LIB} GEN_TYPE_FUNC_GPU)
+
+	FOREACH(exec_path ${GPU_TEST})
+		#MESSAGE("EXEC_PATH: ${exec_path}")
+		GET_FILENAME_COMPONENT(exec_file ${exec_path} NAME_WE)
+		#MESSAGE("EXEC_FILE: ${exec_file}")
+		CUDA_ADD_EXECUTABLE(${exec_file} ${exec_path})
+		CUDA_ADD_CUFFT_TO_TARGET(${exec_file})
+		TARGET_LINK_LIBRARIES(${exec_file} ${GPU_LIB} ${CUDA_CUFFT_LIBRARIES} ${MPI_LIBRARIES}  blas ${BLAS_LIBRARIES} ${PYTHON_LIBRARIES})
+	ENDFOREACH()
+
+	FOREACH(exec_path ${UNIT_TEST_GPU})
+		GET_FILENAME_COMPONENT(exec_file ${exec_path} NAME_WE)
+		CUDA_ADD_EXECUTABLE(${exec_file} ${exec_path})
+		CUDA_ADD_CUFFT_TO_TARGET(${exec_file})
+		TARGET_LINK_LIBRARIES(${exec_file} ${GPU_LIB} ${CUDA_CUFFT_LIBRARIES} ${MPI_LIBRARIES} blas ${BLAS_LIBRARIES} ${PYTHON_LIBRARIES} gmock_main)
+		ADD_TEST(NAME ${exec_file}_test COMMAND ${exec_file}) 
+	ENDFOREACH()
+	SET(TARGET_LIB ${GPU_LIB} ${CUDA_CUFFT_LIBRARIES})
+ELSE(USE_GPU)
+	ADD_LIBRARY(${CPU_LIB} STATIC ${CPU_SRC} ${AUTO_CPU_SRC} ${AUTO_TIMESTAMP})
+	SET_TARGET_PROPERTIES(${CPU_LIB} PROPERTIES LINKER_LANGUAGE CXX)
+	ADD_DEPENDENCIES(${CPU_LIB} GEN_TYPE_FUNC_CPU) 
+	SET(TARGET_LIB ${CPU_LIB})
+ENDIF(USE_GPU)
 
 FOREACH(exec_path ${CPU_TEST})
 	#MESSAGE("EXEC_PATH: ${exec_path}")
 	GET_FILENAME_COMPONENT(exec_file ${exec_path} NAME_WE)
 	#MESSAGE("EXEC_FILE: ${exec_file}")
 	ADD_EXECUTABLE(${exec_file} ${exec_path})
-	TARGET_LINK_LIBRARIES(${exec_file} ${GPU_LIB} ${CUDA_CUFFT_LIBRARIES} ${CPU_LIB} ${MPI_LIBRARIES} ${BLAS_LIBRARIES})
+	TARGET_LINK_LIBRARIES(${exec_file} ${TARGET_LIB} ${MPI_LIBRARIES} ${BLAS_LIBRARIES})
 ENDFOREACH()
+
+FOREACH(exec_path ${UNIT_TEST_CPU})
+	GET_FILENAME_COMPONENT(exec_file ${exec_path} NAME_WE)
+	ADD_EXECUTABLE(${exec_file} ${exec_path})
+	TARGET_LINK_LIBRARIES(${exec_file} ${TARGET_LIB} ${MPI_LIBRARIES} blas ${BLAS_LIBRARIES} ${PYTHON_LIBRARIES} gmock_main)
+	IF (${exec_file} MATCHES "multi_node")
+		ADD_TEST(NAME ${exec_file}_test COMMAND mpirun -n 2 $<TARGET_FILE:${exec_file}>) 
+	ELSE()
+		ADD_TEST(NAME ${exec_file}_test COMMAND ${exec_file}) 
+	ENDIF()
+ENDFOREACH()
+
 
 FOREACH(exec_path ${TOOL})
 	GET_FILENAME_COMPONENT(exec_file ${exec_path} NAME_WE)
 	ADD_EXECUTABLE(${exec_file} ${exec_path})
-	TARGET_LINK_LIBRARIES(${exec_file} ${GPU_LIB} ${CUDA_CUFFT_LIBRARIES} ${CPU_LIB}  blas ${BLAS_LIBRARIES} ${PYTHON_LIBRARIES})
+	TARGET_LINK_LIBRARIES(${exec_file} ${TARGET_LIB} ${CUDA_CUFFT_LIBRARIES} ${CPU_LIB}  blas ${BLAS_LIBRARIES} ${PYTHON_LIBRARIES})
 ENDFOREACH()
 
 
-FOREACH(exec_path ${GPU_TEST})
-	#MESSAGE("EXEC_PATH: ${exec_path}")
-	GET_FILENAME_COMPONENT(exec_file ${exec_path} NAME_WE)
-	#MESSAGE("EXEC_FILE: ${exec_file}")
-	CUDA_ADD_EXECUTABLE(${exec_file} ${exec_path})
-	CUDA_ADD_CUFFT_TO_TARGET(${exec_file})
-	TARGET_LINK_LIBRARIES(${exec_file} ${GPU_LIB} ${CUDA_CUFFT_LIBRARIES} ${CPU_LIB} ${MPI_LIBRARIES}  blas ${BLAS_LIBRARIES} ${PYTHON_LIBRARIES})
-ENDFOREACH()
 
 FOREACH(exec_path ${MPI_TEST})
 	#MESSAGE("EXEC_PATH: ${exec_path}")
@@ -184,17 +227,15 @@ FOREACH(exec_path ${MPI_TEST})
 	#MESSAGE("EXEC_FILE: ${exec_file}")
 	CUDA_ADD_EXECUTABLE(${exec_file} ${exec_path})
 	CUDA_ADD_CUFFT_TO_TARGET(${exec_file})
-	TARGET_LINK_LIBRARIES(${exec_file} ${GPU_LIB} ${CUDA_CUFFT_LIBRARIES} ${CPU_LIB} ${MPI_LIBRARIES} blas ${BLAS_LIBRARIES} ${PYTHON_LIBRARIES})
+	TARGET_LINK_LIBRARIES(${exec_file} ${TARGET_LIB} ${MPI_LIBRARIES} blas ${BLAS_LIBRARIES} ${PYTHON_LIBRARIES})
 ENDFOREACH()
 
-FOREACH(exec_path ${UNIT_TEST})
-	GET_FILENAME_COMPONENT(exec_file ${exec_path} NAME_WE)
-	CUDA_ADD_EXECUTABLE(${exec_file} ${exec_path})
-	CUDA_ADD_CUFFT_TO_TARGET(${exec_file})
-	TARGET_LINK_LIBRARIES(${exec_file} ${GPU_LIB} ${CUDA_CUFFT_LIBRARIES} ${CPU_LIB} ${MPI_LIBRARIES} blas ${BLAS_LIBRARIES} ${PYTHON_LIBRARIES} gmock_main)
-	ADD_TEST(NAME ${exec_file}_test COMMAND ${exec_file}) 
-ENDFOREACH()
 
+FOREACH(c_exe ${C_SCRIPTS})
+	GET_FILENAME_COMPONENT(exec_file ${c_exe} NAME_WE)
+	ADD_EXECUTABLE(${exec_file} ${c_exe})
+	# TARGET_LINK_LIBRARIES(${exec_file} ${TARGET_LIB} ${CUDA_CUFFT_LIBRARIES} ${CPU_LIB}  blas ${BLAS_LIBRARIES} ${PYTHON_LIBRARIES})
+ENDFOREACH()
 
 #ADD_CUSTOM_COMMAND(TARGET multi-gpusim_test
 #	POST_BUILD

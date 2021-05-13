@@ -61,7 +61,7 @@ set -x
 if [ "$MODE" = "clean" ]; then
 	cd $SCRIPT_PATH/build && make clean-all
 elif [ "$MODE" = "test" ]; then
-	cd $SCRIPT_PATH/build && cmake -DCMAKE_BUILD_TYPE="Debug" -DUSE_DOUBLE=$USE_DOUBLE -DUSE_LOG=$USE_LOG -DUSE_PROF=$USE_PROF -lpthread .. 2> >(tee bin/error.err) && make -j$THREAD_NUM VERBOSE=$VERBOSE 2> >(tee -a bin/error.err) && make test && cd bin
+	cd $SCRIPT_PATH/build && cmake -DCMAKE_BUILD_TYPE="Debug" -DUSE_DOUBLE=$USE_DOUBLE -DUSE_LOG=$USE_LOG -DUSE_PROF=$USE_PROF -lpthread .. 2> >(tee error.err) && make -j$THREAD_NUM VERBOSE=$VERBOSE 2> >(tee -a error.err) && make test 
 else
-	cd $SCRIPT_PATH/build && cmake -DCMAKE_BUILD_TYPE=$C_MODE -DUSE_DOUBLE=$USE_DOUBLE -DUSE_LOG=$USE_LOG -DUSE_PROF=$USE_PROF -lpthread .. 2> >(tee bin/error.err) && make -j$THREAD_NUM VERBOSE=$VERBOSE 2> >(tee -a bin/error.err) && cd bin
+	cd $SCRIPT_PATH/build && cmake -DCMAKE_BUILD_TYPE=$C_MODE -DUSE_DOUBLE=$USE_DOUBLE -DUSE_LOG=$USE_LOG -DUSE_PROF=$USE_PROF -lpthread .. 2> >(tee error.err) && make -j$THREAD_NUM VERBOSE=$VERBOSE 2> >(tee -a error.err)
 fi

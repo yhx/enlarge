@@ -9,28 +9,27 @@ using std::list;
 
 class StaticSynapse : public Synapse {
 public:
-	StaticSynapse(real weight=0, real delay=1e-4, real tau_syn=1e-4);
-	StaticSynapse(const StaticSynapse &synapse);
+	StaticSynapse(real weight, real delay, real tau_syn, real dt, size_t num=1);
+	StaticSynapse(const real *weight, const real *delay, const real *tau_syn, real dt, size_t num=1);
+	StaticSynapse(const real *weight, const real *delay, const real tau_syn, real dt, size_t num=1);
+	StaticSynapse(const StaticSynapse &s, size_t num=0);
 	~StaticSynapse();
 
-	// virtual int recv()  override;
-	// virtual void setDst(NeuronBase *p)  override;
+	virtual int append(const Synapse *s, size_t num=0) override;
 
-	virtual Type getType() const override;
+	virtual void * packup() override;
+	virtual int packup(void *data, size_t dst, size_t src) override;
 
-	// virtual int reset(SimInfo &info) override;
-	// virtual int update(SimInfo &info) override;
-	// virtual void monitor(SimInfo &info) override;
-
-	// virtual size_t getSize() override;
-	// virtual int getData(void *data) override;
-	virtual int hardCopy(void * data, int idx, int base, const SimInfo &info) override;
+	virtual real weight(size_t idx) override {
+		return _weight[idx];
+	}
 
 protected:
-	const static Type type;
+	vector<real> _weight;
+	// const static Type type;
 	// real _weight;
 	// real _delay;
-	real _tau_syn;
+	// real _tau_syn;
 	// list<int> delay_queue;
 	// NeuronBase *pDest;
 };

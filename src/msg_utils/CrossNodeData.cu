@@ -1,7 +1,8 @@
 
 #include <assert.h>
 
-#include "../third_party/cuda/helper_cuda.h"
+#include "../utils/helper_c.h"
+#include "../gpu_utils/helper_gpu.h"
 #include "../gpu_utils/runtime.h"
 #include "CrossNodeData.h"
 
@@ -18,31 +19,17 @@ CrossNodeData * copyCNDtoGPU(CrossNodeData *data)
 	int size = data->_node_num * data->_min_delay;
 	int num_p_1 = data->_node_num + 1;
 
-	checkCudaErrors(cudaMalloc((void**)&(gpu->_recv_offset), sizeof(int)*num_p_1));
-	checkCudaErrors(cudaMemcpy(gpu->_recv_offset, data->_recv_offset, sizeof(int)*num_p_1, cudaMemcpyHostToDevice));
+    gpu->_recv_offset = copyToGPU<integer_t>(data->_recv_offset, num_p_1);
+    gpu->_recv_start = copyToGPU<integer_t>(data->_recv_start, size+num);
+    gpu->_recv_num = gpuMalloc<integer_t>(num);
 
-	checkCudaErrors(cudaMalloc((void**)&(gpu->_recv_start), sizeof(int)*(size+num)));
-	checkCudaErrors(cudaMemcpy(gpu->_recv_start, data->_recv_start, sizeof(int)*(size+num), cudaMemcpyHostToDevice));
+    gpu->_recv_data = gpuMalloc<uinteger_t>(data->_recv_offset[num]);
 
-	checkCudaErrors(cudaMalloc((void**)&(gpu->_recv_num), sizeof(int)*num));
-	checkCudaErrors(cudaMemset(gpu->_recv_num, 0, sizeof(int)*num));
+    gpu->_send_offset = copyToGPU<integer_t>(data->_send_offset, num_p_1);
+    gpu->_send_start = copyToGPU<integer_t>(data->_send_start, size+num);
+    gpu->_send_num = gpuMalloc<integer_t>(num);
 
-	checkCudaErrors(cudaMalloc((void**)&(gpu->_send_offset), sizeof(int)*num_p_1));
-	checkCudaErrors(cudaMemcpy(gpu->_send_offset, data->_send_offset, sizeof(int)*num_p_1, cudaMemcpyHostToDevice));
-
-	checkCudaErrors(cudaMalloc((void**)&(gpu->_send_start), sizeof(int)*(size+num)));
-	checkCudaErrors(cudaMemcpy(gpu->_send_start, data->_send_start, sizeof(int)*(size+num), cudaMemcpyHostToDevice));
-
-
-	checkCudaErrors(cudaMalloc((void**)&(gpu->_send_num), sizeof(int)*num));
-	checkCudaErrors(cudaMemset(gpu->_send_num, 0, sizeof(int)*num));
-
-	checkCudaErrors(cudaMalloc((void**)&(gpu->_recv_data), sizeof(int)*(data->_recv_offset[num])));
-	checkCudaErrors(cudaMemset(gpu->_recv_data, 0, sizeof(int)*(data->_recv_offset[num])));
-
-
-	checkCudaErrors(cudaMalloc((void**)&(gpu->_send_data), sizeof(int)*(data->_send_offset[num])));
-	checkCudaErrors(cudaMemset(gpu->_send_data, 0, sizeof(int)*(data->_send_offset[num])));
+    gpu->_send_data = gpuMalloc<uinteger_t>(data->_send_offset[num]);
 
 	return gpu;
 }
@@ -50,15 +37,15 @@ CrossNodeData * copyCNDtoGPU(CrossNodeData *data)
 
 int freeCNDGPU(CrossNodeData *data) 
 {
-	cudaFree(data->_recv_offset);
-	cudaFree(data->_recv_start);
-	cudaFree(data->_recv_num);
-	cudaFree(data->_recv_data);
+	gpuFree(data->_recv_offset);
+	gpuFree(data->_recv_start);
+	gpuFree(data->_recv_num);
+	gpuFree(data->_recv_data);
 
-	cudaFree(data->_send_offset);
-	cudaFree(data->_send_start);
-	cudaFree(data->_send_num);
-	cudaFree(data->_send_data);
+	gpuFree(data->_send_offset);
+	gpuFree(data->_send_start);
+	gpuFree(data->_send_num);
+	gpuFree(data->_send_data);
 
 	data->_node_num = 0;
 	data->_min_delay = 0;
@@ -67,10 +54,10 @@ int freeCNDGPU(CrossNodeData *data)
 	return 0;
 }
 
-__global__ void cuda_gen_cnd(Connection *conn, int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, int *send_data, int *send_offset, int *send_start, int node_num, int time, int min_delay, int delay)
+__global__ void cuda_gen_cnd(integer_t *idx2index, integer_t *crossnode_index2idx, uinteger_t *send_data, integer_t *send_offset, integer_t *send_start, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, int max_delay, int min_delay, int node_num, int time)
 {
-	__shared__ int cross_neuron_id[MAX_BLOCK_SIZE];
-	__shared__ volatile int cross_cnt;
+	__shared__ uinteger_t cross_neuron_id[MAX_BLOCK_SIZE];
+	__shared__ volatile integer_t cross_cnt;
 
 	if (threadIdx.x == 0) {
 		cross_cnt = 0;
@@ -79,17 +66,18 @@ __global__ void cuda_gen_cnd(Connection *conn, int *firedTable, int *firedTableS
 
 	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	// int delayIdx = time % (conn->maxDelay-conn->minDelay+1);
-	int delayIdx = time % (conn->maxDelay+1);
-	int fired_size = firedTableSizes[delayIdx];
+	int delayIdx = time % (max_delay+1);
+	int curr_delay = time % min_delay;
+	uinteger_t fired_size = firedTableSizes[delayIdx];
 	for (int node = 0; node < node_num; node++) {
-		for (int idx = tid; idx < fired_size; idx += blockDim.x * gridDim.x) {
-			int nid = firedTable[gFiredTableCap*delayIdx + idx];
-			int tmp = idx2index[nid];
+		for (size_t idx = tid; idx < fired_size; idx += blockDim.x * gridDim.x) {
+			size_t nid = firedTable[firedTableCap*delayIdx + idx];
+			integer_t tmp = idx2index[nid];
 			
 			if (tmp >= 0) {
-				int map_nid = crossnode_index2idx[tmp*node_num + node];
+				integer_t map_nid = crossnode_index2idx[tmp*node_num + node];
 				if (map_nid >= 0) {
-					int test_loc = atomicAdd((int*)&cross_cnt, 1);
+					unsigned int test_loc = atomicAdd((unsigned int*)&cross_cnt, 1);
 					if (test_loc < MAX_BLOCK_SIZE) {
 						cross_neuron_id[test_loc] = map_nid;
 					}
@@ -98,8 +86,8 @@ __global__ void cuda_gen_cnd(Connection *conn, int *firedTable, int *firedTableS
 			__syncthreads();
 
 			if (cross_cnt > 0) {
-				int idx_t = node * (min_delay+1) + delay + 1;
-				commit2globalTable(cross_neuron_id, cross_cnt, send_data, &(send_start[idx_t]), send_offset[node]);
+				size_t idx_t = node * (min_delay+1) + curr_delay + 1;
+				commit2globalTable(cross_neuron_id, static_cast<integer_t>(cross_cnt), send_data, &(send_start[idx_t]), send_offset[node]);
 				if (threadIdx.x == 0) {
 					cross_cnt = 0;
 				}
@@ -110,7 +98,8 @@ __global__ void cuda_gen_cnd(Connection *conn, int *firedTable, int *firedTableS
 	}
 }
 
-__global__ void update_cnd_start(int *start, int node, int min_delay, int curr_delay) {
+template<typename T>
+__global__ void update_cnd_start(T *start, int node, int min_delay, int curr_delay) {
 	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	for (int i=tid; i<node; i++) {
 		start[i*(min_delay+1)+curr_delay+2] = start[i*(min_delay+1)+curr_delay+1];
@@ -118,9 +107,9 @@ __global__ void update_cnd_start(int *start, int node, int min_delay, int curr_d
 }
 
 
-void cudaGenerateCND(Connection *conn, int *firedTable, int *firedTableSizes, int *idx2index, int *crossnode_index2idx, CrossNodeData *cnd, int node_num, int time, int delay, int gridSize, int blockSize) 
+void cudaGenerateCND(integer_t *idx2index, integer_t *crossnode_index2idx, CrossNodeData *cnd, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, int max_delay, int min_delay, int node_num, int time, int gridSize, int blockSize) 
 {
-	cuda_gen_cnd<<<gridSize, blockSize>>>(conn, firedTable, firedTableSizes, idx2index, crossnode_index2idx, cnd->_send_data, cnd->_send_offset, cnd->_send_start, node_num, time, cnd->_min_delay, delay);
+	cuda_gen_cnd<<<gridSize, blockSize>>>(idx2index, crossnode_index2idx, cnd->_send_data, cnd->_send_offset, cnd->_send_start, firedTable, firedTableSizes, firedTableCap, max_delay, min_delay, node_num, time);
 }
 
 int fetch_cnd_gpu(CrossNodeData *gpu, CrossNodeData *cpu)
@@ -153,10 +142,10 @@ int reset_cnd_gpu(CrossNodeData *gpu, CrossNodeData *cpu)
 {
 	int node_num = cpu->_node_num;
 	int size = cpu->_min_delay * cpu->_node_num;
-	cudaMemset(gpu->_recv_start, 0, sizeof(int)*(size+node_num));
-	cudaMemset(gpu->_send_start, 0, sizeof(int) * (size+node_num));
+	gpuMemset(gpu->_recv_start, 0, size+node_num);
+	gpuMemset(gpu->_send_start, 0, size+node_num);
 
-	memset(cpu->_recv_num, 0, sizeof(int) * node_num);
-	memset(cpu->_send_num, 0, sizeof(int) * node_num);
+	memset_c(cpu->_recv_num, 0, node_num);
+	memset_c(cpu->_send_num, 0, node_num);
 	return 0;
 }

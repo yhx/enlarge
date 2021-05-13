@@ -1,161 +1,149 @@
 
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/sysinfo.h>
+#include <iostream>
+#include <algorithm>
 
+#include "../utils/helper_c.h"
 #include "../utils/utils.h"
-#include "../utils/TypeFunc.h"
+#include "../base/TypeFunc.h"
 #include "Network.h"
-// #include "../neuron/array/ArrayNeuron.h"
-// #include "../neuron/array/GArrayNeurons.h"
 
-// TODO uncomment to support ArrayNeuron
-// void arrangeFireArray(vector<int> &fire_array, vector<int> &start_loc, PopulationBase *popu)
-// {
-// 	size_t num = popu->getNum();
-// 	for (size_t i=0; i<num; i++) {
-// 		ArrayNeuron *p = dynamic_cast<ArrayNeuron*>(popu->getNeuron(i));
-// 		vector<int> &vec = p->getFireTimes();
-// 		start_loc.push_back(fire_array.size());
-// 		fire_array.insert(fire_array.end(), vec.begin(), vec.end());
-// 	}
-// }
+using std::cout;
+using std::endl;
 
-// TODO uncomment to support ArrayNeuron
-// void arrangeArrayNeuron(vector<int> &fire_array, vector<int> &start_loc, GArrayNeurons *p, int num)
-// {
-// 	assert(num == (int)start_loc.size());
-// 	for (int i=0; i<num; i++) {
-// 		p->p_start[i] = start_loc[i];
-// 		p->p_end[i] += p->p_start[i];
-// 		if (i > 0) {
-// 			assert(p->p_end[i-1] == p->p_start[i]);
-// 		}
-// 	}
-// 	assert(p->p_end[num-1] == (int)fire_array.size());
-// 	p->p_fire_time = static_cast<int*>(malloc(sizeof(int) * fire_array.size()));
-// 	std::copy(fire_array.begin(), fire_array.end(), p->p_fire_time);
-// }
+void Network::update_status()
+{
+	_neuron_num = 0;
+	for (auto iter=_neurons.begin(); iter!=_neurons.end(); iter++) {
+		_neurons_offset[iter->first] = _neuron_num;
+		_neuron_num += iter->second->size();
+	}
+
+	_max_delay = 0;
+	_min_delay = INT_MAX;
+	_synapse_num = 0;
+	for (auto iter=_synapses.begin(); iter!=_synapses.end(); iter++) {
+		_synapses_offset[iter->first] = _synapse_num;
+		_synapse_num += iter->second->size();
+
+		auto t = minmax_element(iter->second->delay().begin(), iter->second->delay().end());
+		int max = *(t.second);
+		int min = *(t.first);
+		if (_max_delay < max) {
+			_max_delay = max;
+		}
+		if (_min_delay > min) {
+			_min_delay = min;
+		}
+	}
+	assert(_min_delay <= _max_delay);
+
+	if (_node_num == 1) {
+		_buffer_offsets.clear();
+		size_t count = 0;
+		for (auto iter=_neurons.begin(); iter!=_neurons.end(); iter++) {
+			_buffer_offsets[0][iter->first] = count;
+			count = count + iter->second->size() * iter->second->buffer_size();
+		}
+		_buffer_offsets[0][TYPESIZE] = count;
+	}
+
+	printf("All neuron num: %ld, all synapse num: %ld\n", _neuron_num, _synapse_num);
+	for (auto iter=_neurons.begin(); iter!=_neurons.end(); iter++) {
+		cout << "Neuron type " << iter->first << " num: " << iter->second->size() << endl;
+	}
+	for (auto iter=_synapses.begin(); iter!=_synapses.end(); iter++) {
+		cout << "Synapse type " << iter->first << " num: " << iter->second->size() << endl;
+	}
+	printf("Max delay: %d, min delay: %d\n", _max_delay, _min_delay);
+
+}
 
 GNetwork* Network::buildNetwork(const SimInfo &info)
 {
 	struct sysinfo sinfo;
 	sysinfo(&sinfo);
-	printf("Before build, MEM used: %lfGB\n", static_cast<double>((sinfo.totalram - sinfo.freeram)/1024.0/1024.0/1024.0));
+	print_mem("Before build");
 
-	vector<Population *>::iterator pIter;
-	vector<Neuron *>::iterator niter;
-	vector<Synapse *>::iterator siter;
-	// vector<int> array_neuron_start;
-	// vector<int> array_neuron_fire_times;
+	update_status();
 
-	size_t neuronTypeNum = _nTypes.size();
-	size_t synapseTypeNum = _sTypes.size();
-	int maxDelaySteps = static_cast<unsigned int>(round(_maxDelay/info.dt));
-	int minDelaySteps = static_cast<unsigned int>(round(_minDelay/info.dt));
-	int deltaDelay = maxDelaySteps - minDelaySteps + 1;
+#ifdef DEBUG
+	log_graph();
+	save_graph("graph.test");
+#endif
 
-	GNetwork * ret = allocGNetwork(neuronTypeNum, synapseTypeNum);
+	size_t n_type_num = _neurons.size();
+	size_t s_type_num = _synapses.size();
+	// int delta_delay = _max_delay - _min_delay + 1;
 
-	for (size_t i=0; i<neuronTypeNum; i++) {
-		ret->pNTypes[i] = _nTypes[i];
+	GNetwork * ret = allocGNetwork(n_type_num, s_type_num);
 
-		ret->ppNeurons[i] = allocType[_nTypes[i]](_neuronNums[i]);
-		assert(ret->ppNeurons[i] != NULL);
-
-		int idx = 0;
-		for (pIter = _pPopulations.begin(); pIter != _pPopulations.end();  pIter++) {
-			Population * p = *pIter;
-			if (p->getType() == _nTypes[i]) {
-				size_t copied = p->hardCopy(ret->ppNeurons[i], idx, ret->pNeuronNums[i], info);
-				idx += copied;
-
-				// TODO uncomment to support array
-				// if (p->getType() == Array) {
-				// 	arrangeFireArray(array_neuron_fire_times, array_neuron_start, p);
-				// }
-
-			}
-		}
-
-		assert(idx == _neuronNums[i]);
-
-		// TODO uncomment to support array
-		// if (nTypes[i] == Array) {
-		// 	arrangeArrayNeuron(array_neuron_fire_times, array_neuron_start, static_cast<GArrayNeurons*>(pN), idx);
-		// }
-
-		ret->pNeuronNums[i+1] = idx + ret->pNeuronNums[i];
+	int n_t=0;
+	for (auto iter=_neurons.begin(); iter!=_neurons.end(); iter++) {
+		ret->pNTypes[n_t] = iter->first;
+		ret->ppNeurons[n_t] = iter->second->packup();
+		assert(ret->ppNeurons[n_t] != NULL);
+		ret->pNeuronNums[n_t+1] = iter->second->size() + ret->pNeuronNums[n_t];
+		ret->bufferOffsets[n_t] = _buffer_offsets[0][iter->first];
+		n_t++;
 	}
-	assert(ret->pNeuronNums[ret->nTypeNum] == _totalNeuronNum);
+	ret->bufferOffsets[n_t] = _buffer_offsets[0][TYPESIZE];
+	assert(ret->pNeuronNums[n_type_num] == _neuron_num);
 
-	for (size_t i=0; i<synapseTypeNum; i++) {
-		ret->pSTypes[i] = _sTypes[i];
+	map<Type, size_t> tp2idx;
+	int s_t = 0;
+	for (auto iter=_synapses.begin(); iter!=_synapses.end(); iter++) {
+		ret->pSTypes[s_t] = iter->first;
+		ret->ppSynapses[s_t] = iter->second->packup();
+		assert(ret->ppSynapses[s_t] != NULL);
+		ret->pSynapseNums[s_t+1] = iter->second->size() + ret->pSynapseNums[s_t];
+		tp2idx[iter->first] = s_t;
+		s_t++;
+	}
+	assert(ret->pSynapseNums[n_type_num] == _synapse_num);
 
-		ret->ppSynapses[i] = allocType[_sTypes[i]](_synapseNums[i]);
-		assert(ret->ppSynapses[i] != NULL);
+	ret->ppConnections = malloc_c<Connection*>(s_type_num); 
+	for (size_t i=0; i<s_type_num; i++) {
+		ret->ppConnections[i] = allocConnection(ret->pNeuronNums[n_type_num], ret->pSynapseNums[i+1] - ret->pSynapseNums[i], _max_delay, _min_delay);
+	}
 
-		size_t idx = 0;
-		for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
-			Population * p = *pIter;
-			for (size_t nidx=0; nidx<p->getNum(); nidx++) {
-				const vector<Synapse *> &s_vec = p->locate(nidx)->getSynapses();
-				for (int delay_t=0; delay_t < deltaDelay; delay_t++) {
-					for (auto siter = s_vec.begin(); siter != s_vec.end(); siter++) {
-						if ((*siter)->getDelaySteps(info.dt) == delay_t + minDelaySteps) {
-							if ((*siter)->getType() == _sTypes[i]) {
-								//int sid = (*iter)->getID();
-								//assert(synapseIdx < totalSynapseNum);
-								//synapseIdx++;
-								size_t copied = (*siter)->hardCopy(ret->ppSynapses[i], idx, ret->pSynapseNums[i], info);
-								idx += copied;
-							}
-						}
-					}
+	size_t *syn_idx = malloc_c<size_t>(s_type_num); 
+	size_t *start = malloc_c<size_t>(s_type_num); 
+	for (int d=_min_delay; d<_max_delay+1; d++) {
+		for (size_t i=0; i<n_type_num; i++) {
+			Type t = ret->pNTypes[i];
+			for (size_t n=0; n<ret->pNeuronNums[i+1]-ret->pNeuronNums[i]; n++) {
+				ID nid(t, 0, n);
+				size_t n_offset = _neuron_num*(d-_min_delay) + _neurons_offset[t]+n;
+				for (auto s_iter = _conn_n2s[t][n][d].begin(); s_iter != _conn_n2s[t][n][d].end(); s_iter++) {
+					int s_idx = tp2idx[s_iter->type()];
+					Connection * c = ret->ppConnections[s_idx];
+					c->pDelayStart[n_offset] = start[s_idx];
+					c->pSidMap[syn_idx[s_idx]] = s_iter->id();
+					ID target = _conn_s2n[s_iter->type()][s_iter->id()];
+					c->dst[syn_idx[s_idx]] = _buffer_offsets[0][target.type()] + target.offset() * _neurons[target.type()]->size() + target.id();
+					syn_idx[s_idx]++;
+				}
+				for (size_t s=0; s<s_type_num; s++) {
+					ret->ppConnections[s]->pDelayNum[n_offset] = syn_idx[s] - start[s];
+					ret->ppConnections[s]->pDelayStart[n_offset+1] = ret->ppConnections[s]->pDelayStart[n_offset] +  ret->ppConnections[s]->pDelayNum[n_offset];
+					start[s] = syn_idx[s];
 				}
 			}
 		}
-		//for (siter = pSynapses.begin(); siter != pSynapses.end();  siter++) {
-		//	SynapseBase * p = *siter;
-		//	if (p->getType() == _sTypes[i]) {
-		//		int copied = p->hardCopy(pS, idx, pSynapsesNum[i]);
-		//		idx += copied;
-		//	}
-		//}
-
-		assert(idx == _synapseNums[i]);
-		ret->pSynapseNums[i+1] = idx + ret->pSynapseNums[i];
 	}
-	assert(ret->pSynapseNums[ret->sTypeNum] == _totalSynapseNum);
 
-	logMap();
-
-	ret->pConnection = allocConnection(_totalNeuronNum, _totalSynapseNum, maxDelaySteps, minDelaySteps);
-
-	size_t synapseIdx = 0;
-	for (auto pIter = _pPopulations.begin(); pIter != _pPopulations.end(); pIter++) {
-		Population * p = *pIter;
-		for (size_t i=0; i<p->getNum(); i++) {
-			ID nid = p->locate(i)->getID();
-			const vector<Synapse *> &s_vec = p->locate(i)->getSynapses();
-			for (int delay_t=0; delay_t < deltaDelay; delay_t++) {
-				ret->pConnection->pDelayStart[delay_t + deltaDelay*nid] = synapseIdx;
-
-				for (auto iter = s_vec.begin(); iter != s_vec.end(); iter++) {
-					if ((*iter)->getDelaySteps(info.dt) == delay_t + minDelaySteps) {
-						ID sid = (*iter)->getID();
-						assert(synapseIdx < _totalSynapseNum);
-						assert(synapseIdx == sid);
-						synapseIdx++;
-					}
-				}
-
-				ret->pConnection->pDelayNum[delay_t + deltaDelay*nid] = synapseIdx - ret->pConnection->pDelayStart[delay_t + deltaDelay*nid];
-			}
+	for (size_t st=0; st<s_type_num; st++) {
+		for (unsigned int i=0; i<ret->pNeuronNums[n_type_num] * (_max_delay - _min_delay+1); i++) {
+			assert(ret->ppConnections[st]->pDelayStart[i+1] == ret->ppConnections[st]->pDelayStart[i] + ret->ppConnections[st]->pDelayNum[i]);
 		}
 	}
 
 	sysinfo(&sinfo);
-	printf("Finish build, MEM used: %lfGB\n", static_cast<double>((sinfo.totalram - sinfo.freeram)/1024.0/1024.0/1024.0));
+	print_mem("Finish build");
 
 	return ret;
 }

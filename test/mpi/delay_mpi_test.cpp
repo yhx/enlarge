@@ -76,26 +76,26 @@ int main(int argc, char **argv)
 	int node_id = 0;
 	MPI_Comm_rank(MPI_COMM_WORLD, &node_id);
 
-	Network c;
+	Network c(dt);
 
 	if (node_id == 0) {
 
 		Population *g[depth+1];
 
-		g[1]=c.createPopulation(1, N, LIF_curr_exp(LIFNeuron(
+		g[1]=c.createPopulation(1, N, LIFNeuron(
 						fv,v_rest,freset,
 						c_m,tau_m,
 						frefractory,tau_syn_e,tau_syn_i,
-						fthreshold,i_offset
-						),  tau_syn_e, tau_syn_i));
+						fthreshold,i_offset, dt
+						));
 
 		for(int i=2;i<=depth;i++)
-			g[i] = c.createPopulation(i, N, LIF_curr_exp(LIFNeuron(
+			g[i] = c.createPopulation(i, N, LIFNeuron(
 							fv,v_rest,freset,
 							c_m,tau_m,
 							frefractory,tau_syn_e,tau_syn_i,
-							fthreshold,0
-							),  tau_syn_e, tau_syn_i));
+							fthreshold,0, dt
+							));
 
 		real * weight6 = getConstArray((real)(1e-9)*w1 /N, N*N);
 		real * weight6_30 = getConstArray((real)(1e-9)*w2 /N, N*N);
@@ -103,7 +103,7 @@ int main(int argc, char **argv)
 		real * weight3 = getConstArray((real)(-1e-9)*w4 /N, N*N);
 		real * delay = getConstArray((real)(delay_step * 0.1e-3), N*N);
 
-		enum SpikeType type=Inhibitory;
+		enum SpikeType type=Inh;
 		SpikeType *ii = getConstArray(type, N*N);
 
 		for(int i=2;i<=depth;i++)
@@ -118,12 +118,12 @@ int main(int argc, char **argv)
 		int i=1;
 		while(i+1<=depth)
 		{
-			p[i] = c.createPopulation(i+depth, N, LIF_curr_exp(LIFNeuron(
+			p[i] = c.createPopulation(i+depth, N, LIFNeuron(
 							fv,v_rest,freset,
 							c_m,tau_m,
 							frefractory,tau_syn_e,tau_syn_i,
-							fthreshold,0
-							),  tau_syn_e, tau_syn_i));
+							fthreshold,0, dt
+							));
 			c.connect(g[i], p[i], weight5, delay, NULL, N*N);
 			c.connect(p[i], g[i+1], weight3, delay, ii, N*N);
 			i+=4;

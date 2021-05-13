@@ -9,13 +9,12 @@
 #include <string.h>
 
 #include "../utils/utils.h"
-#include "../utils/FileOp.h"
-#include "../utils/TypeFunc.h"
+#include "../utils/helper_c.h"
+#include "../utils/Buffer.h"
+#include "../base/TypeFunc.h"
 #include "../neuron/lif/LIFData.h"
 
 #include "SingleThreadSimulator.h"
-
-int *c_gFiredCount = NULL;
 
 SingleThreadSimulator::SingleThreadSimulator(Network *network, real dt)
 	: Simulator(network, dt)
@@ -36,14 +35,13 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 
 	GNetwork *pNetCPU = _network->buildNetwork(info);
 
-	FILE *v_file = openFile("v.cpu.log", "w+");
-	FILE *log_file = openFile("sim.cpu.log", "w+");
-	FILE *fire_file = openFile("fire.cpu.log", "w+");
+	FILE *v_file = fopen_c("v.cpu.log", "w+");
+	FILE *log_file = fopen_c("sim.cpu.log", "w+");
+	// FILE *fire_file = fopen_c("fire.cpu.log", "w+");
 #ifdef LOG_DATA
-	FILE *input_e_file = openFile("input_e.cpu.log", "w+");
-	FILE *input_i_file = openFile("input_i.cpu.log", "w+");
-	FILE *ie_file = openFile("ie.cpu.log", "w+");
-	FILE *ii_file = openFile("ii.cpu.log", "w+");
+	FILE *input_file = fopen_c("input.cpu.log", "w+");
+	// FILE *ie_file = fopen_c("ie.cpu.log", "w+");
+	// FILE *ii_file = fopen_c("ii.cpu.log", "w+");
 #endif
 
 	int nTypeNum = pNetCPU->nTypeNum;
@@ -53,25 +51,11 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 	printf("NeuronTypeNum: %d, SynapseTypeNum: %d\n", nTypeNum, sTypeNum);
 	printf("NeuronNum: %d, SynapseNum: %d\n", totalNeuronNum, totalSynapseNum);
 
-	int maxDelay = pNetCPU->pConnection->maxDelay;
-	// int deltaDelay = pNetCPU->pConnection->maxDelay - pNetCPU->pConnection->minDelay + 1;
-	printf("maxDelay: %d minDelay: %d\n", pNetCPU->pConnection->maxDelay, pNetCPU->pConnection->minDelay);
+	int maxDelay = pNetCPU->ppConnections[0]->maxDelay;
+	// int deltaDelay = pNetCPU->ppConnections->maxDelay - pNetCPU->ppConnections->minDelay + 1;
+	printf("maxDelay: %d minDelay: %d\n", pNetCPU->ppConnections[0]->maxDelay, pNetCPU->ppConnections[0]->minDelay);
 
-	int cFiredTableCap = totalNeuronNum;
-
-
-
-	real *c_gNeuronInput = (real*)malloc(sizeof(real)*totalNeuronNum);
-	memset(c_gNeuronInput, 0, sizeof(real)*totalNeuronNum);
-	real *c_gNeuronInput_I = (real*)malloc(sizeof(real)*totalNeuronNum); 
-	memset(c_gNeuronInput_I, 0, sizeof(real)*totalNeuronNum);
-	int *c_gFiredTable = (int*)malloc(sizeof(int)*totalNeuronNum*(maxDelay+1));
-	memset(c_gFiredTable, 0, sizeof(int)*totalNeuronNum*(maxDelay+1));
-   	int *c_gFiredTableSizes = (int*)malloc(sizeof(int)*(maxDelay+1));
-   	memset(c_gFiredTableSizes, 0, sizeof(int)*(maxDelay+1));
-
-   	c_gFiredCount = (int*)malloc(sizeof(int)*(totalNeuronNum));
-   	memset(c_gFiredCount, 0, sizeof(int)*(totalNeuronNum));
+	Buffer buffer(pNetCPU->bufferOffsets[nTypeNum], totalNeuronNum, maxDelay);
 
 	printf("Start runing for %d cycles\n", sim_cycle);
 	struct timeval ts, te;
@@ -81,10 +65,7 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 		//printf("\rCycle: %d", cycle);
 		//fflush(stdout);
 #ifdef LOG_DATA
-		int copy_idx = getIndex(pNetCPU->pNTypes, nTypeNum, LIF);
-
-		log_array(input_e_file, c_gNeuronInput, totalNeuronNum);
-		log_array(input_i_file, c_gNeuronInput_I, totalNeuronNum);
+		log_array(input_file, buffer._data, pNetCPU->bufferOffsets[nTypeNum]);
 
 		// for (int i=pNetCPU->pNeuronNums[copy_idx]; i<pNetCPU->pNeuronNums[copy_idx+1]; i++) {
 		// 	fprintf(input_e_file, "%.10lf \t", c_gNeuronInput[i]);
@@ -101,25 +82,26 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 		info.input.clear();
 
 		int currentIdx = time % (maxDelay + 1);
-		c_gFiredTableSizes[currentIdx] = 0;
+		buffer._fired_sizes[currentIdx] = 0;
 
 		for (int i=0; i<nTypeNum; i++) {
-			updateType[pNetCPU->pNTypes[i]](pNetCPU->pConnection, pNetCPU->ppNeurons[i], c_gNeuronInput, c_gNeuronInput_I, c_gFiredTable, c_gFiredTableSizes, cFiredTableCap, pNetCPU->pNeuronNums[i+1]-pNetCPU->pNeuronNums[i], pNetCPU->pNeuronNums[i], time);
+			updateType[pNetCPU->pNTypes[i]](pNetCPU->ppConnections[i], pNetCPU->ppNeurons[i], buffer._data + pNetCPU->bufferOffsets[i], buffer._fire_table, buffer._fired_sizes, buffer._fire_table_cap, pNetCPU->pNeuronNums[i+1]-pNetCPU->pNeuronNums[i], pNetCPU->pNeuronNums[i], time);
 		}
 
 		for (int i=0; i<sTypeNum; i++) {
-			updateType[pNetCPU->pSTypes[i]](pNetCPU->pConnection, pNetCPU->ppSynapses[i], c_gNeuronInput, c_gNeuronInput_I, c_gFiredTable, c_gFiredTableSizes, cFiredTableCap, pNetCPU->pSynapseNums[i+1]-pNetCPU->pSynapseNums[i], pNetCPU->pSynapseNums[i], time);
+			updateType[pNetCPU->pSTypes[i]](pNetCPU->ppConnections[i], pNetCPU->ppSynapses[i], buffer._data, buffer._fire_table, buffer._fired_sizes, buffer._fire_table_cap, pNetCPU->pSynapseNums[i+1]-pNetCPU->pSynapseNums[i], pNetCPU->pSynapseNums[i], time);
 		}
 
 #ifdef LOG_DATA
+		int copy_idx = getIndex(pNetCPU->pNTypes, nTypeNum, LIF);
 		LIFData *c_lif = (LIFData *)pNetCPU->ppNeurons[copy_idx];
 		real *c_vm = c_lif->pV_m;
 
-		int copy_size = c_gFiredTableSizes[currentIdx];
+		int copy_size = buffer._fired_sizes[currentIdx];
 
 		log_array(v_file, c_vm, pNetCPU->pNeuronNums[copy_idx+1] - pNetCPU->pNeuronNums[copy_idx]);
 
-		log_array(log_file, c_gFiredTable + totalNeuronNum * currentIdx, copy_size);
+		log_array(log_file, buffer._fire_table  + totalNeuronNum * currentIdx, copy_size);
 
 		// for (int i=0; i<pNetCPU->pNeuronNums[copy_idx+1] - pNetCPU->pNeuronNums[copy_idx]; i++) {
 		// 	fprintf(v_file, "%.10lf \t", c_vm[i]);
@@ -147,19 +129,21 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 
 	printf("\nSimulation finished in %ld:%ld:%ld.%06lds\n", hours, minutes, seconds, uSeconds);
 
-	for (int i=0; i<totalNeuronNum; i++) {
-		fprintf(fire_file, "%d \t", c_gFiredCount[i]); 
+	for (int i=0; i<nTypeNum; i++) {
+		logRateNeuron[pNetCPU->pNTypes[i]](pNetCPU->ppNeurons[i], "cpu");
 	}
 
 
 
 	fclose(v_file);
-	// fclose(input_e_file);
 	// fclose(input_i_file);
 	// fclose(ie_file);
 	// fclose(ii_file);
-	fclose(fire_file);
 	fclose(log_file);
+
+#ifdef LOG_DATA
+	fclose(input_file);
+#endif
 
 	return 0;
 }

@@ -5,48 +5,52 @@
 #ifndef GNETWORK_H
 #define GNETWORK_H
 
-#include "../utils/type.h"
+#include <string>
 
+#include "../base/type.h"
 #include "Connection.h"
+
+using std::string;
 
 struct GNetwork {
 	//Numbers of types
-	int nTypeNum;
-	int sTypeNum;
+	size_t nTypeNum;
+	size_t sTypeNum;
 
-	// Delay info moved into connection
-	// int maxDelay;
-	// int minDelay;
+	// Delay info moved size_to connection
+	// size_t maxDelay;
+	// size_t minDelay;
 
 	//Type 
 	Type * pNTypes;
 	Type * pSTypes;
 
 	//Index for each type
-	int *pNeuronNums;
-	int *pSynapseNums;
+	size_t *pNeuronNums;
+	size_t *pSynapseNums;
 
-	//Pointers to neurons
+	size_t *bufferOffsets;
+
+	//Posize_ters to neurons
 	void **ppNeurons;
 	//Pointers to synapses
 	void **ppSynapses;
 
 	//Neuron to Synapse Connection
-	Connection *pConnection;
+	Connection **ppConnections;
 
 };
 
 
 // init and free
-// This func just set pConnection to NULL
-GNetwork * allocGNetwork(int nTypeNum, int sTypeNum);
+// This func just set the content of ppConnections to NULL
+GNetwork * allocGNetwork(size_t nTypeNum, size_t sTypeNum);
 GNetwork * deepcopyGNetwork(GNetwork *net);
-// TODO freeGNetwork
 void freeGNetwork(GNetwork * network);
 
 // Save and Load
-int saveGNetwork(GNetwork *net, FILE *f);
-GNetwork *loadGNetwork(FILE *f);
+int saveGNetwork(GNetwork *net, const string &path);
+GNetwork *loadGNetwork(const string &path);
 bool compareGNetwork(GNetwork *n1, GNetwork *n2);
 
 // Transfer GNetwork between CPU and GPU
