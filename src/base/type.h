@@ -27,6 +27,6 @@ enum Type {
 
 enum SpikeType { Exc = 0, Inh = 1, SPIKETYPESIZE = 2};
 
-enum SplitType { NeuronBalance = 0, RoundRobin = 1, GrpRR = 2, SynBestFit = 3, Metis = 4, Balanced, SynapseBalance};
+enum SplitType { NeuronBalance = 0, RoundRobin = 1, GrpRR = 2, SynBestFit = 3, Metis = 4, BestFit = 5, Balanced, SynapseBalance};
 #endif /* TYPE_H */
 
