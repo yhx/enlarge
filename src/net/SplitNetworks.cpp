@@ -161,9 +161,9 @@ void Network::splitNetwork(SplitType split, const char *name)
 		case BestFit:
 			{
 				printf("===BestFit\n");
-				float syn_weight = 0.02;
-				float comm_weight = 15;
-				float send_weight = 0.5;
+				float syn_weight = 0.1;
+				float comm_weight = 30;
+				float send_weight = 1;
 				float *load = malloc_c<float>(_node_num);
 				float *comm = malloc_c<float>(_node_num);
 				float *comm_idx = malloc_c<float>(_node_num);
