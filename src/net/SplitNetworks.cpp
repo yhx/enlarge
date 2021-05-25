@@ -204,6 +204,7 @@ void Network::splitNetwork(SplitType split, const char *name)
 				float syn_weight = 0.01;
 				float comm_weight = 5;
 				float send_weight = 1;
+				float recv_weight = 0.1;
 				float *load = malloc_c<float>(_node_num);
 				float *comm = malloc_c<float>(_node_num);
 				float *comm_idx = malloc_c<float>(_node_num);
@@ -241,9 +242,9 @@ void Network::splitNetwork(SplitType split, const char *name)
 									ID &nid = _conn_s2n[s_i->type()][s_i->id()];
 									int nidx = _idx2node[nid.type()][nid.id()];
 									if (nidx >= 0 && idx != nidx) {
-										comm[nidx] += 1;
+										comm[nidx] += recv_weight;
 										comm[idx] += send_weight;
-										c_cost += 1 + send_weight;
+										c_cost += recv_weight + send_weight;
 									}
 								}
 							}
@@ -253,8 +254,8 @@ void Network::splitNetwork(SplitType split, const char *name)
 								int nidx = _idx2node[nid.type()][nid.id()];
 								if (nidx >= 0 && idx != nidx) {
 									comm[nidx] += send_weight;
-									comm[nidx] += 1;
-									c_cost += 1 + send_weight;
+									comm[idx] += recv_weight;
+									c_cost += recv_weight + send_weight;
 								}
 							}
 
@@ -268,7 +269,7 @@ void Network::splitNetwork(SplitType split, const char *name)
 						_idx2node[t][i] = node_idx;
 						load[node_idx] += burden;
 						for (int i=0; i<_node_num; i++) {
-							load[i] += comm_idx[i];
+							load[i] += comm_idx[i] * comm_weight;
 						}
 						for (auto siter = n2s_rev[t][i].begin(); siter != n2s_rev[t][i].end(); siter++) {
 							_idx2node[siter->type()][siter->id()] = node_idx;

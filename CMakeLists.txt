@@ -36,7 +36,7 @@ ELSE(NOT IS_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/googletest-src")
 	CONFIGURE_FILE(CMakeLists.gtest.local.txt googletest-download/CMakeLists.txt)
 ENDIF()
 
-IF(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/googletest-download/CMakeLists.txt")
+IF(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/googletest-download/CMakeLists.txt")
 	EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
 		RESULT_VARIABLE result
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
