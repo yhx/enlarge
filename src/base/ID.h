@@ -37,8 +37,13 @@ public:
 	ID() {
 		_id = 0;
 	}
-	ID(uint64_t id) {
+
+	ID(const uint64_t &id) {
 		_id = id;
+	}
+
+	ID(const ID &id) {
+		_id = id._id;
 	}
 
 	ID(Type type, uint64_t id) : ID(type, 0, id) {
