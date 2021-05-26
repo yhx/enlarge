@@ -202,12 +202,9 @@ void Network::splitNetwork(SplitType split, const char *name)
 			{
 				printf("===BestFit\n");
 				float syn_weight = 0.01;
-				float comm_weight = 5;
+				float comm_weight = 1.2;
 				float send_weight = 1;
-				float recv_weight = 0.1;
-				float *load = malloc_c<float>(_node_num);
-				float *comm = malloc_c<float>(_node_num);
-				float *comm_idx = malloc_c<float>(_node_num);
+				float recv_weight = 0.5;
 
 				print_mem("before s2n_rev");
 				map<Type, vector<ID>> s2n_rev;
@@ -225,6 +222,10 @@ void Network::splitNetwork(SplitType split, const char *name)
 					}
 				}
 				print_mem("after s2n_rev");
+
+				float *load = malloc_c<float>(_node_num);
+				float *comm = malloc_c<float>(_node_num);
+				float *comm_idx = malloc_c<float>(_node_num);
 
 				for (auto t_iter = _neurons.begin(); t_iter != _neurons.end(); t_iter++) {
 					Type t = t_iter->first;
