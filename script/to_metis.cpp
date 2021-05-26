@@ -41,7 +41,7 @@ int to_metis(const char *in_name, const char *out_name)
 	}
 
 	size_t syn_num = synapse_num;
-	size_t nid =0;
+	// size_t nid =0;
 	for (size_t n=0; n<neuron_num; n++) {
 		for (auto di=conn[n].begin(); di!=conn[n].end(); di++) {
 			for (auto ti=di->second.begin(); ti!=di->second.end(); ti++) {

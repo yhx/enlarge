@@ -13,10 +13,10 @@ int main(int argc, char **argv)
 
 	time_t start,end;
 	start=clock(); //time(NULL);
-	if(argc !=6 && argc != 7)
+	if(argc !=6 && argc != 7 && argc != 11)
 	{
 		if (node_id == 0) {
-			printf("Need 5/6 paras. For example\n FR 1%%: %s n0 n1 fire_rate delay net_parts [algorithm]\n", argv[0]);
+			printf("Need 5/6/10 paras. For example\n FR 1%%: %s n0 n1 fire_rate delay net_parts [algorithm syn_weight comm_weight send_weight recv_weight]\n", argv[0]);
 		}
 		return 0;
 	}
@@ -31,6 +31,14 @@ int main(int argc, char **argv)
 	SplitType split = SynapseBalance;
 	if (argc == 7) {
 		 split = (SplitType)atoi(argv[6]);
+	}
+
+	AlgoPara para = {0, 0, 0, 0};
+	if (argc == 11) {
+		para.syn_weight = strtof(argv[7], NULL);
+		para.comm_weight = strtof(argv[8], NULL);
+		para.send_weight = strtof(argv[9], NULL);
+		para.recv_weight = strtof(argv[10], NULL);
 	}
 
 	real w1=0.0;
@@ -124,7 +132,10 @@ int main(int argc, char **argv)
 	if (node_id == 0) {
 		char name[1024];
 
-		if (argc == 7) {
+		if (argc == 11) {
+			sprintf(name, "%s_%d_%ld_%ld_%d_%d_%d", "standard_mpi", parts, n0, n1, fr, delay_step, split); 
+			mn.build_net(parts, split, name, &para);
+		} else if (argc == 7) {
 			sprintf(name, "%s_%d_%ld_%ld_%d_%d_%d", "round_mpi", parts, n0, n1, fr, delay_step, split); 
 			mn.build_net(parts, split, name);
 		} else {

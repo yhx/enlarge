@@ -21,7 +21,7 @@ void swap_id(ID &s, ID &d, map<Type, vector<vector<ID>>> &n2s_rev, map<Type, vec
 	}
 }
 
-void Network::splitNetwork(SplitType split, const char *name)
+void Network::splitNetwork(SplitType split, const char *name, const AlgoPara *para)
 {
 
 	print_mem("before n2s_rev");
@@ -200,12 +200,19 @@ void Network::splitNetwork(SplitType split, const char *name)
 			break;
 		case BestFit:
 			{
-				printf("===BestFit\n");
 				float syn_weight = 0.01;
 				float comm_weight = 1.2;
 				float send_weight = 1;
 				float recv_weight = 0.5;
+				
+				if (para) {
+					syn_weight = para->syn_weight;
+					comm_weight = para->comm_weight;
+					send_weight = para->comm_weight;
+					recv_weight = para->recv_weight;
+				}
 
+				printf("===BestFit %.4lf %.4lf %.4lf %.4lf\n", syn_weight, comm_weight, send_weight, recv_weight);
 				print_mem("before s2n_rev");
 				map<Type, vector<ID>> s2n_rev;
 				for (auto iter = _synapses.begin(); iter != _synapses.end(); iter++) {

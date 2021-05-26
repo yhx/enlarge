@@ -1,6 +1,7 @@
-#include "../../include/BSim.h"
 #include <stdlib.h>
-#include<time.h>
+#include <time.h>
+
+#include "../../include/BSim.h"
 
 using namespace std;
 
@@ -12,9 +13,9 @@ int main(int argc, char **argv)
 
 	time_t start,end;
 	start=clock(); //time(NULL);
-	if(argc !=6 && argc != 7)
+	if(argc !=6 && argc != 7 && argc != 11)
 	{
-		printf("Need 5/6 paras. For example\n FR 1%%: %s depth num_neuron fire_rate delay net_parts [algorithm]\n", argv[0]);
+		printf("Need 5/6/10 paras. For example\n FR 1%%: %s depth num_neuron fire_rate delay net_parts [algorithm syn_weight comm_weight send_weight recv_weight]\n", argv[0]);
 		// printf("Need 7 paras. For example\n FR 1%%: %s depth num_neuron 0.7 0.5 0.6 0.3 6\n FR 5%%: %s depth num_neuron 0.7 0.9 0.6 0.2 6\n FR 20%%: %s depth num_neuron 1.3 1 2 1 50\n FR 50%%: %s depth num_neuron 2.7 3 2 1 20\n FR 65%%: %s depth num_neuron 4 2 5 3 20\n", argv[0], argv[0], argv[0], argv[0], argv[0]);
 		return 0;
 	}
@@ -32,9 +33,18 @@ int main(int argc, char **argv)
 	real w4=0.0;
 	int who=0;
 
+
 	SplitType split = SynapseBalance;
 	if (argc == 7) {
 		 split = (SplitType)atoi(argv[6]);
+	}
+
+	AlgoPara para = {0, 0, 0, 0};
+	if (argc == 11) {
+		para.syn_weight = strtof(argv[7], NULL);
+		para.comm_weight = strtof(argv[8], NULL);
+		para.send_weight = strtof(argv[9], NULL);
+		para.recv_weight = strtof(argv[10], NULL);
 	}
 
 	switch(fr) {
@@ -153,7 +163,10 @@ int main(int argc, char **argv)
 	MNSim mn(&c, dt);	//gpu
 	if (node_id == 0) {
 		char name[1024];
-		if (argc == 7) {
+		if (argc == 11) {
+			sprintf(name, "%s_%d_%d_%d_%d_%d_%d", "standard_mpi", parts, depth, N, fr, delay_step, split); 
+			mn.build_net(parts, split, name, &para);
+		} else if (argc == 7) {
 			sprintf(name, "%s_%d_%d_%d_%d_%d_%d", "standard_mpi", parts, depth, N, fr, delay_step, split); 
 			mn.build_net(parts, split, name);
 		} else {

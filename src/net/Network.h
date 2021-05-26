@@ -12,6 +12,7 @@
 #include <map>
 #include <algorithm>
 
+#include "../utils/Para.h"
 #include "../utils/SimInfo.h"
 #include "../interface/Neuron.h"
 #include "../interface/Synapse.h"
@@ -71,7 +72,7 @@ public:
 	void status();
 
 	GNetwork* buildNetwork(const SimInfo &info);
-	DistriNetwork * buildNetworks(const SimInfo &info, SplitType split = SynapseBalance, const char *name="", bool auto_splited = true);
+	DistriNetwork * buildNetworks(const SimInfo &info, SplitType split = SynapseBalance, const char *name="", const AlgoPara *para = NULL, bool auto_splited = true);
 
 	// CrossThreadData * arrangeCrossThreadData(int node_num);
 	CrossThreadDataGPU * arrangeCrossGPUData();
@@ -84,7 +85,7 @@ private:
 	
 	size_t add_type_conn(Type type, size_t size);
 	
-	void splitNetwork(SplitType split, const char *name="");
+	void splitNetwork(SplitType split, const char *name="", const AlgoPara *para = NULL);
 	void update_status();
 	void update_status_splited();
 
