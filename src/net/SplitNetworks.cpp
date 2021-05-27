@@ -23,6 +23,16 @@ void swap_id(ID &s, ID &d, map<Type, vector<vector<ID>>> &n2s_rev, map<Type, vec
 
 void Network::splitNetwork(SplitType split, const char *name, const AlgoPara *para)
 {
+	if (_node_num <= 1) {
+		for (auto iter = _neurons.begin(); iter != _neurons.end(); iter++) {
+			_idx2node[iter->first].resize(iter->second->size(), 0);
+		}
+
+		for (auto iter = _synapses.begin(); iter != _synapses.end(); iter++) {
+			_idx2node[iter->first].resize(iter->second->size(), 0);
+		}
+		return;
+	}
 
 	print_mem("before n2s_rev");
 	map<Type, vector<vector<ID>>> n2s_rev;
@@ -42,10 +52,6 @@ void Network::splitNetwork(SplitType split, const char *name, const AlgoPara *pa
 		}
 	}
 	print_mem("after n2s_rev");
-
-	if (_node_num <= 1) {
-		return;
-	}
 
 	switch (split) {
 		case NeuronBalance:

@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 
 
 	SplitType split = SynapseBalance;
-	if (argc == 7) {
+	if (argc >= 7) {
 		 split = (SplitType)atoi(argv[6]);
 	}
 

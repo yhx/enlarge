@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 	const int parts = atoi(argv[5]);
 
 	SplitType split = SynapseBalance;
-	if (argc == 7) {
+	if (argc >= 7) {
 		 split = (SplitType)atoi(argv[6]);
 	}
 
