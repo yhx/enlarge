@@ -206,9 +206,9 @@ void Network::splitNetwork(SplitType split, const char *name, const AlgoPara *pa
 			break;
 		case BestFit:
 			{
-				float syn_weight = 0.01;
-				float comm_weight = 1.2;
-				float send_weight = 1;
+				float syn_weight = 0.05;
+				float comm_weight = 0.2;
+				float send_weight = 1.5;
 				float recv_weight = 0.5;
 				
 				if (para) {
@@ -255,10 +255,15 @@ void Network::splitNetwork(SplitType split, const char *name, const AlgoPara *pa
 								for (auto s_i = i_i->second.begin(); s_i != i_i->second.end(); s_i++) {
 									ID &nid = _conn_s2n[s_i->type()][s_i->id()];
 									int nidx = _idx2node[nid.type()][nid.id()];
-									if (nidx >= 0 && idx != nidx) {
-										comm[nidx] += recv_weight;
-										comm[idx] += send_weight;
-										c_cost += recv_weight + send_weight;
+									if (nidx >= 0) { 
+										if (idx != nidx) {
+											comm[nidx] += recv_weight;
+											comm[idx] += send_weight;
+											c_cost += recv_weight + send_weight;
+										} else {
+											comm[nidx] += comm_weight;
+											c_cost += comm_weight;
+										}
 									}
 								}
 							}
@@ -266,14 +271,19 @@ void Network::splitNetwork(SplitType split, const char *name, const AlgoPara *pa
 							for (auto si = n2s_rev[t][i].begin(); si != n2s_rev[t][i].end(); si++) {
 								ID &nid = s2n_rev[si->type()][si->id()];
 								int nidx = _idx2node[nid.type()][nid.id()];
-								if (nidx >= 0 && idx != nidx) {
-									comm[nidx] += send_weight;
-									comm[idx] += recv_weight;
-									c_cost += recv_weight + send_weight;
+								if (nidx >= 0) {
+								   	if (idx != nidx) {
+										comm[nidx] += send_weight;
+										comm[idx] += recv_weight;
+										c_cost += recv_weight + send_weight;
+									} else {
+										comm[nidx] += comm_weight;
+										c_cost += comm_weight;
+									}
 								}
 							}
 
-							float eval = load[idx] + burden + c_cost *comm_weight;
+							float eval = load[idx] + burden + c_cost;
 							if (eval < value) {
 								value = eval;
 								node_idx = idx;
@@ -283,7 +293,7 @@ void Network::splitNetwork(SplitType split, const char *name, const AlgoPara *pa
 						_idx2node[t][i] = node_idx;
 						load[node_idx] += burden;
 						for (int i=0; i<_node_num; i++) {
-							load[i] += comm_idx[i] * comm_weight;
+							load[i] += comm_idx[i];
 						}
 						for (auto siter = n2s_rev[t][i].begin(); siter != n2s_rev[t][i].end(); siter++) {
 							_idx2node[siter->type()][siter->id()] = node_idx;

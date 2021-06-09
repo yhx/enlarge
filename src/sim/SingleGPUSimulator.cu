@@ -111,10 +111,12 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 #endif
 
 		update_time<<<1, 1>>>(g_buffer->_fired_sizes, maxDelay, time);
+		cudaDeviceSynchronize();
 
 		for (int i=0; i<nTypeNum; i++) {
 			cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->ppConnections[0], c_pNetGPU->ppNeurons[i], g_buffer->_data, g_buffer->_fire_table, g_buffer->_fired_sizes, totalNeuronNum, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i],time, &updateSize[c_pNetGPU->pNTypes[i]]);
 		}
+		cudaDeviceSynchronize();
 
 		for (int i=0; i<sTypeNum; i++) {
 			cudaUpdateType[c_pNetGPU->pSTypes[i]](c_pNetGPU->ppConnections[i], c_pNetGPU->ppSynapses[i], g_buffer->_data, g_buffer->_fire_table, g_buffer->_fired_sizes, totalNeuronNum, c_pNetGPU->pSynapseNums[i+1]-c_pNetGPU->pSynapseNums[i], c_pNetGPU->pSynapseNums[i], time, &updateSize[c_pNetGPU->pSTypes[i]]);

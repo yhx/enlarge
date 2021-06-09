@@ -167,7 +167,7 @@ int MultiNodeSimulator::distribute(SimInfo &info, int sim_cycle)
 			_node_nets[i]._dt = _dt;
 		}
 	} else {
-	printf("Rank %d, Wait for network build\n", _node_id);
+		printf("Rank %d, Wait for network build\n", _node_id);
 	}
 
 	MPI_Barrier(MPI_COMM_WORLD);

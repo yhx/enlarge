@@ -133,7 +133,7 @@ int main(int argc, char **argv)
 		char name[1024];
 
 		if (argc == 11) {
-			sprintf(name, "%s_%d_%ld_%ld_%d_%d_%d", "standard_mpi", parts, n0, n1, fr, delay_step, split); 
+			sprintf(name, "%s_%d_%ld_%ld_%d_%d_%d", "round_mpi", parts, n0, n1, fr, delay_step, split); 
 			mn.build_net(parts, split, name, &para);
 		} else if (argc == 7) {
 			sprintf(name, "%s_%d_%ld_%ld_%d_%d_%d", "round_mpi", parts, n0, n1, fr, delay_step, split); 
