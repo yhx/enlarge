@@ -153,6 +153,7 @@ int MultiNodeSimulator::load_net(const string &path)
 int MultiNodeSimulator::distribute(SimInfo &info, int sim_cycle)
 {
 
+	printf("Distritubing Network\n");
 	if (_node_id == 0) {
 		// print_mem("Finish Network");
 		// print_mem("Finish CND");

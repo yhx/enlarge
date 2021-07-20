@@ -5,6 +5,7 @@
 #include "../utils/macros.h"
 #include "../utils/helper_c.h"
 #include "../gpu_utils/helper_gpu.h"
+#include "../gpu_utils/gpu_utils.h"
 #include "GNetwork.h"
 
 GNetwork* copyGNetworkToGPU(GNetwork *pCpuNet)
@@ -18,6 +19,7 @@ GNetwork* copyGNetworkToGPU(GNetwork *pCpuNet)
 	size_t sTypeNum = pCpuNet->sTypeNum;
 
 	GNetwork *tmp = allocGNetwork(nTypeNum, sTypeNum);
+	print_gmem("After alloc");
 
 	// tmp->maxDelay = pCpuNet->maxDelay;
 	// tmp->minDelay = pCpuNet->minDelay;
@@ -37,13 +39,16 @@ GNetwork* copyGNetworkToGPU(GNetwork *pCpuNet)
 	tmp->pSynapseNums[sTypeNum] = pCpuNet->pSynapseNums[sTypeNum];
 
 
+	print_gmem("Before alloc neuron");
 	for (size_t i=0; i<nTypeNum; i++) {
 		tmp->ppNeurons[i] = cudaAllocType[pCpuNet->pNTypes[i]](pCpuNet->ppNeurons[i], pCpuNet->pNeuronNums[i+1]-pCpuNet->pNeuronNums[i]);
 	}
 
+	print_gmem("Before alloc synapse");
 	for (size_t i=0; i<sTypeNum; i++) {
 		tmp->ppSynapses[i] = cudaAllocType[pCpuNet->pSTypes[i]](pCpuNet->ppSynapses[i], pCpuNet->pSynapseNums[i+1]-pCpuNet->pSynapseNums[i]);
 	}
+	print_gmem("Before alloc connection");
 
 	tmp->ppConnections = (Connection **)malloc(sizeof(Connection*)*sTypeNum);
 	for (size_t i=0; i<sTypeNum; i++) {

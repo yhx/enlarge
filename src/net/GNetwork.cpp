@@ -160,6 +160,9 @@ GNetwork *loadGNetwork(const string &path)
 	fread_c(net->pNeuronNums, net->nTypeNum+1, f);
 	fread_c(net->pSynapseNums, net->sTypeNum+1, f);
 
+	printf("NeuronTypeNum: %ld, SynapseTypeNum: %ld\n", nTypeNum, sTypeNum);
+	printf("NeuronNum: %d, SynapseNum: %d\n", net->pNeuronNums[nTypeNum], net->pSynapseNums[sTypeNum]);
+
 	fread_c(net->bufferOffsets, net->nTypeNum+1, f);
 
 	fclose_c(f);

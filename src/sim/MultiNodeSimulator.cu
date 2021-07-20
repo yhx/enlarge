@@ -14,6 +14,7 @@
 #include "../neuron/lif/LIFData.h"
 #include "../gpu_utils/helper_gpu.h"
 #include "../gpu_utils/runtime.h"
+#include "../gpu_utils/gpu_utils.h"
 #include "MultiNodeSimulator.h"
 // #include "../gpu_utils/GBuffers.h"
 
@@ -35,6 +36,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 	// print_mem("Before Network");
 
 	GNetwork *pNetCPU = network->_network;
+	print_gmem("Before using GPU");
 	GNetwork *c_pNetGPU = copyGNetworkToGPU(pNetCPU);
 	// print_mem("Copied Network");
 
@@ -110,9 +112,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 	memset(recv_count, 0, node_num * sizeof(int));
 #endif
 
-	size_t fmem = 0, tmem = 0;
-	checkCudaErrors(cudaMemGetInfo(&fmem, &tmem));
-	printf("Thread %d, GPUMEM used: %lfGB\n", network->_nodeIdx, static_cast<double>((tmem - fmem)/1024.0/1024.0/1024.0));
+	print_gmem("After build");
 
 	to_attach();
 	printf("Start runing for %d cycles\n", network->_simCycle);
