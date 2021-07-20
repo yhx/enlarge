@@ -3,18 +3,16 @@
  * Tue December 15 2015
  */
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+#define CATCH_CONFIG_MAIN
+#include "../catch2/catch.hpp"
 
 #include "../../include/BSim.h"
 #include "../../src/net/GNetwork.h"
 
 using std::vector;
-using ::testing::AtLeast;
-using ::testing::ElementsAreArray;
 
 
-TEST(ConnectionAPITest, SynapseTemplTest) {
+TEST_CASE("SynapseTemplTest", "") {
 
 	real dt = 1.0e-4;
 	Network c0(dt), c1(dt);
@@ -48,12 +46,6 @@ TEST(ConnectionAPITest, SynapseTemplTest) {
 	DistriNetwork *n0 = c0.buildNetworks(SimInfo(1.0e-4));
 	DistriNetwork *n1 = c1.buildNetworks(SimInfo(1.0e-4));
 
-	ASSERT_TRUE(compareGNetwork(n0->_network, n1->_network));
-
+	CHECK( compareGNetwork(n0->_network, n1->_network) );
 }
 
-int main(int argc, char **argv)
-{
-	::testing::InitGoogleMock(&argc, argv);
-	return RUN_ALL_TESTS();
-} 
