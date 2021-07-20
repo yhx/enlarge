@@ -5,8 +5,7 @@
 
 #include <string.h>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+#include "../catch2/catch.h"
 
 #include "../../src/utils/python.h"
 #include "../../include/BSim.h"
@@ -14,12 +13,10 @@
 using namespace std;
 
 using std::vector;
-using ::testing::AtLeast;
-using ::testing::ElementsAreArray;
 
 TEST(MultiGPUTest, ResultTest) {
 	Py_Initialize();
-	ASSERT_TRUE(Py_IsInitialized());
+	ASSERT(Py_IsInitialized());
 
 	PyRun_SimpleString("import sys");
 	PyRun_SimpleString("sys.path.append('../../script')");
@@ -100,8 +97,7 @@ int main(int argc, char **argv)
 		printf("SAVE DATA FINISHED\n");
 	}
 
-	::testing::InitGoogleMock(&argc, argv);
-	return RUN_ALL_TESTS();
+	CATCH_MAIN;
 	
-	return 0;
+	return ret;
 } 

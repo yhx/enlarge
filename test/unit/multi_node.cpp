@@ -3,17 +3,12 @@
  * Tue December 15 2015
  */
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+#include "../catch2/catch.h"
 
 #include "../../include/BSim.h"
 #include "../../src/msg_utils/msg_utils.h"
 
-using namespace std;
-
 using std::vector;
-using ::testing::AtLeast;
-using ::testing::ElementsAreArray;
 
 const int NODE_NUM = 2;
 const int N = 2;
@@ -44,14 +39,14 @@ TEST(MPITEST, CNMTest) {
 
 	if (node_id == 0) {
 		ASSERT_THAT(vector<int>(network->_crossnodeMap->_idx2index, network->_crossnodeMap->_idx2index+network->_crossnodeMap->_num),
-				ElementsAreArray({-1, -1, 0, 1, -1, -1}));
+				EQUALS({-1, -1, 0, 1, -1, -1}));
 		ASSERT_THAT(vector<int>(network->_crossnodeMap->_crossnodeIndex2idx, network->_crossnodeMap->_crossnodeIndex2idx+network->_crossnodeMap->_crossSize),
-				ElementsAreArray({-1, 4, -1, 5}));
+				EQUALS({-1, 4, -1, 5}));
 	} else {
 		ASSERT_THAT(vector<int>(network->_crossnodeMap->_idx2index, network->_crossnodeMap->_idx2index+network->_crossnodeMap->_num),
-				ElementsAreArray({-1, -1, 0, 1, -1, -1}));
+				EQUALS({-1, -1, 0, 1, -1, -1}));
 		ASSERT_THAT(vector<int>(network->_crossnodeMap->_crossnodeIndex2idx, network->_crossnodeMap->_crossnodeIndex2idx+network->_crossnodeMap->_crossSize),
-				ElementsAreArray({4, -1, 5, -1}));
+				EQUALS({4, -1, 5, -1}));
 	}
 }
 
@@ -61,46 +56,46 @@ TEST(MPITEST, CNDTest) {
 
 	if (node_id == 0) {
 		ASSERT_THAT(vector<int>(data->_recv_offset, data->_recv_offset+NODE_NUM+1),
-				ElementsAreArray({0, 0, 6}));
+				EQUALS({0, 0, 6}));
 		ASSERT_THAT(vector<int>(data->_send_offset, data->_send_offset+NODE_NUM+1),
-				ElementsAreArray({0, 0, 6}));
+				EQUALS({0, 0, 6}));
 	} else {
 		ASSERT_THAT(vector<int>(data->_recv_offset, data->_recv_offset+NODE_NUM+1),
-				ElementsAreArray({0, 6, 6}));
+				EQUALS({0, 6, 6}));
 		ASSERT_THAT(vector<int>(data->_send_offset, data->_send_offset+NODE_NUM+1),
-				ElementsAreArray({0, 6, 6}));
+				EQUALS({0, 6, 6}));
 	}
 }
 
 TEST(MPITEST, MSGTest) {
 	if (node_id == 0) {
 		ASSERT_THAT(vector<int>(data->_send_start, data->_send_start+NODE_NUM*(DELAY+1)),
-				ElementsAreArray({0, 0, 0, 0, 0, 2, 4, 5}));
+				EQUALS({0, 0, 0, 0, 0, 2, 4, 5}));
 		ASSERT_THAT(vector<int>(data->_send_num, data->_send_num+NODE_NUM),
-				ElementsAreArray({0, 5}));
+				EQUALS({0, 5}));
 		ASSERT_THAT(vector<int>(data->_send_data, data->_send_data+data->_send_num[1]),
-				ElementsAreArray({4, 5, 4, 5, 5}));
+				EQUALS({4, 5, 4, 5, 5}));
 
 		ASSERT_THAT(vector<int>(data->_recv_start, data->_recv_start+NODE_NUM*(DELAY+1)),
-				ElementsAreArray({0, 0, 0, 0, 0, 2, 4, 5}));
+				EQUALS({0, 0, 0, 0, 0, 2, 4, 5}));
 		ASSERT_THAT(vector<int>(data->_recv_num, data->_recv_num+NODE_NUM),
-				ElementsAreArray({0, 5}));
+				EQUALS({0, 5}));
 		ASSERT_THAT(vector<int>(data->_recv_data, data->_recv_data+data->_recv_num[1]),
-				ElementsAreArray({4, 5, 4, 5, 4}));
+				EQUALS({4, 5, 4, 5, 4}));
 	} else {
 		ASSERT_THAT(vector<int>(data->_send_start, data->_send_start+NODE_NUM*(DELAY+1)),
-				ElementsAreArray({0, 2, 4, 5, 0, 0, 0, 0}));
+				EQUALS({0, 2, 4, 5, 0, 0, 0, 0}));
 		ASSERT_THAT(vector<int>(data->_send_num, data->_send_num+NODE_NUM),
-				ElementsAreArray({5, 0}));
+				EQUALS({5, 0}));
 		ASSERT_THAT(vector<int>(data->_send_data, data->_send_data+data->_send_num[0]),
-				ElementsAreArray({4, 5, 4, 5, 4}));
+				EQUALS({4, 5, 4, 5, 4}));
 
 		ASSERT_THAT(vector<int>(data->_recv_start, data->_recv_start+NODE_NUM*(DELAY+1)),
-				ElementsAreArray({0, 2, 4, 5, 0, 0, 0, 0}));
+				EQUALS({0, 2, 4, 5, 0, 0, 0, 0}));
 		ASSERT_THAT(vector<int>(data->_recv_num, data->_recv_num+NODE_NUM),
-				ElementsAreArray({5, 0}));
+				EQUALS({5, 0}));
 		ASSERT_THAT(vector<int>(data->_recv_data, data->_recv_data+data->_recv_num[0]),
-				ElementsAreArray({4, 5, 4, 5, 5}));
+				EQUALS({4, 5, 4, 5, 5}));
 	}
 }
 
@@ -188,8 +183,7 @@ int main(int argc, char **argv)
 	sg.save_net("multi_node_test");
 	MPI_Barrier(MPI_COMM_WORLD);
 
-	::testing::InitGoogleMock(&argc, argv);
-	int ret = RUN_ALL_TESTS();
+	CATCH_MAIN;
 	MPI_Finalize();
 	return ret;
 } 

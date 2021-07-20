@@ -46,6 +46,6 @@ TEST_CASE("SynapseTemplTest", "") {
 	DistriNetwork *n0 = c0.buildNetworks(SimInfo(1.0e-4));
 	DistriNetwork *n1 = c1.buildNetworks(SimInfo(1.0e-4));
 
-	CHECK( compareGNetwork(n0->_network, n1->_network) );
+	REQUIRE( compareGNetwork(n0->_network, n1->_network) );
 }
 

@@ -2,6 +2,10 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
 PROJECT (BSim)
 
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "test/catch2")
+INCLUDE(CTest)
+INCLUDE(Catch)
+
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -29,47 +33,6 @@ MESSAGE(STATUS "C++ Compiler: " ${CMAKE_CXX_COMPILER_ID} " " ${CMAKE_CXX_COMPILE
 MESSAGE(STATUS "CUDA Version: " ${CUDA_VERSION})
 MESSAGE(STATUS "MPI Library: ${MPI_LIBRARIES}")
 MESSAGE(STATUS "BLAS Libraries: ${BLAS_LIBRARIES}")
-
-IF(NOT IS_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/googletest-src")
-	MESSAGE(STATUS "Download and unpack googletest at configure time")
-	CONFIGURE_FILE(CMakeLists.gtest.txt googletest-download/CMakeLists.txt)
-ELSE(NOT IS_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/googletest-src")
-	MESSAGE(STATUS "Googletest at configure")
-	CONFIGURE_FILE(CMakeLists.gtest.local.txt googletest-download/CMakeLists.txt)
-ENDIF()
-
-IF(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/googletest-download/CMakeLists.txt")
-	EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-		RESULT_VARIABLE result
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
-	IF(result)
-		MESSAGE(FATAL_ERROR "CMake step for googletest failed: ${result}")
-	ENDIF()
-ENDIF()
-
-IF(NOT EXISTS "${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/libgtestd.a")
-	MESSAGE(STATUS "Build googletest")
-	EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} --build .
-		RESULT_VARIABLE result
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
-	IF(result)
-		MESSAGE(FATAL_ERROR "Build step for googletest failed: ${result}")
-	ENDIF()
-ENDIF()
-# Prevent overriding the parent project's compiler/linker
-# settings on Windows
-SET(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-# Add googletest directly to our build. This defines
-# the gtest and gtest_main targets.
-ADD_SUBDIRECTORY(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
-	${CMAKE_CURRENT_BINARY_DIR}/googletest-build
-	EXCLUDE_FROM_ALL)
-# The gtest/gtest_main targets carry header search path
-# dependencies automatically when using CMake 2.8.11 or
-# later. Otherwise we have to add them here ourselves.
-IF (CMAKE_VERSION VERSION_LESS 2.8.11)
-	INCLUDE_DIRECTORIES("${gtest_SOURCE_DIR}/include")
-ENDIF()
 
 IF(NOT CMAKE_BUILD_TYPE)
 	SET(CMAKE_BUILD_TYPE Release)
@@ -185,6 +148,7 @@ IF(USE_GPU)
 		CUDA_ADD_EXECUTABLE(${exec_file} ${exec_path})
 		CUDA_ADD_CUFFT_TO_TARGET(${exec_file})
 		TARGET_LINK_LIBRARIES(${exec_file} ${GPU_LIB} ${CUDA_CUFFT_LIBRARIES} ${MPI_LIBRARIES} blas ${BLAS_LIBRARIES} ${PYTHON_LIBRARIES} gmock_main)
+		CATCH_DISCOVER_TESTS(${exec_file})
 		ADD_TEST(NAME ${exec_file}_test COMMAND ${exec_file}) 
 	ENDFOREACH()
 	SET(TARGET_LIB ${GPU_LIB} ${CUDA_CUFFT_LIBRARIES})
@@ -206,7 +170,8 @@ ENDFOREACH()
 FOREACH(exec_path ${UNIT_TEST_CPU})
 	GET_FILENAME_COMPONENT(exec_file ${exec_path} NAME_WE)
 	ADD_EXECUTABLE(${exec_file} ${exec_path})
-	TARGET_LINK_LIBRARIES(${exec_file} ${TARGET_LIB} ${MPI_LIBRARIES} blas ${BLAS_LIBRARIES} ${PYTHON_LIBRARIES} gmock_main)
+	TARGET_LINK_LIBRARIES(${exec_file} ${TARGET_LIB} ${MPI_LIBRARIES} blas ${BLAS_LIBRARIES} ${PYTHON_LIBRARIES})
+	CATCH_DISCOVER_TESTS(${exec_file})
 	IF (${exec_file} MATCHES "multi_node")
 		ADD_TEST(NAME ${exec_file}_test COMMAND mpirun -n 2 $<TARGET_FILE:${exec_file}>) 
 	ELSE()
