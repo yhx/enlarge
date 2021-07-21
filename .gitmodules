@@ -1,6 +1,3 @@
-[submodule "src/third_party/msg_utils"]
-	path = src/third_party/msg_utils
-	url = git@git.tsinghua.edu.cn:qp2018/msg_utils.git
-[submodule "msg_uitls"]
-	path = msg_uitls
-	url = git@git.tsinghua.edu.cn:qp2018/msg_utils.git
+[submodule "msg_utils"]
+	path = msg_utils
+	url = ../msg_utils.git

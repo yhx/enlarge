@@ -16,7 +16,7 @@ using std::vector;
 
 TEST(MultiGPUTest, ResultTest) {
 	Py_Initialize();
-	ASSERT(Py_IsInitialized());
+	ASSERT_TRUE(Py_IsInitialized());
 
 	PyRun_SimpleString("import sys");
 	PyRun_SimpleString("sys.path.append('../../script')");
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
 		printf("SAVE DATA FINISHED\n");
 	}
 
-	CATCH_MAIN;
+	int ret = CATCH_RET();
 	
 	return ret;
 } 

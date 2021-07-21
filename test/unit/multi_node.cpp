@@ -183,7 +183,7 @@ int main(int argc, char **argv)
 	sg.save_net("multi_node_test");
 	MPI_Barrier(MPI_COMM_WORLD);
 
-	CATCH_MAIN;
+	int ret = CATCH_RET();
 	MPI_Finalize();
 	return ret;
 } 

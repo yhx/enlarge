@@ -10,8 +10,6 @@
 #include "../../src/net/GNetwork.h"
 
 using std::vector;
-using Catch::Equals;
-using Catch::Approx;
 
 GNetwork *net = NULL;
 Network * network = NULL;
@@ -26,7 +24,7 @@ TEST_CASE("NeuronTest", "") {
 
 	ASSERT_THAT(
 			vector<Type>(net->pNTypes, net->pNTypes + net->nTypeNum), 
-			Equals(vector<Type>({LIF}))
+			EQUALT({LIF})
 			);
 	ASSERT_THAT(
 			vector<int>(net->pNeuronNums, net->pNeuronNums + net->nTypeNum + 1), 
@@ -108,7 +106,7 @@ TEST_CASE("SynapseTest", "") {
 			APPROX({1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 2.0, 2.1, 2.2})
 			);
 }
- 
+
 TEST_CASE("ConnectionTest", "") {
 	Connection *c = net->ppConnections[0];
 
@@ -164,7 +162,7 @@ TEST_CASE("BuildTest2") {
 	ASSERT_EQ(n0->nTypeNum, 1);
 	ASSERT_THAT(
 			vector<Type>(n0->pNTypes, n0->pNTypes + n0->nTypeNum), 
-			EQUALT(({LIF})
+			EQUALT({LIF})
 			);
 	ASSERT_THAT(
 			vector<int>(n0->pNeuronNums, n0->pNeuronNums + n0->nTypeNum + 1), 
@@ -342,7 +340,7 @@ TEST_CASE("BuildTest2") {
 			vector<real>(s1->pWeight, s1->pWeight + n1->pSynapseNums[n1->sTypeNum]), 
 			APPROX({1.4, 2.0, 2.1, 1.1, 2.2})
 			);
-	
+
 	CrossNodeMap * c0_ = n[0]._crossnodeMap;
 	ASSERT_EQ(c0_->_crossSize, n[0]._nodeNum * 3);
 	ASSERT_THAT(
