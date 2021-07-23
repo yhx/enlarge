@@ -15,7 +15,7 @@ public:
 	Simulator(Network* network, real dt) : _network(network), _dt(dt) {}
 	virtual ~Simulator() {}
 
-	 virtual int run(real time, FireInfo &log) = 0;
+	virtual int run(real time, FireInfo &log) = 0;
 	virtual int reset();
 	GNetwork * getNet();
 

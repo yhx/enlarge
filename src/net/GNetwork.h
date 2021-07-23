@@ -68,5 +68,7 @@ GNetwork * recvGNetwork(int src, int tag, MPI_Comm comm);
 // Other utils
 int printGNetwork(GNetwork *net, int rank = 0);
 
+int pInfoGNetwork(GNetwork *net, const string &s = "");
+
 #endif /* GNETWORK_H */
 

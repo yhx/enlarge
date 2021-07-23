@@ -15,11 +15,12 @@
 #include "../gpu_utils/helper_gpu.h"
 #include "../gpu_utils/runtime.h"
 #include "../gpu_utils/gpu_utils.h"
-#include "MultiNodeSimulator.h"
+#include "MultiLevelSimulator.h"
 // #include "../gpu_utils/GBuffers.h"
 
 
-int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
+
+int run_proc_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 	// print_mem("Inside Run");
 
 	FILE *v_file = log_file_mpi("v", network->_nodeIdx);
