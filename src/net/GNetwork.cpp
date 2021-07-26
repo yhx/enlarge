@@ -320,11 +320,11 @@ GNetwork * recvGNetwork(int src, int tag, MPI_Comm comm)
 
 int pInfoGNetwork(GNetwork *net, const string &s)
 {
-	printf("%s NeuronTypeNum: %d, SynapseTypeNum: %d\n", s.c_str(), net->nTypeNum, net->sTypeNum);
-	printf("%s NeuronNum: %d, AllNeuronNum: %d, SynapseNum: %d\n", s.c_str(), net->pNeuronNums[nTypeNum], net->ppConnections[0]->nNum, net->pSynapseNums[sTypeNum]);
+	printf("%s NeuronTypeNum: %ld, SynapseTypeNum: %ld\n", s.c_str(), net->nTypeNum, net->sTypeNum);
+	printf("%s NeuronNum: %ld, AllNeuronNum: %ld, SynapseNum: %ld\n", s.c_str(), net->pNeuronNums[net->nTypeNum], net->ppConnections[0]->nNum, net->pSynapseNums[net->sTypeNum]);
 
-	for (int i=0; i<net->sTypeNum; i++) {
-		printf("%s Type %d MaxDelay: %d MinDelay: %d\n", i, s.c_str(), net->ppConnections[i]->maxDelay, net->ppConnections[i]->minDelay);
+	for (size_t i=0; i<net->sTypeNum; i++) {
+		printf("%s Type %ld MaxDelay: %d MinDelay: %d\n", s.c_str(), i, net->ppConnections[i]->maxDelay, net->ppConnections[i]->minDelay);
 	}
 	return 0;
 }

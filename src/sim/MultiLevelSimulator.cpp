@@ -126,12 +126,12 @@ int MultiLevelSimulator::save_net(const string &path)
 int MultiLevelSimulator::load_net(const string &path)
 {
 	string name = path + "/meta.data";
-	int node_num;
+	int proc_num;
 	FILE *f = fopen_c(name.c_str(), "r");
-	fread_c(&(node_num), 1, f);
+	fread_c(&(proc_num), 1, f);
 	fclose_c(f);
 
-	if (_proc_num != node_num) {
+	if (_proc_num != proc_num) {
 		printf("Error: node num mismatch network data\n");
 		exit(-1);
 	}
@@ -183,7 +183,7 @@ int MultiLevelSimulator::distribute(SimInfo &info, int sim_cycle)
 		// network->_network = _network->buildNetwork(info);
 		// network->_simCycle = sim_cycle;
 		// network->_nodeIdx = 0;
-		// network->_nodeNum = node_num;
+		// network->_nodeNum = proc_num;
 		// network->_dt = _dt;
 		// data = NULL;
 	} else {
@@ -198,7 +198,7 @@ int MultiLevelSimulator::distribute(SimInfo &info, int sim_cycle)
 	return 0;
 }
 
-int MultiLevelSimulator::run(real time, FireInfo &log, bool gpu)
+int MultiLevelSimulator::run(real time, FireInfo &log, int gpu)
 {
 
 	int sim_cycle = round(time/_dt);
@@ -220,13 +220,16 @@ int MultiLevelSimulator::run(real time, FireInfo &log, bool gpu)
 		_network_data->_simCycle = sim_cycle;
 	}
 
+	CrossMap *map = convert2crossmap(_network_data->_crossnodeMap);
+	CrossSpike *msg = convert2crossspike(_data);
+
 	if (gpu) {
-		run_proc_gpu(_network_data, _data);
+		run_proc_gpu(_network_data, map, msg);
 	} else {
-		run_proc_cpu(_network_data, _data);
+		run_proc_cpu(_network_data, map, msg);
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
-	M296 465 573PI_Finalize();
+	MPI_Finalize();
 
 	return 0;
 }
@@ -246,19 +249,19 @@ int run_proc_cpu(DistriNetwork *network, CrossMap *map, CrossSpike *msg) {
 
 	int nTypeNum = pNetCPU->nTypeNum;
 	int sTypeNum = pNetCPU->sTypeNum;
-	int nodeNeuronNum = pNetCPU->pNeuronNums[nTypeNum];
+	// int nodeNeuronNum = pNetCPU->pNeuronNums[nTypeNum];
 	int allNeuronNum = pNetCPU->ppConnections[0]->nNum;
-	int nodeSynapseNum = pNetCPU->pSynapseNums[sTypeNum];
+	// int nodeSynapseNum = pNetCPU->pSynapseNums[sTypeNum];
 
-	int maxDelay = pNetCPU->ppConnections[0]->maxDelay;
-	int minDelay = pNetCPU->ppConnections[0]->minDelay;
-	assert(minDelay == cnd->_min_delay);
+	int max_delay = pNetCPU->ppConnections[0]->maxDelay;
+	// int min_delay = pNetCPU->ppConnections[0]->minDelay;
+	// assert(min_delay == msg->_min_delay);
 
-	pInfoGNetwork(pNetCPU, string("Proc ") + network->_nodeIdx); 
+	pInfoGNetwork(pNetCPU, string("Proc ") + std::to_string(network->_nodeIdx)); 
 
-	int node_num = cnd->_proc_num;
+	int proc_num = msg->_proc_num;
 
-	Buffer buffer(pNetCPU->bufferOffsets[nTypeNum], allNeuronNum, maxDelay);
+	Buffer buffer(pNetCPU->bufferOffsets[nTypeNum], allNeuronNum, max_delay);
 
 #ifdef LOG_DATA
 	int copy_idx = getIndex(pNetCPU->pNTypes, nTypeNum, LIF);
@@ -281,7 +284,7 @@ int run_proc_cpu(DistriNetwork *network, CrossMap *map, CrossSpike *msg) {
 #ifdef PROF
 		gettimeofday(&t1, NULL);
 #endif
-		int currentIdx = time % (maxDelay+1);
+		int currentIdx = time % (max_delay+1);
 		buffer._fired_sizes[currentIdx] = 0;
 
 #ifdef LOG_DATA
@@ -293,25 +296,17 @@ int run_proc_cpu(DistriNetwork *network, CrossMap *map, CrossSpike *msg) {
 		}
 
 #if 1
-		// memset(cnd->_send_num, 0, sizeof(int)*(node_num));
+		// memset(cnd->_send_num, 0, sizeof(int)*(proc_num));
 #ifdef PROF
 		gettimeofday(&t2, NULL);
 		comp_time += 1000000 * (t2.tv_sec - t1.tv_sec) + (t2.tv_usec - t1.tv_usec);
 #endif
-		int curr_delay = time % cnd->_min_delay;
-		cs.fetch_cpu(map, buffer._fire_table, buffer._fired_sizes, buffer._fire_table_cap, _proc_num, 
-		generateCND(network->_crossnodeMap->_idx2index, network->_crossnodeMap->_crossnodeIndex2idx, cnd, buffer._fire_table, buffer._fired_sizes, buffer._fire_table_cap, maxDelay, cnd->_min_delay, network->_nodeNum, time);
+		// int curr_delay = time % msg->_min_delay;
 
+		msg->fetch_cpu(map, buffer._fire_table, buffer._fired_sizes, buffer._fire_table_cap, proc_num, max_delay, time);
 
-		MPI_Request request_t;
-		update_cnd(cnd, curr_delay, &request_t);
-		// if (curr_delay >= minDelay - 1) {
-		// 	msg_cnd(cnd, &request_t);
-		// } else {
-		// 	for (int i=0; i<node_num; i++) {
-		// 		cnd->_send_start[i*(minDelay+1)+curr_delay+2] = cnd->_send_num[i*(minDelay+1)+curr_delay+1];
-		// 	}
-		// }
+		msg->update_cpu(time);
+
 #endif
 #ifdef PROF
 		gettimeofday(&t3, NULL);
@@ -341,50 +336,13 @@ int run_proc_cpu(DistriNetwork *network, CrossMap *map, CrossSpike *msg) {
 		log_array(v_file, c_vm, pNetCPU->pNeuronNums[copy_idx+1] - pNetCPU->pNeuronNums[copy_idx]);
 
 		log_array(sim_file, buffer._fire_table + allNeuronNum * currentIdx, copy_size);
-
-		// for (int i=0; i<pNetCPU->pNeuronNums[copy_idx+1] - pNetCPU->pNeuronNums[copy_idx]; i++) {
-		// 	fprintf(v_file, "%.10lf \t", c_vm[i]);
-		// }
-		// fprintf(v_file, "\n");
-
-		// for (int i=0; i<copySize; i++) {
-		// 	fprintf(sim_file, "%d ", c_gFiredTable[allNeuronNum*currentIdx+i]);
-		// }
-		// fprintf(sim_file, "\n");
-
 #endif
-
-#if 1
-		if (curr_delay >= minDelay - 1) {
-#ifdef ASYNC
-			MPI_Status status_t;
-			int ret = MPI_Wait(&request_t, &status_t);
-			assert(ret == MPI_SUCCESS);
-#endif
-			for (int d_ =0; d_ < minDelay; d_++) {
-				int delay_idx = (time-minDelay+2+d_+maxDelay)%(maxDelay+1);
-				for (int n_ = 0; n_ < node_num; n_++) {
-					int start = cnd->_recv_start[n_*(minDelay+1)+d_];
-					int end = cnd->_recv_start[n_*(minDelay+1)+d_+1];
-					for (int i=start; i<end; i++) {
-						buffer._fire_table[allNeuronNum*delay_idx + buffer._fired_sizes[delay_idx] + i-start] = cnd->_recv_data[cnd->_recv_offset[n_]+i];
-					}
-					buffer._fired_sizes[delay_idx] += end - start;
-#ifdef LOG_DATA
-					log_array_noendl(msg_file, cnd->_recv_data + cnd->_recv_offset[n_] + start, end - start); 
-#endif
-				}
-#ifdef LOG_DATA
-				fprintf(msg_file, "\n");
-#endif
-			}
 
 #ifdef LOG_DATA
-			log_cnd(cnd, time, send_file, recv_file);
+		msg->log_cpu(time, (string("proc_") + std::to_string(network->_nodeIdx)).c_str());
 #endif
-			resetCND(cnd);
-		}
-#endif
+		msg->upload_cpu(buffer._fire_table, buffer._fired_sizes, buffer._fire_table_cap, max_delay, time);
+
 #ifdef PROF
 		gettimeofday(&t5, NULL);
 		comm_time += 1000000 * (t5.tv_sec - t4.tv_sec) + (t5.tv_usec - t4.tv_usec);

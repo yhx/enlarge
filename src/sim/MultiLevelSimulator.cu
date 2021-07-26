@@ -18,8 +18,6 @@
 #include "MultiLevelSimulator.h"
 // #include "../gpu_utils/GBuffers.h"
 
-
-
 int run_proc_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 	// print_mem("Inside Run");
 
