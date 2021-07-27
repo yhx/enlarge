@@ -29,15 +29,23 @@ public:
 
 	virtual int run(real time, FireInfo &log);
 	virtual int run(real time, FireInfo &log, int gpu_num);
-protected:
-	int _proc_id;
-	int _proc_num;
 
-	DistriNetwork *_proc_nets;
-	CrossNodeData *_proc_datas;
 public:
 	DistriNetwork *_network_data;
 	CrossNodeData *_data;
+
+protected:
+	int _proc_id;
+	int _proc_num;
+	int _gpu_id;
+	int _gpu_num;
+	int _gpu_grp;
+
+	ncclComm_t comm_gpu;
+	cudaStream_t _stream;
+
+	DistriNetwork *_proc_nets;
+	CrossNodeData *_proc_datas;
 };
 
 int run_proc_cpu(DistriNetwork *network, CrossMap *cnd, CrossSpike *msg);

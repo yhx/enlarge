@@ -6,6 +6,6 @@
 #include "../../msg_utils/msg_utils/CrossSpike.h"
 
 CrossMap * convert2crossmap(CrossNodeMap * cnm);
-CrossSpike * convert2crossspike(CrossNodeData *cnd, int proc_rank, int gpu_rank, int gpu_num, int gpu_group);
+CrossSpike * convert2crossspike(CrossNodeData *cnd, int proc_rank, int gpu_rank = 0, int gpu_num = 1, int gpu_group = 0);
 
 #endif //CONVERT_H

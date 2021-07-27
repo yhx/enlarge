@@ -18,7 +18,7 @@
 #include "MultiLevelSimulator.h"
 // #include "../gpu_utils/GBuffers.h"
 
-int run_proc_gpu(DistriNetwork *network, CrossNodeData *cnd) {
+int run_proc_gpu(DistriNetwork *network, CrossMap *map, CrossSpike *msg) {
 	// print_mem("Inside Run");
 
 	FILE *v_file = log_file_mpi("v", network->_nodeIdx);
@@ -31,45 +31,38 @@ int run_proc_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 	FILE *input_e_file = log_file_mpi("input_e", network->_nodeIdx);
 #endif
 
-	// print_mem("Before SetDevice");
-	checkCudaErrors(cudaSetDevice(0));
-	// print_mem("Before Network");
 
 	GNetwork *pNetCPU = network->_network;
 	print_gmem("Before using GPU");
 	GNetwork *c_pNetGPU = copyGNetworkToGPU(pNetCPU);
 	// print_mem("Copied Network");
 
-	CrossNodeData * cnd_gpu = copyCNDtoGPU(cnd);
+	map->to_gpu();
+	msg->to_gpu();
 	// print_mem("Copied CND");
 
 	int nTypeNum = c_pNetGPU->nTypeNum;
 	int sTypeNum = c_pNetGPU->sTypeNum;
-	int nodeNeuronNum = c_pNetGPU->pNeuronNums[nTypeNum];
 	int allNeuronNum = pNetCPU->ppConnections[0]->nNum;
 	int nodeSynapseNum = c_pNetGPU->pSynapseNums[sTypeNum];
-	printf("Thread %d, NeuronTypeNum: %d, SynapseTypeNum: %d\n", network->_nodeIdx, nTypeNum, sTypeNum);
-	printf("Thread %d, NodeNeuronNum: %d, AllNeuronNum: %d, SynapseNum: %d\n", network->_nodeIdx, nodeNeuronNum, allNeuronNum, nodeSynapseNum);
 
-	int maxDelay = pNetCPU->ppConnections[0]->maxDelay;
-	int minDelay = pNetCPU->ppConnections[0]->minDelay;
+	int max_delay = pNetCPU->ppConnections[0]->maxDelay;
+	// int min_delay = pNetCPU->ppConnections[0]->minDelay;
 
-	printf("Thread %d MaxDelay: %d MinDelay: %d\n", network->_nodeIdx, maxDelay,  minDelay);
+	pInfoGNetwork(c_pNetGPU, string("Proc ") + std::to_string(network->_nodeIdx));
 
-	// print_mem("Before Buffers");
 
-	// GBuffers *buffers = alloc_buffers(allNeuronNum, nodeSynapseNum, pNetCPU->ppConnections[0]->maxDelay, network->_dt);
-
-	Buffer buffer(pNetCPU->bufferOffsets[nTypeNum], allNeuronNum, maxDelay, 0);
+	Buffer buffer(pNetCPU->bufferOffsets[nTypeNum], allNeuronNum, max_delay, 0);
 	Buffer *g_buffer = buffer._gpu_array;
 
-	int *c_fired_sizes = hostMalloc<int>(maxDelay+1);
+	int *c_fired_sizes = hostMalloc<int>(max_delay+1);
 
 	BlockSize *updateSize = getBlockSize(allNeuronNum, nodeSynapseNum);
 
 	// print_mem("Alloced Buffers");
 
 #ifdef LOG_DATA
+	int nodeNeuronNum = c_pNetGPU->pNeuronNums[nTypeNum];
 	real *c_vm = hostMalloc<real>(nodeNeuronNum);
 	int life_idx = getIndex(c_pNetGPU->pNTypes, nTypeNum, LIF);
 	int copy_idx = -1;
@@ -90,14 +83,7 @@ int run_proc_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 		printf("Thread %d stype %d: <<<%d. %d>>>\n", network->_nodeIdx, c_pNetGPU->pSTypes[i], updateSize[c_pNetGPU->pSTypes[i]].gridSize, updateSize[c_pNetGPU->pSTypes[i]].blockSize);
 	}
 
-	int node_num = network->_nodeNum;
-
-	CrossNodeMap *cnm_gpu = to_gpu(network->_crossnodeMap);
-
-	// integer_t * c_g_idx2index = copyToGPU(network->_crossnodeMap->_idx2index, allNeuronNum);
-	// integer_t * c_g_cross_index2idx = copyToGPU(network->_crossnodeMap->_crossnodeIndex2idx, network->_crossnodeMap->_crossSize);
-	// int * c_g_global_cross_data = gpuMalloc<int>(allNeuronNum * node_num);
-	// int * c_g_fired_n_num = gpuMalloc<int>(node_num);
+	int proc_num = network->_nodeNum;
 
 	vector<int> firedInfo;
 	double ts, te;
@@ -106,10 +92,10 @@ int run_proc_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 #ifdef PROF
 	double t1, t2, t3, t4, t5, t6;
 	double comp_time = 0, comm_time = 0, sync_time = 0;
-	int *send_count = (int *)malloc(node_num * sizeof(int));
-	int *recv_count = (int *)malloc(node_num * sizeof(int));
-	memset(send_count, 0, node_num * sizeof(int));
-	memset(recv_count, 0, node_num * sizeof(int));
+	int *send_count = (int *)malloc(proc_num * sizeof(int));
+	int *recv_count = (int *)malloc(proc_num * sizeof(int));
+	memset(send_count, 0, proc_num * sizeof(int));
+	memset(recv_count, 0, proc_num * sizeof(int));
 #endif
 
 	print_gmem("After build");
@@ -121,7 +107,7 @@ int run_proc_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 #ifdef PROF
 		t1 = MPI_Wtime();
 #endif
-		update_time<<<1, 1>>>(g_buffer->_fired_sizes, maxDelay, time);
+		update_time<<<1, 1>>>(g_buffer->_fired_sizes, max_delay, time);
 
 		for (int i=0; i<nTypeNum; i++) {
 			assert(c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i] > 0);
@@ -132,21 +118,20 @@ int run_proc_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 		t2 = MPI_Wtime();
 		comp_time += t2-t1;
 #endif
-		int curr_delay = time % cnd->_min_delay;
-		cudaGenerateCND(cnm_gpu->_idx2index, cnm_gpu->_crossnodeIndex2idx, cnd_gpu, g_buffer->_fire_table, g_buffer->_fired_sizes, allNeuronNum, maxDelay, cnd_gpu->_min_delay, node_num, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
+	    msg->fetch_gpu(map, g_buffer->_fire_table, g_buffer->_fired_sizes, g_buffer->_fire_table_cap, proc_num, max_delay, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
 
-		// checkCudaErrors(cudaMemcpy(gCrossDataGPU->_firedNum + network->_nodeIdx * node_num, c_g_fired_n_num, sizeof(int)*node_num, cudaMemcpyDeviceToHost));
-		MPI_Request request_t;
-		update_cnd_gpu(cnd_gpu, cnd, curr_delay, &request_t);
+		// checkCudaErrors(cudaMemcpy(gCrossDataGPU->_firedNum + network->_nodeIdx * proc_num, c_g_fired_n_num, sizeof(int)*proc_num, cudaMemcpyDeviceToHost));
+		msg->update_gpu(time);
 
+		int curr_delay = time % msg->_min_delay;
 #ifdef PROF
 		t3 = MPI_Wtime();
 		comm_time += t3-t2;
 		MPI_Barrier(MPI_COMM_WORLD);
-		if (curr_delay >= minDelay-1) {
-			for (int i=0; i<node_num; i++) {
-				send_count[i] += cnd->_send_num[i];
-				recv_count[i] += cnd->_recv_num[i];
+		if (curr_delay >= min_delay-1) {
+			for (int i=0; i<proc_num; i++) {
+				send_count[i] += msg->_send_num[i];
+				recv_count[i] += msg->_recv_num[i];
 			}
 		}
 		t6 = MPI_Wtime();
@@ -154,7 +139,7 @@ int run_proc_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 #endif
 
 #ifdef LOG_DATA
-		int currentIdx = time%(maxDelay+1);
+		int currentIdx = time%(max_delay+1);
 
 		uinteger_t copySize = 0;
 		copyFromGPU(&copySize, g_buffer->_fired_sizes + currentIdx, 1);
@@ -178,34 +163,11 @@ int run_proc_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 		t4 = MPI_Wtime();
 		comp_time += t4 - t6;
 #endif
-		if (curr_delay >= minDelay -1) {
-			MPI_Status status_t;
-			int ret = MPI_Wait(&request_t, &status_t);
-			assert(ret == MPI_SUCCESS);
 
-			//int delay_idx = time % (maxDelay + 1);
-
-			checkCudaErrors(cudaMemcpy(c_fired_sizes, g_buffer->_fired_sizes, sizeof(int)*(maxDelay+1), cudaMemcpyDeviceToHost));
-
-			for (int d_=0; d_ < minDelay; d_++) {
-				int delay_idx = (time-minDelay+2+d_+maxDelay)%(maxDelay+1);
-				for (int n_ = 0; n_<node_num; n_++) {
-					int start = cnd->_recv_start[n_*(minDelay+1)+d_];
-					int end = cnd->_recv_start[n_*(minDelay+1)+d_+1];
-					if (end > start) {
-						assert(c_fired_sizes[delay_idx] + end - start <= allNeuronNum);
-						checkCudaErrors(cudaMemcpy(g_buffer->_fire_table + allNeuronNum*delay_idx + c_fired_sizes[delay_idx], cnd->_recv_data + cnd->_recv_offset[n_] + start, sizeof(int)*(end-start), cudaMemcpyHostToDevice));
-						c_fired_sizes[delay_idx] += end - start;
-					}
-				}
-			}
-			checkCudaErrors(cudaMemcpy(g_buffer->_fired_sizes, c_fired_sizes, sizeof(int)*(maxDelay+1), cudaMemcpyHostToDevice));
 #ifdef LOG_DATA
-			log_cnd(cnd, time, send_file, recv_file);
+		msg->log_gpu(time, (string("proc_") + std::to_string(network->_nodeIdx)).c_str());
 #endif
-			reset_cnd_gpu(cnd_gpu, cnd);
-		}
-
+		msg->upload_gpu(g_buffer->_fire_table, g_buffer->_fired_sizes, buffer._fired_sizes, g_buffer->_fire_table_cap, max_delay, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
 
 #ifdef PROF
 		cudaDeviceSynchronize();
@@ -213,15 +175,6 @@ int run_proc_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 		comm_time += t5 - t4;
 #endif
 
-		// for (int i=0; i< node_num; i++) {
-			// int i2idx = network->_nodeIdx + node_num * i;
-			// if (gCrossDataGPU->_firedNum[i2idx] > 0) {
-			// 	int num = gCrossDataGPU->_firedNum[i2idx];
-			// 	cudaAddCrossNeurons<<<(num+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(c_pNetGPU->ppConnections[0], g_buffer->_fire_table, g_buffer->_fired_sizes, gCrossDataGPU->_firedArrays[i2idx], gCrossDataGPU->_firedNum[i2idx], time);
-			// }
-		//}
-		
-		
 #ifdef LOG_DATA
 		for (int i=0; i<copySize; i++) {
 			fprintf(sim_file, "%d ", buffer._fire_table[i]);
@@ -241,7 +194,7 @@ int run_proc_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 	string send;
 	string recv;
-	for (int i=0; i<node_num; i++) {
+	for (int i=0; i<proc_num; i++) {
 		send += std::to_string(send_count[i]);
 		send += ' ';
 		recv += std::to_string(recv_count[i]);

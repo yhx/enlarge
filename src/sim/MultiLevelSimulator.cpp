@@ -28,9 +28,13 @@ MultiLevelSimulator::MultiLevelSimulator(Network *network, real dt) : Simulator(
 	MPI_Comm_rank(MPI_COMM_WORLD, &_proc_id);
 	MPI_Comm_size(MPI_COMM_WORLD, &_proc_num);
 	char processor_name[MPI_MAX_PROCESSOR_NAME];
-	int name_len;
+	int name_len = 0;
 	MPI_Get_processor_name(processor_name, &name_len);
 	printf("Processor %s, rank %d out of %d processors\n", processor_name, _proc_id, _proc_num);
+
+	_gpu_id = 0;
+	_gpu_num = 0;
+	_gpu_grp = 0;
 }
 
 MultiLevelSimulator::MultiLevelSimulator(const string &path, real dt) : Simulator(NULL, dt)
@@ -221,13 +225,16 @@ int MultiLevelSimulator::run(real time, FireInfo &log, int gpu)
 	}
 
 	CrossMap *map = convert2crossmap(_network_data->_crossnodeMap);
-	CrossSpike *msg = convert2crossspike(_data);
+	CrossSpike *msg = convert2crossmap(_data, gpu);
+	
 
-	if (gpu) {
+	if (gpu > 0) {
 		run_proc_gpu(_network_data, map, msg);
 	} else {
 		run_proc_cpu(_network_data, map, msg);
 	}
+	delete map;
+	delete msg;
 	MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Finalize();
 
