@@ -1,6 +1,10 @@
 
 #include <stdio.h>
 
+#include "../../msg_utils/msg_utils/CrossMap.h"
+#include "../../msg_utils/msg_utils/CrossSpike.h"
+#include "../msg_utils/CrossNodeMap.h"
+#include "../msg_utils/CrossNodeData.h"
 #include "convert.h"
 
 CrossMap * convert2crossmap(CrossNodeMap * cnm)
@@ -20,11 +24,17 @@ CrossMap * convert2crossmap(CrossNodeMap * cnm)
 	return cm;
 }
 
-CrossSpike * convert2crossspike(CrossNodeData *cnd, int proc_rank, int gpu_rank, int gpu_num, int gpu_group)
+CrossSpike * convert2crossspike(CrossNodeData *cnd, int proc_rank, int gpu_num)
 {
 	int proc_num = cnd->_node_num;
 	int delay = cnd->_min_delay;
-	CrossSpike cs = new CrossSpike(proc_rank, proc_num, gpu_rank, gpu_num, gpu_group);
+	CrossSpike *cs = NULL;
+	
+	if (gpu_num > 0) {
+		cs = new CrossSpike(proc_rank, proc_num, delay, gpu_num);
+	} else {
+		cs = new CrossSpike(proc_rank, proc_num, delay);
+	}
 
 	for (int i=0;  i<proc_num + 1; i++) {
 		cs->_recv_offset[i] = cnd->_recv_offset[i];

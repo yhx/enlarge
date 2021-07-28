@@ -1,11 +1,13 @@
 
-#ifdef CONVERT_H
+#ifndef CONVERT_H
 #define CONVERT_H
 
 #include "../../msg_utils/msg_utils/CrossMap.h"
 #include "../../msg_utils/msg_utils/CrossSpike.h"
+#include "CrossNodeMap.h"
+#include "CrossNodeData.h"
 
 CrossMap * convert2crossmap(CrossNodeMap * cnm);
-CrossSpike * convert2crossspike(CrossNodeData *cnd, int proc_rank, int gpu_rank = 0, int gpu_num = 1, int gpu_group = 0);
+CrossSpike * convert2crossspike(CrossNodeData *cnd, int proc_rank, int gpu_num);
 
 #endif //CONVERT_H

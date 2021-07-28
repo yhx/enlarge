@@ -15,6 +15,7 @@
 #include "../utils/helper_c.h"
 #include "../base/TypeFunc.h"
 #include "../msg_utils/msg_utils.h"
+#include "../msg_utils/convert.h"
 #include "../net/Network.h"
 #include "../neuron/lif/LIFData.h"
 #include "MultiLevelSimulator.h"
@@ -225,7 +226,7 @@ int MultiLevelSimulator::run(real time, FireInfo &log, int gpu)
 	}
 
 	CrossMap *map = convert2crossmap(_network_data->_crossnodeMap);
-	CrossSpike *msg = convert2crossmap(_data, gpu);
+	CrossSpike *msg = convert2crossspike(_data, _proc_id, gpu);
 	
 
 	if (gpu > 0) {

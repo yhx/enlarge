@@ -47,7 +47,7 @@ int run_proc_gpu(DistriNetwork *network, CrossMap *map, CrossSpike *msg) {
 	int nodeSynapseNum = c_pNetGPU->pSynapseNums[sTypeNum];
 
 	int max_delay = pNetCPU->ppConnections[0]->maxDelay;
-	// int min_delay = pNetCPU->ppConnections[0]->minDelay;
+	int min_delay = pNetCPU->ppConnections[0]->minDelay;
 
 	pInfoGNetwork(c_pNetGPU, string("Proc ") + std::to_string(network->_nodeIdx));
 
