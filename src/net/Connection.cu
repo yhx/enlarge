@@ -3,7 +3,7 @@
 #include <assert.h>
 
 #include "../utils/helper_c.h"
-#include "../gpu_utils/helper_gpu.h"
+#include "../../msg_utils/helper/helper_gpu.h"
 #include "Connection.h"
 
 Connection * cudaAllocConnection(Connection * pCPU)

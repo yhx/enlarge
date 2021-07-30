@@ -10,7 +10,7 @@
 #include "../utils/utils.h"
 #include "../utils/helper_c.h"
 #include "../base/TypeFunc.h"
-#include "../gpu_utils/helper_gpu.h"
+#include "../../msg_utils/helper/helper_gpu.h"
 #include "../gpu_utils/gpu_utils.h"
 // #include "../gpu_utils/GBuffers.h"
 #include "../gpu_utils/runtime.h"

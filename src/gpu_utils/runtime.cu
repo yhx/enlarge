@@ -12,7 +12,7 @@
 // #include "../neuron/poisson/poisson.h"
 // #include "../neuron/tj/tj.h"
 
-#include "helper_gpu.h"
+#include "../../msg_utils/helper/helper_gpu.h"
 #include "runtime.h"
 // #include "gpu_func.h"
 

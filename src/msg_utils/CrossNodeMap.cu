@@ -1,7 +1,7 @@
 
 
 #include "../utils/helper_c.h"
-#include "../gpu_utils/helper_gpu.h"
+#include "../../msg_utils/helper/helper_gpu.h"
 #include "CrossNodeMap.h"
 
 CrossNodeMap * to_gpu(CrossNodeMap *cpu)

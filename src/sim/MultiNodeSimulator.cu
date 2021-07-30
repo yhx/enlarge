@@ -12,7 +12,7 @@
 #include "../msg_utils/msg_utils.h"
 #include "../net/Network.h"
 #include "../neuron/lif/LIFData.h"
-#include "../gpu_utils/helper_gpu.h"
+#include "../../msg_utils/helper/helper_gpu.h"
 #include "../gpu_utils/runtime.h"
 #include "../gpu_utils/gpu_utils.h"
 #include "MultiNodeSimulator.h"

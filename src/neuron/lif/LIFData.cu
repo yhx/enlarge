@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-#include "../../gpu_utils/helper_gpu.h"
+#include "../../../msg_utils/helper/helper_gpu.h"
 #include "LIFData.h"
 
 void *cudaMallocLIF()

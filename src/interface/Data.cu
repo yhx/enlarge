@@ -1,7 +1,7 @@
 
 
 #ifdef USE_GPU
-#include "../gpu_utils/helper_gpu.h"
+#include "../../msg_utils/helper/helper_gpu.h"
 #endif
 
 #include "Data.h"

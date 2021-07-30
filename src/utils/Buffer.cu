@@ -1,5 +1,5 @@
 
-#include "../gpu_utils/helper_gpu.h"
+#include "../../msg_utils/helper/helper_gpu.h"
 #include "Buffer.h"
 
 Buffer::Buffer(size_t data_size, size_t n_num, int max_delay, int gpu): Buffer(data_size, n_num, max_delay)

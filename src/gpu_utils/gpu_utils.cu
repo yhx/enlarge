@@ -1,5 +1,5 @@
 
-#include "helper_gpu.h"
+#include "../../msg_utils/helper/helper_gpu.h"
 #include "gpu_utils.h"
 
 void print_gmem(const char *msg)

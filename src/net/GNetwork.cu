@@ -4,7 +4,7 @@
 #include "../base/TypeFunc.h"
 #include "../utils/macros.h"
 #include "../utils/helper_c.h"
-#include "../gpu_utils/helper_gpu.h"
+#include "../../msg_utils/helper/helper_gpu.h"
 #include "../gpu_utils/gpu_utils.h"
 #include "GNetwork.h"
 

@@ -1,6 +1,7 @@
 
 #include "LIFData.h"
 
+#include "../../../msg_utils/helper/helper_gpu.h"
 #include "../../gpu_utils/runtime.h"
 #include "../../net/Connection.h"
 

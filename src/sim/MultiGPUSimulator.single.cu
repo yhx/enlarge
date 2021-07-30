@@ -8,7 +8,7 @@
 #include "../base/TypeFunc.h"
 #include "../utils/helper_c.h"
 #include "../utils/utils.h"
-#include "../gpu_utils/helper_gpu.h"
+#include "../../msg_utils/helper/helper_gpu.h"
 #include "../gpu_utils/runtime.h"
 // #include "../gpu_utils/GBuffers.h"
 #include "../net/Network.h"
