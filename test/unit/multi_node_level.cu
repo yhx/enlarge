@@ -198,7 +198,8 @@ int main(int argc, char **argv)
 	sg.save_net("multi_node_test");
 	MPI_Barrier(MPI_COMM_WORLD);
 
-	copyFromGPU(msg->_recv_start, msg->_gpu_array->_recv_start, msg->_min_delay * msg->_proc_num + msg->_proc_num);
+	// copyFromGPU(msg->_recv_start, msg->_gpu_array->_recv_start, msg->_min_delay * msg->_proc_num + msg->_proc_num);
+	msg->from_gpu();
 
 	int ret = CATCH_RET();
 	MPI_Finalize();

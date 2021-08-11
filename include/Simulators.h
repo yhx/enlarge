@@ -17,11 +17,13 @@
 
 //MPI SIM
 #include "../src/sim/MultiNodeSimulator.h"
+#include "../src/sim/MultiLevelSimulator.h"
 
 typedef SingleThreadSimulator STSim;
 typedef SingleGPUSimulator SGSim;
 typedef MultiGPUSimulator MGSim;
 typedef MultiNodeSimulator MNSim;
+typedef MultiLevelSimulator MLSim;
 
 #endif /* SIMULATORS_H */
 
