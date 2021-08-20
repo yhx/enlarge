@@ -49,13 +49,13 @@ int MultiGPUSimulator::run(real time, FireInfo &log)
 				int access = 0;
 				checkCudaErrors(cudaDeviceCanAccessPeer(&access, i, j));
 				if (access == 1) {
-					checkCudaErrors(cudaSetDevice(i));
+					gpuSetDevice(i);
 					checkCudaErrors(cudaDeviceEnablePeerAccess(j, 0));
 				}
 			}
 		}
 	}
-	checkCudaErrors(cudaSetDevice(0));
+	gpuSetDevice(0);
 
 	pthread_barrier_init(&gpuCycleBarrier, NULL, device_count);
 
@@ -105,7 +105,7 @@ void * run_thread_gpu(void *para) {
 	FILE *v_file = fopen(v_filename, "w+");
 	assert(v_file != NULL);
 
-	checkCudaErrors(cudaSetDevice(network->_nodeIdx));
+	gpuSetDevice(network->_nodeIdx);
 
 	GNetwork *pNetCPU = network->_network;
 	GNetwork *c_pNetGPU = copyGNetworkToGPU(pNetCPU);
