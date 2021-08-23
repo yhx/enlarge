@@ -14,6 +14,7 @@
 #include "../../msg_utils/helper/helper_c.h"
 #include "../../msg_utils/helper/helper_gpu.h"
 #include "../../msg_utils/msg_utils/msg_utils.h"
+#include "../../msg_utils/msg_utils/GPUManager.h"
 #include "../gpu_utils/runtime.h"
 #include "../gpu_utils/gpu_utils.h"
 #include "MultiNodeSimulator.h"
@@ -34,7 +35,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 #endif
 
 	// print_mem("Before SetDevice");
-	checkCudaErrors(cudaSetDevice(0));
+	gm.set(0);
 	// print_mem("Before Network");
 
 	GNetwork *pNetCPU = network->_network;

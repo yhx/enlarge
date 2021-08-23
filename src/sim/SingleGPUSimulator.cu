@@ -12,6 +12,7 @@
 #include "../base/TypeFunc.h"
 #include "../../msg_utils/helper/helper_c.h"
 #include "../../msg_utils/helper/helper_gpu.h"
+#include "../../msg_utils/msg_utils/GPUManager.h"
 #include "../gpu_utils/gpu_utils.h"
 // #include "../gpu_utils/GBuffers.h"
 #include "../gpu_utils/runtime.h"
@@ -51,7 +52,7 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 	FILE *log_file = fopen_c("sim.gpu.log", "w+");
 
 	//findCudaDevice(0, NULL);
-	checkCudaErrors(cudaSetDevice(0));
+	gm.set(0);
 	GNetwork *c_pNetGPU = copyGNetworkToGPU(pNetCPU);
 
 	int nTypeNum = c_pNetGPU->nTypeNum;
@@ -232,7 +233,7 @@ int SingleGPUSimulator::runMultiNets(real time, int parts, FireInfo &log) {
 	int sim_cycle = round(time/_dt);
 	reset();
 
-	checkCudaErrors(cudaSetDevice(0));
+	gm.set(0);
 
 	// Network multiNet(_network, parts);
 	_network->set_node_num(parts);
