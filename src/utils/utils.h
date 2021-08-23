@@ -11,7 +11,7 @@
 
 #include "../third_party/json/json.h"
 #include "../base/type.h"
-#include "helper_c.h"
+#include "../../msg_utils/helper/helper_c.h"
 
 static bool rand_seed_inited = false;
 

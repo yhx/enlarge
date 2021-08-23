@@ -6,7 +6,7 @@
 #include "../catch2/catch.h"
 
 #include "../../include/BSim.h"
-#include "../../src/msg_utils/msg_utils.h"
+#include "../../../msg_utils/msg_utils/msg_utils.h"
 
 using std::vector;
 

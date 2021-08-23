@@ -27,6 +27,7 @@ public:
 	int load_net(const string &name);
 	int distribute(SimInfo &, int);
 
+	int run(real time, int gpu_num);
 	virtual int run(real time, FireInfo &log);
 	virtual int run(real time, FireInfo &log, int gpu_num);
 

@@ -9,7 +9,7 @@
 #include <string.h>
 
 #include "../utils/utils.h"
-#include "../utils/helper_c.h"
+#include "../../msg_utils/helper/helper_c.h"
 #include "../utils/Buffer.h"
 #include "../base/TypeFunc.h"
 #include "../neuron/lif/LIFData.h"

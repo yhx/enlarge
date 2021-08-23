@@ -7,12 +7,13 @@
 #include <mpi.h>
 
 #include "../utils/utils.h"
-#include "../utils/helper_c.h"
+// #include "../utils/helper_c.h"
 #include "../base/TypeFunc.h"
-#include "../msg_utils/msg_utils.h"
 #include "../net/Network.h"
 #include "../neuron/lif/LIFData.h"
+#include "../../msg_utils/helper/helper_c.h"
 #include "../../msg_utils/helper/helper_gpu.h"
+#include "../../msg_utils/msg_utils/msg_utils.h"
 #include "../gpu_utils/runtime.h"
 #include "../gpu_utils/gpu_utils.h"
 #include "MultiLevelSimulator.h"
@@ -41,15 +42,15 @@ int run_proc_gpu(DistriNetwork *network, CrossMap *map, CrossSpike *msg) {
 	msg->to_gpu();
 	// print_mem("Copied CND");
 
-	int nTypeNum = c_pNetGPU->nTypeNum;
-	int sTypeNum = c_pNetGPU->sTypeNum;
+	int nTypeNum = pNetCPU->nTypeNum;
+	int sTypeNum = pNetCPU->sTypeNum;
 	int allNeuronNum = pNetCPU->ppConnections[0]->nNum;
-	int nodeSynapseNum = c_pNetGPU->pSynapseNums[sTypeNum];
+	int nodeSynapseNum = pNetCPU->pSynapseNums[sTypeNum];
 
 	int max_delay = pNetCPU->ppConnections[0]->maxDelay;
 	int min_delay = pNetCPU->ppConnections[0]->minDelay;
 
-	pInfoGNetwork(c_pNetGPU, string("Proc ") + std::to_string(network->_nodeIdx));
+	pInfoGNetwork(pNetCPU, string("Proc ") + std::to_string(network->_nodeIdx));
 
 
 	Buffer buffer(pNetCPU->bufferOffsets[nTypeNum], allNeuronNum, max_delay, 0);
@@ -100,7 +101,7 @@ int run_proc_gpu(DistriNetwork *network, CrossMap *map, CrossSpike *msg) {
 
 	print_gmem("After build");
 
-	to_attach();
+	// to_attach();
 	printf("Start runing for %d cycles\n", network->_simCycle);
 
 	for (int time=0; time<network->_simCycle; time++) {
@@ -111,7 +112,7 @@ int run_proc_gpu(DistriNetwork *network, CrossMap *map, CrossSpike *msg) {
 
 		for (int i=0; i<nTypeNum; i++) {
 			assert(c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i] > 0);
-			cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->ppConnections[0], c_pNetGPU->ppNeurons[i], g_buffer->_data, g_buffer->_fire_table, g_buffer->_fired_sizes, allNeuronNum, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i], time, &updateSize[c_pNetGPU->pNTypes[i]]);
+			cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->ppConnections[i], c_pNetGPU->ppNeurons[i], g_buffer->_data, g_buffer->_fire_table, g_buffer->_fired_sizes, allNeuronNum, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i], time, &updateSize[c_pNetGPU->pNTypes[i]]);
 		}
 
 #ifdef PROF

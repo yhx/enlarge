@@ -12,9 +12,9 @@
 #include <mpi.h>
 
 #include "../utils/utils.h"
-#include "../utils/helper_c.h"
 #include "../base/TypeFunc.h"
-#include "../msg_utils/msg_utils.h"
+#include "../../msg_utils/helper/helper_c.h"
+#include "../../msg_utils/msg_utils/msg_utils.h"
 #include "../net/Network.h"
 #include "../neuron/lif/LIFData.h"
 #include "MultiNodeSimulator.h"

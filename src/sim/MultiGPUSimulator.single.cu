@@ -6,8 +6,8 @@
 #include <iostream>
 
 #include "../base/TypeFunc.h"
-#include "../utils/helper_c.h"
 #include "../utils/utils.h"
+#include "../../msg_utils/helper/helper_c.h"
 #include "../../msg_utils/helper/helper_gpu.h"
 #include "../gpu_utils/runtime.h"
 // #include "../gpu_utils/GBuffers.h"
@@ -132,7 +132,7 @@ int MultiGPUSimulator::run_single(real time)
 
 			for (int i=0; i<c_pNetGPU[d]->nTypeNum; i++) {
 				assert(c_pNetGPU[d]->pNeuronNums[i+1]-c_pNetGPU[d]->pNeuronNums[i] > 0);
-				cudaUpdateType[c_pNetGPU[d]->pNTypes[i]](c_pNetGPU[d]->ppConnections[0], c_pNetGPU[d]->ppNeurons[i], buffers[d]->_data, buffers[d]->_fire_table, buffers[d]->_fired_sizes, allNeuronNum, c_pNetGPU[d]->pNeuronNums[i+1]-c_pNetGPU[d]->pNeuronNums[i], c_pNetGPU[d]->pNeuronNums[i], time, &updateSize[d][c_pNetGPU[d]->pNTypes[i]]);
+				cudaUpdateType[c_pNetGPU[d]->pNTypes[i]](c_pNetGPU[d]->ppConnections[i], c_pNetGPU[d]->ppNeurons[i], buffers[d]->_data, buffers[d]->_fire_table, buffers[d]->_fired_sizes, allNeuronNum, c_pNetGPU[d]->pNeuronNums[i+1]-c_pNetGPU[d]->pNeuronNums[i], c_pNetGPU[d]->pNeuronNums[i], time, &updateSize[d][c_pNetGPU[d]->pNTypes[i]]);
 			}
 
 			cudaMemset(c_g_fired_n_num[d], 0, sizeof(int)*node_nets[d]._nodeNum);

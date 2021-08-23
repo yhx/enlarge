@@ -1,6 +1,6 @@
 
 
-#include "../utils/helper_c.h"
+#include "../../msg_utils/helper/helper_c.h"
 #include "../../msg_utils/helper/helper_gpu.h"
 #include "CrossNodeMap.h"
 

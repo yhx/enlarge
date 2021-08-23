@@ -8,8 +8,9 @@
 #include <iostream>
 
 #include "../utils/utils.h"
-#include "../utils/helper_c.h"
+// #include "../utils/helper_c.h"
 #include "../base/TypeFunc.h"
+#include "../../msg_utils/helper/helper_c.h"
 #include "../../msg_utils/helper/helper_gpu.h"
 #include "../gpu_utils/gpu_utils.h"
 // #include "../gpu_utils/GBuffers.h"
@@ -112,7 +113,7 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 		cudaDeviceSynchronize();
 
 		for (int i=0; i<nTypeNum; i++) {
-			cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->ppConnections[0], c_pNetGPU->ppNeurons[i], g_buffer->_data, g_buffer->_fire_table, g_buffer->_fired_sizes, totalNeuronNum, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i],time, &updateSize[c_pNetGPU->pNTypes[i]]);
+			cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->ppConnections[i], c_pNetGPU->ppNeurons[i], g_buffer->_data, g_buffer->_fire_table, g_buffer->_fired_sizes, totalNeuronNum, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i],time, &updateSize[c_pNetGPU->pNTypes[i]]);
 		}
 		cudaDeviceSynchronize();
 
@@ -279,7 +280,7 @@ int SingleGPUSimulator::runMultiNets(real time, int parts, FireInfo &log) {
 
 			for (int i=0; i<c_pNetGPU->nTypeNum; i++) {
 				assert(c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i] > 0);
-				cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->ppConnections[0], c_pNetGPU->ppNeurons[i], buffers[p]->_data, buffers[p]->_fire_table, buffers[p]->_fired_sizes, allNeuronNum, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i], time, &updateSizes[p][c_pNetGPU->pNTypes[i]]);
+				cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->ppConnections[i], c_pNetGPU->ppNeurons[i], buffers[p]->_data, buffers[p]->_fire_table, buffers[p]->_fired_sizes, allNeuronNum, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i], time, &updateSizes[p][c_pNetGPU->pNTypes[i]]);
 			}
 		}
 

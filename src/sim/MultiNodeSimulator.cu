@@ -7,12 +7,13 @@
 #include <mpi.h>
 
 #include "../utils/utils.h"
-#include "../utils/helper_c.h"
+// #include "../utils/helper_c.h"
 #include "../base/TypeFunc.h"
-#include "../msg_utils/msg_utils.h"
 #include "../net/Network.h"
 #include "../neuron/lif/LIFData.h"
+#include "../../msg_utils/helper/helper_c.h"
 #include "../../msg_utils/helper/helper_gpu.h"
+#include "../../msg_utils/msg_utils/msg_utils.h"
 #include "../gpu_utils/runtime.h"
 #include "../gpu_utils/gpu_utils.h"
 #include "MultiNodeSimulator.h"
@@ -126,7 +127,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 		for (int i=0; i<nTypeNum; i++) {
 			assert(c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i] > 0);
-			cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->ppConnections[0], c_pNetGPU->ppNeurons[i], g_buffer->_data, g_buffer->_fire_table, g_buffer->_fired_sizes, allNeuronNum, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i], time, &updateSize[c_pNetGPU->pNTypes[i]]);
+			cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->ppConnections[i], c_pNetGPU->ppNeurons[i], g_buffer->_data, g_buffer->_fire_table, g_buffer->_fired_sizes, allNeuronNum, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i], time, &updateSize[c_pNetGPU->pNTypes[i]]);
 		}
 
 #ifdef PROF
