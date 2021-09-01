@@ -46,9 +46,9 @@ int main(int argc, char **argv)
 		weight2 = (real*)malloc_c<real>(N * N);
 
 		for (int i=0; i<N*N; i++) {
-			weight0[i] = 0.002 + (double)(i)/(double)(N*N) * 0.02;
-			weight1[i] = 0.022 - (double)(i)/(double)(N*N) * 0.02;
-			weight2[i] = -0.022 + (double)(i)/(double)(N*N) * 0.02;
+		    weight0[i] = 0.0001 + (double)(i)/(double)(N*N) * 0.001;
+		    weight1[i] = 0.0011 - (double)(i)/(double)(N*N) * 0.001;
+		    weight2[i] = -0.00022 + (double)(i)/(double)(N*N) * 0.0002;
 		}
 
 		delay1 = getConstArray((real)1e-4, N*N);

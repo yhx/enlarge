@@ -142,7 +142,7 @@ void * run_thread_gpu(void *para) {
 	real *c_g_vm = NULL;
 
 	if (life_idx >= 0) {
-		LIFData *c_g_lif = copyFromGPU<LIFData>(static_cast<LIFData *>(c_pNetGPU->ppNeurons[life_idx]), 1);
+		LIFData *c_g_lif = FROMGPU(static_cast<LIFData *>(c_pNetGPU->ppNeurons[life_idx]), 1);
 		c_g_vm = c_g_lif->pV_m;
 		copy_idx = life_idx;
 	} else {
@@ -195,7 +195,7 @@ void * run_thread_gpu(void *para) {
 
 		cudaDeliverNeurons<<<(allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE>>>(g_buffer->_fire_table, g_buffer->_fired_sizes, cnm_gpu->_idx2index, cnm_gpu->_crossnodeIndex2idx, c_g_global_cross_data, c_g_fired_n_num, maxDelay, network->_nodeNum, time);
 
-		copyFromGPU(gCrossDataGPU->_firedNum + network->_nodeIdx * network->_nodeNum, c_g_fired_n_num, network->_nodeNum);
+		COPYFROMGPU(gCrossDataGPU->_firedNum + network->_nodeIdx * network->_nodeNum, c_g_fired_n_num, network->_nodeNum);
 		// checkCudaErrors(cudaMemcpy(gCrossDataGPU->_firedNum + network->_nodeIdx * network->_nodeNum, c_g_fired_n_num, sizeof(int)*network->_nodeNum, cudaMemcpyDeviceToHost));
 		//gettimeofday(&t3, NULL);
 
@@ -215,14 +215,14 @@ void * run_thread_gpu(void *para) {
 		int currentIdx = time%(maxDelay+1);
 
 		uinteger_t copySize = 0;
-		copyFromGPU(&copySize, g_buffer->_fired_sizes + currentIdx, 1);
+		COPYFROMGPU(&copySize, g_buffer->_fired_sizes + currentIdx, 1);
 		assert(copySize <= allNeuronNum);
 		if (copySize > 0) {
-			copyFromGPU(buffer._fire_table, g_buffer->_fire_table + (allNeuronNum*currentIdx), copySize);
+			COPYFROMGPU(buffer._fire_table, g_buffer->_fire_table + (allNeuronNum*currentIdx), copySize);
 		}
 
 		if (copy_idx >= 0 && (c_pNetGPU->pNeuronNums[copy_idx+1]-c_pNetGPU->pNeuronNums[copy_idx]) > 0) {
-			copyFromGPU(c_vm, c_g_vm, c_pNetGPU->pNeuronNums[copy_idx+1]-c_pNetGPU->pNeuronNums[copy_idx]);
+			COPYFROMGPU(c_vm, c_g_vm, c_pNetGPU->pNeuronNums[copy_idx+1]-c_pNetGPU->pNeuronNums[copy_idx]);
 		}
 #endif
 

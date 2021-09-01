@@ -19,14 +19,14 @@ CrossNodeData * copyCNDtoGPU(CrossNodeData *data)
 	int size = data->_node_num * data->_min_delay;
 	int num_p_1 = data->_node_num + 1;
 
-    gpu->_recv_offset = copyToGPU<integer_t>(data->_recv_offset, num_p_1);
-    gpu->_recv_start = copyToGPU<integer_t>(data->_recv_start, size+num);
+    gpu->_recv_offset = TOGPU(data->_recv_offset, num_p_1);
+    gpu->_recv_start = TOGPU(data->_recv_start, size+num);
     gpu->_recv_num = gpuMalloc<integer_t>(num);
 
     gpu->_recv_data = gpuMalloc<uinteger_t>(data->_recv_offset[num]);
 
-    gpu->_send_offset = copyToGPU<integer_t>(data->_send_offset, num_p_1);
-    gpu->_send_start = copyToGPU<integer_t>(data->_send_start, size+num);
+    gpu->_send_offset = TOGPU(data->_send_offset, num_p_1);
+    gpu->_send_start = TOGPU(data->_send_start, size+num);
     gpu->_send_num = gpuMalloc<integer_t>(num);
 
     gpu->_send_data = gpuMalloc<uinteger_t>(data->_send_offset[num]);

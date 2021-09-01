@@ -74,7 +74,7 @@ void *cudaAllocLIFPara(void *pCPU, size_t num)
 	checkCudaErrors(cudaMemset(ret->pC_i, 0, sizeof(real)*num));
 	checkCudaErrors(cudaMemcpy(ret->pC_i, p->pC_i, sizeof(real)*num, cudaMemcpyHostToDevice));
 
-	ret->_fire_count = copyToGPU(p->_fire_count, num);
+	ret->_fire_count = TOGPU(p->_fire_count, num);
 
 	return ret;
 }
@@ -111,7 +111,7 @@ int cudaLIFParaToGPU(void *pCPU, void *pGPU, size_t num)
 	checkCudaErrors(cudaMemcpy(pG->pC_m, pC->pC_m, sizeof(real)*num, cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemcpy(pG->pC_i, pC->pC_i, sizeof(real)*num, cudaMemcpyHostToDevice));
 
-	copyToGPU(pG->_fire_count, pC->_fire_count, num);
+	COPYTOGPU(pG->_fire_count, pC->_fire_count, num);
 
 	return 0;
 }
@@ -138,7 +138,7 @@ int cudaLIFParaFromGPU(void *pCPU, void *pGPU, size_t num)
 	checkCudaErrors(cudaMemcpy(pC->pC_m, pG->pC_m, sizeof(real)*num, cudaMemcpyDeviceToHost));
 	checkCudaErrors(cudaMemcpy(pC->pC_i, pG->pC_i, sizeof(real)*num, cudaMemcpyDeviceToHost));
 
-	copyFromGPU(pC->_fire_count, pG->_fire_count, num);
+	COPYFROMGPU(pC->_fire_count, pG->_fire_count, num);
 
 	return 0;
 }
@@ -201,8 +201,8 @@ int cudaLogRateLIF(void *cpu, void *gpu, const char *name)
 	LIFData *c = static_cast<LIFData *>(cpu);
 	LIFData *g = static_cast<LIFData *>(gpu);
 
-	LIFData *t = copyFromGPU(g, 1);
-	copyFromGPU(c->_fire_count, t->_fire_count, c->num);
+	LIFData *t = FROMGPU(g, 1);
+	COPYFROMGPU(c->_fire_count, t->_fire_count, c->num);
 	return logRateLIF(cpu, name);
 }
 

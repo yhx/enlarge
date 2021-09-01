@@ -174,11 +174,11 @@ int main(int argc, char **argv)
 	uinteger_t fire_tbl1[12] = {2, 3, 0, 0, 0, 1, 2, 3, 2, 0, 0, 0};
 	uinteger_t fire_tbl_size1[3] = {2, 4, 1};
 
-	uinteger_t *fire_tbl_g = copyToGPU(fire_tbl, 12);
-	uinteger_t *fire_tbl_size_g = copyToGPU(fire_tbl_size, 3);
+	uinteger_t *fire_tbl_g = TOGPU(fire_tbl, 12);
+	uinteger_t *fire_tbl_size_g = TOGPU(fire_tbl_size, 3);
 
-	uinteger_t *fire_tbl1_g = copyToGPU(fire_tbl1, 12);
-	uinteger_t *fire_tbl_size1_g = copyToGPU(fire_tbl_size1, 3);
+	uinteger_t *fire_tbl1_g = TOGPU(fire_tbl1, 12);
+	uinteger_t *fire_tbl_size1_g = TOGPU(fire_tbl_size1, 3);
 
 
 	for (int time = 0; time<DELAY; time++) {
