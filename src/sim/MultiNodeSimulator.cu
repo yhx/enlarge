@@ -21,7 +21,8 @@
 // #include "../gpu_utils/GBuffers.h"
 
 
-int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
+int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu) 
+{
 	// print_mem("Inside Run");
 
 	FILE *v_file = log_file_mpi("v", network->_nodeIdx);
@@ -35,7 +36,8 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 #endif
 
 	// print_mem("Before SetDevice");
-	gm.set(0);
+	gm.set(network->_nodeIdx % gpu);
+	gm.lock();
 	// print_mem("Before Network");
 
 	GNetwork *pNetCPU = network->_network;

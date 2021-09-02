@@ -24,9 +24,9 @@ public:
 	int save_net(const string &name);
 	int load_net(const string &name);
 	int distribute(SimInfo &, int);
-	virtual int run(real time, bool gpu);
+	virtual int run(real time, int gpu);
 	virtual int run(real time, FireInfo &log);
-	virtual int run(real time, FireInfo &log, bool gpu);
+	virtual int run(real time, FireInfo &log, int gpu);
 protected:
 	int _node_id;
 	int _node_num;
@@ -38,7 +38,7 @@ public:
 };
 
 int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd);
-int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd);
+int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu);
 
 #define ASYNC
 

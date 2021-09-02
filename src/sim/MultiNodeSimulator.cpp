@@ -60,7 +60,7 @@ int MultiNodeSimulator::mpi_init(int *argc, char ***argv)
 	return 0;
 }
 
-int MultiNodeSimulator::run(real time, bool gpu)
+int MultiNodeSimulator::run(real time, int gpu)
 {
 	FireInfo log;
 	run(time, log, gpu);
@@ -205,7 +205,7 @@ int MultiNodeSimulator::distribute(SimInfo &info, int sim_cycle)
 	return 0;
 }
 
-int MultiNodeSimulator::run(real time, FireInfo &log, bool gpu)
+int MultiNodeSimulator::run(real time, FireInfo &log, int gpu)
 {
 
 	int sim_cycle = round(time/_dt);
@@ -227,8 +227,8 @@ int MultiNodeSimulator::run(real time, FireInfo &log, bool gpu)
 		_network_data->_simCycle = sim_cycle;
 	}
 
-	if (gpu) {
-		run_node_gpu(_network_data, _data);
+	if (gpu > 0) {
+		run_node_gpu(_network_data, _data, gpu);
 	} else {
 		run_node_cpu(_network_data, _data);
 	}
