@@ -7,7 +7,7 @@
 
 //#include "../src/SNNReader.h"
 #include "../src/utils/utils.h"
-#include "../../msg_utils/helper/helper_c.h"
+#include "../msg_utils/helper/helper_c.h"
 #include "../src/generator/generator.h"
 //#include "../src/rw/SNNWriter.h"
 

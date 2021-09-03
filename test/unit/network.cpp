@@ -6,7 +6,7 @@
 #include "../catch2/catch.h"
 
 #include "../../include/BSim.h"
-#include "../../../msg_utils/helper/helper_c.h"
+#include "../../msg_utils/helper/helper_c.h"
 #include "../../src/net/GNetwork.h"
 
 using std::vector;

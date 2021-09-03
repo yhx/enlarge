@@ -7,7 +7,7 @@
 
 #include "../../include/BSim.h"
 #include "../../src/msg_utils/convert.h"
-#include "../../../msg_utils/msg_utils/msg_utils.h"
+#include "../../msg_utils/msg_utils/msg_utils.h"
 #include "../../msg_utils/msg_utils/CrossMap.h"
 #include "../../msg_utils/msg_utils/CrossSpike.h"
 #include "../../msg_utils/helper/helper_gpu.h"
