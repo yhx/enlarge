@@ -205,6 +205,8 @@ int run_proc_gpu(DistriNetwork *network, CrossMap *map, CrossSpike *msg) {
 
 	printf("Thread %d Data Send:%s\n", network->_nodeIdx, send.c_str());
 	printf("Thread %d Data Recv:%s\n", network->_nodeIdx, recv.c_str());
+
+	printf("Comm stat: cpu_wait_gpu %lf; gpu_wait %lf; cpu_comm %lf; gpu_comm %lf\n", msg->_cpu_wait_gpu, msg->_gpu_wait, msg->_cpu_time, msg->_gpu_time);
 #endif
 
 	char name[512];
