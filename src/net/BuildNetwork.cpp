@@ -6,9 +6,9 @@
 #include <iostream>
 #include <algorithm>
 
-#include "../utils/helper_c.h"
 #include "../utils/utils.h"
 #include "../base/TypeFunc.h"
+#include "../../msg_utils/helper/helper_c.h"
 #include "Network.h"
 
 using std::cout;

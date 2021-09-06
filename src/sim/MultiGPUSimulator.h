@@ -13,7 +13,7 @@ public:
 	~MultiGPUSimulator();
 	using Simulator::run;
 	virtual int run(real time, FireInfo &log);
-	virtual int run_single(real time);
+	// virtual int run_single(real time);
 	// virtual int single_run(real time);
 	int init(int argc, char**argv);
 protected:

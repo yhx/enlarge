@@ -12,9 +12,9 @@
 #include <mpi.h>
 
 #include "../utils/utils.h"
-#include "../utils/helper_c.h"
 #include "../base/TypeFunc.h"
-#include "../msg_utils/msg_utils.h"
+#include "../../msg_utils/helper/helper_c.h"
+#include "../../msg_utils/msg_utils/msg_utils.h"
 #include "../msg_utils/convert.h"
 #include "../net/Network.h"
 #include "../neuron/lif/LIFData.h"
@@ -62,6 +62,13 @@ MultiLevelSimulator::~MultiLevelSimulator()
 int MultiLevelSimulator::mpi_init(int *argc, char ***argv)
 {
 	MPI_Init(argc, argv);
+	return 0;
+}
+
+int MultiLevelSimulator::run(real time, int gpu_num)
+{
+	FireInfo log;
+	run(time, log, gpu_num);
 	return 0;
 }
 

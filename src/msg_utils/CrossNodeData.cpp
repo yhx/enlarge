@@ -5,8 +5,8 @@
 
 #include "../base/constant.h"
 #include "../utils/utils.h"
-#include "../utils/helper_c.h"
-#include "msg_utils.h"
+#include "../../msg_utils/helper/helper_c.h"
+#include "../../msg_utils/msg_utils/msg_utils.h"
 #include "CrossNodeData.h"
 
 void allocParaCND(CrossNodeData *data, int node_num, int delay) 

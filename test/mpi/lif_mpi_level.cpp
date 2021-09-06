@@ -66,8 +66,8 @@ int main(int argc, char **argv)
 		c.connect(pn3, pn5, weight1, delay1, NULL, N*N);
 	}
 
-	MNSim mn(&c, dt);
-	mn.run(0.1, true);
+	MLSim ml(&c, dt);
+	ml.run(0.1, 2);
 
 	return 0;
 } 

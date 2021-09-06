@@ -4,7 +4,7 @@
 #include "math.h"
 
 #include "../../third_party/json/json.h"
-#include "../../utils/helper_c.h"
+#include "../../../msg_utils/helper/helper_c.h"
 #include "LIFNeuron.h"
 #include "LIFData.h"
 

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "../utils/helper_c.h"
+#include "../../msg_utils/helper/helper_c.h"
 #include "../../msg_utils/helper/helper_gpu.h"
 #include "Connection.h"
 
@@ -19,10 +19,10 @@ Connection * cudaAllocConnection(Connection * pCPU)
 	pTmp->maxDelay = pCPU->maxDelay;
 	pTmp->minDelay = pCPU->minDelay;
 
-	pTmp->pDelayStart = copyToGPU(pCPU->pDelayStart, length+1);
-	pTmp->pDelayNum = copyToGPU(pCPU->pDelayNum, length);
-	pTmp->pSidMap = copyToGPU(pCPU->pSidMap, sNum);
-	pTmp->dst = copyToGPU(pCPU->dst, sNum);
+	pTmp->pDelayStart = TOGPU(pCPU->pDelayStart, length+1);
+	pTmp->pDelayNum = TOGPU(pCPU->pDelayNum, length);
+	pTmp->pSidMap = TOGPU(pCPU->pSidMap, sNum);
+	pTmp->dst = TOGPU(pCPU->dst, sNum);
 
 	// pTmp->pDelayStartRev = copyToGPU(pCPU->pDelayStartRev, length+1);
 
@@ -32,7 +32,7 @@ Connection * cudaAllocConnection(Connection * pCPU)
 	// checkCudaErrors(cudaMalloc((void**)&(pTmp->pSidMapRev), sizeof(size_t)*sNum));
 	// checkCudaErrors(cudaMemcpy(pTmp->pSidMapRev, pCPU->pSidMapRev, sizeof(size_t)*sNum, cudaMemcpyHostToDevice));
 
-	pGPU = copyToGPU(pTmp, 1);
+	pGPU = TOGPU(pTmp, 1);
 
 	free(pTmp);
 	pTmp = NULL;
@@ -47,17 +47,17 @@ int cudaFetchConnection(Connection *pCPU, Connection *pGPU)
 	size_t length = (pCPU->maxDelay - pCPU->minDelay + 1) * nNum;
 
 	Connection *pTmp = malloc_c<Connection>();
-	copyFromGPU(pTmp, pGPU, 1);
+	COPYFROMGPU(pTmp, pGPU, 1);
 	// checkCudaErrors(cudaMemcpy(pTmp, pGPU, sizeof(Connection), cudaMemcpyDeviceToHost));
 	assert(nNum == pTmp->nNum);
 	assert(sNum == pTmp->sNum);
 	assert(pCPU->maxDelay == pTmp->maxDelay);
 	assert(pCPU->minDelay == pTmp->minDelay);
 
-	copyFromGPU(pCPU->pDelayStart, pTmp->pDelayStart, length+1);
-	copyFromGPU(pCPU->pDelayNum, pTmp->pDelayNum, length);
-	copyFromGPU(pCPU->pSidMap, pTmp->pSidMap, sNum);
-	copyFromGPU(pCPU->dst, pTmp->dst, sNum);
+	COPYFROMGPU(pCPU->pDelayStart, pTmp->pDelayStart, length+1);
+	COPYFROMGPU(pCPU->pDelayNum, pTmp->pDelayNum, length);
+	COPYFROMGPU(pCPU->pSidMap, pTmp->pSidMap, sNum);
+	COPYFROMGPU(pCPU->dst, pTmp->dst, sNum);
 	// checkCudaErrors(cudaMemcpy(pCPU->pDelayStart, pTmp->pDelayStart, sizeof(size_t)*(length+1), cudaMemcpyDeviceToHost));
 	// checkCudaErrors(cudaMemcpy(pCPU->pDelayNum, pTmp->pDelayNum, sizeof(size_t)*length, cudaMemcpyDeviceToHost));
 	// checkCudaErrors(cudaMemcpy(pCPU->pSidMap, pTmp->pSidMap, sizeof(size_t)*sNum, cudaMemcpyDeviceToHost));
@@ -78,7 +78,7 @@ int cudaFreeConnection(Connection *pGPU)
 {
 	Connection * pTmp = malloc_c<Connection>();
 
-	copyFromGPU(pTmp, pGPU, 1);
+	COPYFROMGPU(pTmp, pGPU, 1);
 	// checkCudaErrors(cudaMemcpy(pTmp, pGPU, sizeof(Connection), cudaMemcpyDeviceToHost));
 	gpuFree(pTmp->pDelayStart);
 	gpuFree(pTmp->pDelayNum);

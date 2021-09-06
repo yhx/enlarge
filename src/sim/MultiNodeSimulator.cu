@@ -7,12 +7,13 @@
 #include <mpi.h>
 
 #include "../utils/utils.h"
-#include "../utils/helper_c.h"
+// #include "../utils/helper_c.h"
 #include "../base/TypeFunc.h"
-#include "../msg_utils/msg_utils.h"
 #include "../net/Network.h"
 #include "../neuron/lif/LIFData.h"
+#include "../../msg_utils/helper/helper_c.h"
 #include "../../msg_utils/helper/helper_gpu.h"
+#include "../../msg_utils/msg_utils/msg_utils.h"
 #include "../../msg_utils/msg_utils/GPUManager.h"
 #include "../gpu_utils/runtime.h"
 #include "../gpu_utils/gpu_utils.h"
@@ -20,7 +21,8 @@
 // #include "../gpu_utils/GBuffers.h"
 
 
-int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
+int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu) 
+{
 	// print_mem("Inside Run");
 
 	FILE *v_file = log_file_mpi("v", network->_nodeIdx);
@@ -34,7 +36,8 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 #endif
 
 	// print_mem("Before SetDevice");
-	gm.set(0);
+	gm.set(network->_nodeIdx % gpu);
+	gm.lock();
 	// print_mem("Before Network");
 
 	GNetwork *pNetCPU = network->_network;
@@ -78,7 +81,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 	real *c_g_vm = NULL;
 
 	if (life_idx >= 0) {
-		LIFData *c_g_lif = copyFromGPU<LIFData>(static_cast<LIFData *>(c_pNetGPU->ppNeurons[life_idx]), 1);
+		LIFData *c_g_lif = FROMGPU(static_cast<LIFData *>(c_pNetGPU->ppNeurons[life_idx]), 1);
 		c_g_vm = c_g_lif->pV_m;
 		copy_idx = life_idx;
 	} else {
@@ -127,7 +130,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 
 		for (int i=0; i<nTypeNum; i++) {
 			assert(c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i] > 0);
-			cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->ppConnections[0], c_pNetGPU->ppNeurons[i], g_buffer->_data, g_buffer->_fire_table, g_buffer->_fired_sizes, allNeuronNum, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i], time, &updateSize[c_pNetGPU->pNTypes[i]]);
+			cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->ppConnections[i], c_pNetGPU->ppNeurons[i], g_buffer->_data, g_buffer->_fire_table, g_buffer->_fired_sizes, allNeuronNum, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i], time, &updateSize[c_pNetGPU->pNTypes[i]]);
 		}
 
 #ifdef PROF
@@ -159,14 +162,14 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd) {
 		int currentIdx = time%(maxDelay+1);
 
 		uinteger_t copySize = 0;
-		copyFromGPU(&copySize, g_buffer->_fired_sizes + currentIdx, 1);
+		COPYFROMGPU(&copySize, g_buffer->_fired_sizes + currentIdx, 1);
 		assert(copySize <= allNeuronNum);
 		if (copySize > 0) {
-			copyFromGPU(buffer._fire_table, g_buffer->_fire_table + (allNeuronNum*currentIdx), copySize);
+			COPYFROMGPU(buffer._fire_table, g_buffer->_fire_table + (allNeuronNum*currentIdx), copySize);
 		}
 
 		if (copy_idx >= 0 && (c_pNetGPU->pNeuronNums[copy_idx+1]-c_pNetGPU->pNeuronNums[copy_idx]) > 0) {
-			copyFromGPU(c_vm, c_g_vm, c_pNetGPU->pNeuronNums[copy_idx+1]-c_pNetGPU->pNeuronNums[copy_idx]);
+			COPYFROMGPU(c_vm, c_g_vm, c_pNetGPU->pNeuronNums[copy_idx+1]-c_pNetGPU->pNeuronNums[copy_idx]);
 		}
 #endif
 

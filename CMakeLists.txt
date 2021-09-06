@@ -15,7 +15,6 @@ MESSAGE(STATUS "CMAKE_CURRENT_BINARY_DIR:" ${CMAKE_CURRENT_BINARY_DIR})
 
 # SET(Python_ADDITIONAL_VERSIONS "3.4" "3.5" "3.8")
 
-ADD_SUBDIRECTORY(msg_utils)
 
 ENABLE_TESTING()
 
@@ -26,8 +25,6 @@ FIND_PACKAGE(CUDA REQUIRED)
 FIND_PACKAGE(MPI REQUIRED)
 FIND_PACKAGE(BLAS REQUIRED)
 
-INCLUDE_DIRECTORIES(${MPI_INCLUDE_PATH})
-INCLUDE_DIRECTORIES(${BLAS_INCLUDE_PATH})
 
 MESSAGE(STATUS "C Compiler: " ${CMAKE_C_COMPILER_ID} " " ${CMAKE_C_COMPILER_VERSION})
 MESSAGE(STATUS "C++ Compiler: " ${CMAKE_CXX_COMPILER_ID} " " ${CMAKE_CXX_COMPILER_VERSION})
@@ -38,6 +35,26 @@ MESSAGE(STATUS "BLAS Libraries: ${BLAS_LIBRARIES}")
 IF(NOT CMAKE_BUILD_TYPE)
 	SET(CMAKE_BUILD_TYPE Release)
 ENDIF(NOT CMAKE_BUILD_TYPE)
+
+STRING(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_UPPER)
+
+if (CMAKE_BUILD_TYPE_UPPER STREQUAL "RELEASE")
+	IF ( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
+		SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -std=c++11 -stdlib=libc++ -O3 -fPIC -pthread")
+	ELSE( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
+		SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -std=c++11 -O3 -fPIC -pthread")
+	ENDIF ( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
+	SET(CUDA_NVCC_FLAGS_RELEASE "-std=c++11;-O3;-gencode arch=compute_60,code=sm_60 -gencode arch=compute_61,code=sm_61 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_75,code=sm_75 -gencode arch=compute_80,code=sm_80 -gencode arch=compute_86,code=sm_86 -gencode arch=compute_86,code=compute_86;-lcufft")
+	# SET(CUDA_NVCC_FLAGS_RELEASE "-std=c++11;-O3;-arch=compute_60;-code=sm_60;-lcufft")
+elseif (CMAKE_BUILD_TYPE_UPPER STREQUAL "DEBUG")
+	IF ( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
+		SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -std=c++11 -stdlib=libc++ -O0 -Wall -g -ggdb -fPIC -D DEBUG -pthread")
+	ELSE( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
+		SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -std=c++11 -O0 -Wall -g -ggdb -fPIC -D DEBUG -pthread")
+	ENDIF ( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
+	#SET(CUDA_NVCC_FLAGS_DEBUG "-std=c++11;-g;-G;-lineinfo;-Xcompiler;-arch=sm_60")
+	SET(CUDA_NVCC_FLAGS_DEBUG "-gencode=arch=compute_60,code=sm_60;-gencode=arch=compute_61,code=sm_61;-gencode=arch=compute_70,code=sm_70;-gencode=arch=compute_75,code=sm_75;-gencode=arch=compute_80,code=sm_80;-gencode=arch=compute_86,code=sm_86;-gencode=arch=compute_86,code=compute_86;-std=c++11;-g;-G;-D DEBUG;-lcufft")
+endif (CMAKE_BUILD_TYPE_UPPER STREQUAL "RELEASE")
 
 OPTION(USE_DOUBLE "Use double" OFF) # Disabled by default
 IF(USE_DOUBLE)
@@ -59,32 +76,13 @@ OPTION(USE_GPU "Use gpu" ON) # Disabled by default
 SET(CUDA_PROPAGATE_HOST_FLAGS OFF)
 SET(CUDA_SEPARABLE_COMPILATION ON)
 
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DMY_DEBUG")
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DMY_DEBUG")
-
-STRING(TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_UPPER)
-
-if (CMAKE_BUILD_TYPE_UPPER STREQUAL "RELEASE")
-	IF ( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
-		SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -std=c++11 -stdlib=libc++ -O3 -fPIC -pthread")
-	ELSE( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
-		SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -std=c++11 -O3 -fPIC -pthread")
-	ENDIF ( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
-	SET(CUDA_NVCC_FLAGS_RELEASE "-std=c++11;-O3;-arch=sm_60;-lcufft")
-	# SET(CUDA_NVCC_FLAGS_RELEASE "-std=c++11;-O3;-arch=compute_60;-code=sm_60;-lcufft")
-elseif (CMAKE_BUILD_TYPE_UPPER STREQUAL "DEBUG")
-	IF ( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
-		SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -std=c++11 -stdlib=libc++ -O0 -Wall -g -ggdb -fPIC -D LOG_DATA -D DEBUG -pthread")
-	ELSE( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
-		SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -std=c++11 -O0 -Wall -g -ggdb -fPIC -D LOG_DATA -D DEBUG -pthread")
-	ENDIF ( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
-	#SET(CUDA_NVCC_FLAGS_DEBUG "-std=c++11;-g;-G;-lineinfo;-Xcompiler;-D LOG_DATA;-arch=sm_60")
-	SET(CUDA_NVCC_FLAGS_DEBUG "-std=c++11;-g;-G;-D LOG_DATA;-D DEBUG;-arch=sm_60;-lcufft")
-endif (CMAKE_BUILD_TYPE_UPPER STREQUAL "RELEASE")
-
-
 SET(CPU_LIB bsim)
 SET(GPU_LIB bsim_gpu)
+
+INCLUDE_DIRECTORIES(${MPI_INCLUDE_PATH})
+INCLUDE_DIRECTORIES(${BLAS_INCLUDE_PATH})
+
+ADD_SUBDIRECTORY(msg_utils)
 
 # SET(AUTO_TIMESTAMP "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/.timestamp")
 SET(AUTO_CPU_SRC "${PROJECT_SOURCE_DIR}/src/base/TypeFunc.cpp")
@@ -119,7 +117,7 @@ FILE(COPY ${PROJECT_SOURCE_DIR}/CLEAN_ALL.cmake DESTINATION ${CMAKE_BINARY_DIR})
 
 ADD_CUSTOM_COMMAND(OUTPUT ${AUTO_CPU_SRC} ${AUTO_GPU_SRC}
 	COMMAND echo "Generating ${AUTO_CPU_SRC} and ${AUTO_GPU_SRC}"
-	COMMAND python ${GEN_TYPE_FUNC_SCRIPT}
+	COMMAND python3 ${GEN_TYPE_FUNC_SCRIPT}
 	MAIN_DEPENDENCY src/base/TypeFunc.h
 	DEPENDS src/base/type.h # ${GEN_TYPE_FUNC_SCRIPT}
 	COMMENT "Generate type func"

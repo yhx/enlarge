@@ -8,8 +8,9 @@
 #include <iostream>
 
 #include "../utils/utils.h"
-#include "../utils/helper_c.h"
+// #include "../utils/helper_c.h"
 #include "../base/TypeFunc.h"
+#include "../../msg_utils/helper/helper_c.h"
 #include "../../msg_utils/helper/helper_gpu.h"
 #include "../../msg_utils/msg_utils/GPUManager.h"
 #include "../gpu_utils/gpu_utils.h"
@@ -74,7 +75,7 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 
 	int copy_idx = getIndex(c_pNetGPU->pNTypes, nTypeNum, LIF);
 
-	LIFData *c_g_lif = copyFromGPU<LIFData>(static_cast<LIFData *>(c_pNetGPU->ppNeurons[copy_idx]), 1);
+	LIFData *c_g_lif = FROMGPU(static_cast<LIFData *>(c_pNetGPU->ppNeurons[copy_idx]), 1);
 
 	real *c_g_vm = c_g_lif->pV_m;
 #ifdef DEBUG 
@@ -105,7 +106,7 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 		//printf("Cycle: %d ", time);
 		//fflush(stdout);
 #ifdef DEBUG
-		copyFromGPU<real>(buffer._data, g_buffer->_data, pNetCPU->bufferOffsets[nTypeNum]);
+		COPYFROMGPU(buffer._data, g_buffer->_data, pNetCPU->bufferOffsets[nTypeNum]);
 		log_array(input_file, buffer._data, pNetCPU->bufferOffsets[nTypeNum]);
 #endif
 
@@ -113,7 +114,7 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 		cudaDeviceSynchronize();
 
 		for (int i=0; i<nTypeNum; i++) {
-			cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->ppConnections[0], c_pNetGPU->ppNeurons[i], g_buffer->_data, g_buffer->_fire_table, g_buffer->_fired_sizes, totalNeuronNum, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i],time, &updateSize[c_pNetGPU->pNTypes[i]]);
+			cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->ppConnections[i], c_pNetGPU->ppNeurons[i], g_buffer->_data, g_buffer->_fire_table, g_buffer->_fired_sizes, totalNeuronNum, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i],time, &updateSize[c_pNetGPU->pNTypes[i]]);
 		}
 		cudaDeviceSynchronize();
 
@@ -127,11 +128,11 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 		int currentIdx = time%(maxDelay+1);
 
 		uinteger_t copySize = 0;
-		copyFromGPU(&copySize, g_buffer->_fired_sizes + currentIdx, 1);
+		COPYFROMGPU(&copySize, g_buffer->_fired_sizes + currentIdx, 1);
 		assert(copySize <= totalNeuronNum); 
-		copyFromGPU(buffer._fire_table, g_buffer->_fire_table + (totalNeuronNum*currentIdx), copySize);
+		COPYFROMGPU(buffer._fire_table, g_buffer->_fire_table + (totalNeuronNum*currentIdx), copySize);
 
-		copyFromGPU<real>(c_vm, c_g_vm, c_pNetGPU->pNeuronNums[copy_idx+1]-c_pNetGPU->pNeuronNums[copy_idx]);
+		COPYFROMGPU(c_vm, c_g_vm, c_pNetGPU->pNeuronNums[copy_idx+1]-c_pNetGPU->pNeuronNums[copy_idx]);
 		log_array(v_file, c_vm, pNetCPU->pNeuronNums[copy_idx+1] - pNetCPU->pNeuronNums[copy_idx]);
 
 		log_array(log_file, buffer._fire_table, copySize);
@@ -280,7 +281,7 @@ int SingleGPUSimulator::runMultiNets(real time, int parts, FireInfo &log) {
 
 			for (int i=0; i<c_pNetGPU->nTypeNum; i++) {
 				assert(c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i] > 0);
-				cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->ppConnections[0], c_pNetGPU->ppNeurons[i], buffers[p]->_data, buffers[p]->_fire_table, buffers[p]->_fired_sizes, allNeuronNum, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i], time, &updateSizes[p][c_pNetGPU->pNTypes[i]]);
+				cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->ppConnections[i], c_pNetGPU->ppNeurons[i], buffers[p]->_data, buffers[p]->_fire_table, buffers[p]->_fired_sizes, allNeuronNum, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i], time, &updateSizes[p][c_pNetGPU->pNTypes[i]]);
 			}
 		}
 

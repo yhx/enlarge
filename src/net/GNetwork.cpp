@@ -9,7 +9,7 @@
 
 #include "../utils/utils.h"
 #include "../base/TypeFunc.h"
-#include "../utils/helper_c.h"
+#include "../../msg_utils/helper/helper_c.h"
 
 #include "GNetwork.h"
 

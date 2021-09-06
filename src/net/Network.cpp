@@ -11,7 +11,7 @@
 #include "../base/TypeFunc.h"
 #include "../utils/proc_info.h"
 #include "../utils/utils.h"
-#include "../utils/helper_c.h"
+#include "../../msg_utils/helper/helper_c.h"
 #include "../../include/Synapses.h"
 #include "Network.h"
 
