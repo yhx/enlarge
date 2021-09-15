@@ -290,6 +290,8 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 	int copy_idx = getIndex(pNetCPU->pNTypes, nTypeNum, LIF);
 #endif
 
+	MPI_Barrier(MPI_COMM_WORLD);
+
 	printf("Start runing for %d cycles\n", network->_simCycle);
 	vector<int> firedInfo;
 	struct timeval ts, te;
