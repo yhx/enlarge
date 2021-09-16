@@ -70,16 +70,18 @@ __global__ void cuda_gen_cnd(integer_t *idx2index, integer_t *crossnode_index2id
 	int curr_delay = time % min_delay;
 	uinteger_t fired_size = firedTableSizes[delayIdx];
 	for (int node = 0; node < node_num; node++) {
-		for (size_t idx = tid; idx < fired_size; idx += blockDim.x * gridDim.x) {
-			size_t nid = firedTable[firedTableCap*delayIdx + idx];
-			integer_t tmp = idx2index[nid];
-			
-			if (tmp >= 0) {
-				integer_t map_nid = crossnode_index2idx[tmp*node_num + node];
-				if (map_nid >= 0) {
-					unsigned int test_loc = atomicAdd((unsigned int*)&cross_cnt, 1);
-					if (test_loc < MAX_BLOCK_SIZE) {
-						cross_neuron_id[test_loc] = map_nid;
+		for (size_t idx = 0; idx < fired_size; idx += blockDim.x * gridDim.x) {
+			if (idx + tid < fired_size) {
+				size_t nid = firedTable[firedTableCap*delayIdx + idx + tid];
+				integer_t tmp = idx2index[nid];
+
+				if (tmp >= 0) {
+					integer_t map_nid = crossnode_index2idx[tmp*node_num + node];
+					if (map_nid >= 0) {
+						unsigned int test_loc = atomicAdd((unsigned int*)&cross_cnt, 1);
+						if (test_loc < MAX_BLOCK_SIZE) {
+							cross_neuron_id[test_loc] = map_nid;
+						}
 					}
 				}
 			}
