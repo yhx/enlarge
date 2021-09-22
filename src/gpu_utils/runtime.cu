@@ -169,15 +169,18 @@ __global__ void cudaDeliverNeurons(uinteger_t *firedTable, uinteger_t *firedTabl
 	// int delayIdx = time % (conn->maxDelay+1);
 	uinteger_t fired_size = firedTableSizes[delayIdx];
 	for (int node = 0; node < node_num; node++) {
-		for (uinteger_t idx = tid; idx < fired_size; idx += blockDim.x * gridDim.x) {
-			uinteger_t nid = firedTable[gFiredTableCap*delayIdx + idx];
-			integer_t tmp = idx2index[nid];
-			if (tmp >= 0) {
-				integer_t map_nid = crossnode_index2idx[tmp*node_num + node];
-				if (map_nid >= 0) {
-					size_t test_loc = atomicAdd((uinteger_t *)&cross_cnt, 1);
-					if (test_loc < MAX_BLOCK_SIZE) {
-						cross_neuron_id[test_loc] = map_nid;
+		for (uinteger_t i = 0; i < fired_size; i += blockDim.x * gridDim.x) {
+			uinteger_t idx = i + tid;
+			if (idx < fired_size) {
+				uinteger_t nid = firedTable[gFiredTableCap*delayIdx + idx];
+				integer_t tmp = idx2index[nid];
+				if (tmp >= 0) {
+					integer_t map_nid = crossnode_index2idx[tmp*node_num + node];
+					if (map_nid >= 0) {
+						size_t test_loc = atomicAdd((uinteger_t *)&cross_cnt, 1);
+						if (test_loc < MAX_BLOCK_SIZE) {
+							cross_neuron_id[test_loc] = map_nid;
+						}
 					}
 				}
 			}
