@@ -134,6 +134,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 		}
 
 #ifdef PROF
+		cudaDeviceSynchronize();
 		t2 = MPI_Wtime();
 		comp_time += t2-t1;
 #endif
@@ -145,6 +146,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 		update_cnd_gpu(cnd_gpu, cnd, curr_delay, &request_t);
 
 #ifdef PROF
+		cudaDeviceSynchronize();
 		t3 = MPI_Wtime();
 		comm_time += t3-t2;
 		MPI_Barrier(MPI_COMM_WORLD);
