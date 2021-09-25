@@ -28,14 +28,18 @@ def column_merge(inputs=[], output=""):
 
 def find_series_files(name):
     series_files = []
-    fname, fext = os.path.splitext(name)
+    fpath, fname_all = os.path.split(os.path.abspath(name))
+    fname, fext = os.path.splitext(fname_all)
     pattern1 = fname + '[_\s]*\d+[_\s]*'+ fext + '$'
 
-    curr_dir = os.getcwd()
-    for _, _, files in os.walk(curr_dir):
-        for f in files:
-            if (re.match(pattern1, f)):
-                series_files.append(f)
+    # for _, _, files in os.walk(curr_dir):
+    #     for f in files:
+    #         if (re.match(pattern1, f)):
+    #             series_files.append(f)
+
+    for f in os.listdir(fpath):
+        if (os.path.isfile(f) and re.match(pattern1, f)):
+            series_files.append(f)
 
     while len(series_files) == 0:
         fname, fext2 = os.path.splitext(fname)
@@ -44,10 +48,14 @@ def find_series_files(name):
             exit(0)
         fext = fext2 + fext
         pattern2 = fname + '[_\s]*\d+[_\s]*'+ fext + '$'
-        for _, _, files in os.walk(curr_dir):
-            for f in files:
-                if (re.match(pattern2, f)):
-                    series_files.append(f)
+        # for _, _, files in os.walk(curr_dir):
+        #     for f in files:
+        #         if (re.match(pattern2, f)):
+        #             series_files.append(f)
+
+        for f in os.listdir(fpath):
+            if (os.path.isfile(f) and re.match(pattern1, f)):
+                series_files.append(f)
 
     series_files.sort()
     out_file = fname + "_merge" + fext

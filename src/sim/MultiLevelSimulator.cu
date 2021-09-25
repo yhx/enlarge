@@ -102,6 +102,10 @@ int run_proc_gpu(DistriNetwork *network, CrossMap *map, CrossSpike *msg) {
 
 	print_gmem("After build");
 
+#ifdef LOG_DATA
+	map->log((string("proc_") + std::to_string(network->_nodeIdx)).c_str());
+#endif
+
 	// to_attach();
 	printf("Start runing for %d cycles\n", network->_simCycle);
 
@@ -143,13 +147,6 @@ int run_proc_gpu(DistriNetwork *network, CrossMap *map, CrossSpike *msg) {
 #ifdef LOG_DATA
 		int currentIdx = time%(max_delay+1);
 
-		uinteger_t copySize = 0;
-		COPYFROMGPU(&copySize, g_buffer->_fired_sizes + currentIdx, 1);
-		assert(copySize <= allNeuronNum);
-		if (copySize > 0) {
-			COPYFROMGPU(buffer._fire_table, g_buffer->_fire_table + (allNeuronNum*currentIdx), copySize);
-		}
-
 		if (copy_idx >= 0 && (c_pNetGPU->pNeuronNums[copy_idx+1]-c_pNetGPU->pNeuronNums[copy_idx]) > 0) {
 			COPYFROMGPU(c_vm, c_g_vm, c_pNetGPU->pNeuronNums[copy_idx+1]-c_pNetGPU->pNeuronNums[copy_idx]);
 		}
@@ -178,13 +175,20 @@ int run_proc_gpu(DistriNetwork *network, CrossMap *map, CrossSpike *msg) {
 #endif
 
 #ifdef LOG_DATA
+		uinteger_t copySize = 0;
+		COPYFROMGPU(&copySize, g_buffer->_fired_sizes + currentIdx, 1);
+		assert(copySize <= allNeuronNum);
+		if (copySize > 0) {
+			COPYFROMGPU(buffer._fire_table, g_buffer->_fire_table + (allNeuronNum*currentIdx), copySize);
+		}
+
 		for (int i=0; i<copySize; i++) {
 			fprintf(sim_file, "%d ", buffer._fire_table[i]);
 		}
 		fprintf(sim_file, "\n");
 
 		for (int i=0; i<c_pNetGPU->pNeuronNums[copy_idx+1] - c_pNetGPU->pNeuronNums[copy_idx]; i++) {
-			fprintf(v_file, "%.10lf \t", c_vm[i]);
+			fprintf(v_file, "%.10lf ", c_vm[i]);
 		}
 		fprintf(v_file, "\n");
 #endif

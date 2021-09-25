@@ -236,7 +236,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 		fprintf(sim_file, "\n");
 
 		for (int i=0; i<c_pNetGPU->pNeuronNums[copy_idx+1] - c_pNetGPU->pNeuronNums[copy_idx]; i++) {
-			fprintf(v_file, "%.10lf \t", c_vm[i]);
+			fprintf(v_file, "%.10lf ", c_vm[i]);
 		}
 		fprintf(v_file, "\n");
 #endif

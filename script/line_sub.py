@@ -23,7 +23,7 @@ def column_sub(file1="", file2=""):
 
         for i,j in zip(data0, data1):
             diff = i-j
-            outfile.write(str(diff) + ' \t')
+            outfile.write(str(diff) + ' ')
         outfile.write('\n')
 
 

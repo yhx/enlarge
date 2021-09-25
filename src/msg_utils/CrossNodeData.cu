@@ -103,9 +103,11 @@ __global__ void cuda_gen_cnd(integer_t *idx2index, integer_t *crossnode_index2id
 template<typename T>
 __global__ void update_cnd_start(T *start, int node, int min_delay, int curr_delay) {
 	int tid = blockIdx.x * blockDim.x + threadIdx.x;
-	for (int i=tid; i<node; i++) {
-		start[i*(min_delay+1)+curr_delay+2] = start[i*(min_delay+1)+curr_delay+1];
+	// for (int i=tid; i<node; i++) {
+	if (tid < node) {
+		start[tid*(min_delay+1)+curr_delay+2] = start[tid*(min_delay+1)+curr_delay+1];
 	}
+	// }
 }
 
 

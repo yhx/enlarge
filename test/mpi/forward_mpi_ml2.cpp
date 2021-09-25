@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 	}
 
 	MLSim mn(name, dt);	//gpu
-	mn.run(run_time, 1);	
+	mn.run(run_time, 2);	
 
 	end=clock(); //time(NULL);
 	printf("exec time=%lf seconds\n",(double)(end-start) / CLOCKS_PER_SEC);
