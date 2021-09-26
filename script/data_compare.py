@@ -37,13 +37,18 @@ def main(argv):
         elif opt in ("-2", "--file2"):
             file2 = arg
 
+    if not os.path.exists(file1):
+        inputfile, outputfile = column_merge.find_series_files(file1)
+        print('Column Merge: ' + ' '.join(str(e) for e in inputfile) + " to " + str(outputfile))
+        column_merge.column_merge(inputfile, outputfile)
+        file1 = outputfile
     if not os.path.exists(file2):
         inputfile, outputfile = column_merge.find_series_files(file2)
         print('Column Merge: ' + ' '.join(str(e) for e in inputfile) + " to " + str(outputfile))
         column_merge.column_merge(inputfile, outputfile)
-        diff = column_sub(file1, outputfile);
-    else:
-        diff = column_sub(file1, file2);
+        file2 =  outputfile
+
+    diff = column_sub(file1, file2);
 
     return diff < 1e-5
 

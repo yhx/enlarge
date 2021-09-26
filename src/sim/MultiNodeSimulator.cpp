@@ -46,7 +46,7 @@ MultiNodeSimulator::MultiNodeSimulator(const string &path, real dt) : Simulator(
 	MPI_Get_processor_name(processor_name, &name_len);
 	printf("Processor %s, rank %d out of %d processors\n", processor_name, _node_id, _node_num);
 	printf("Data %s/%d\n", path.c_str(), _node_id);
-	to_attach();
+	// to_attach();
 	load_net(path);
 }
 

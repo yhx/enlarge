@@ -28,7 +28,9 @@ def column_merge(inputs=[], output=""):
 
 def find_series_files(name):
     series_files = []
-    fpath, fname_all = os.path.split(os.path.abspath(name))
+    fpath, fname_all = os.path.split(name)
+    if fpath == "":
+        fpath = "./"
     fname, fext = os.path.splitext(fname_all)
     pattern1 = fname + '[_\s]*\d+[_\s]*'+ fext + '$'
 
@@ -39,7 +41,7 @@ def find_series_files(name):
 
     for f in os.listdir(fpath):
         if (os.path.isfile(f) and re.match(pattern1, f)):
-            series_files.append(f)
+            series_files.append(os.path.join(fpath, f))
 
     while len(series_files) == 0:
         fname, fext2 = os.path.splitext(fname)
@@ -54,11 +56,11 @@ def find_series_files(name):
         #             series_files.append(f)
 
         for f in os.listdir(fpath):
-            if (os.path.isfile(f) and re.match(pattern1, f)):
-                series_files.append(f)
+            if (os.path.isfile(f) and re.match(pattern2, f)):
+                series_files.append(os.path.join(fpath, f))
 
     series_files.sort()
-    out_file = fname + "_merge" + fext
+    out_file = os.path.join(fpath, fname + "_merge" + fext)
 
     return (series_files, out_file)
 

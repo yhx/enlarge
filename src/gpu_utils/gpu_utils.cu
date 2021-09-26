@@ -4,7 +4,9 @@
 
 void print_gmem(const char *msg)
 {
+#ifdef PROF
 	size_t fmem = 0, tmem = 0;
 	checkCudaErrors(cudaMemGetInfo(&fmem, &tmem));
 	printf("%s GMEM used: %lfGB\n", msg, static_cast<double>((tmem - fmem)/1024.0/1024.0/1024.0));
+#endif
 }

@@ -51,7 +51,7 @@ MultiLevelSimulator::MultiLevelSimulator(const string &path, real dt) : Simulato
 	MPI_Get_processor_name(processor_name, &name_len);
 	printf("Processor %s, rank %d out of %d processors\n", processor_name, _proc_id, _proc_num);
 	printf("Data %s/%d\n", path.c_str(), _proc_id);
-	to_attach();
+	// to_attach();
 	load_net(path);
 }
 

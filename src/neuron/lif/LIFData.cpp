@@ -235,7 +235,7 @@ int copyLIF(void *p_src, size_t s_off, void *p_dst, size_t d_off)
 int logRateLIF(void *data, const char *name)
 {
 	char filename[512];
-	sprintf(filename, "rate_%s_%s.log", name, "LIF");
+	sprintf(filename, "rate_%s.%s.log", name, "LIF");
 	FILE *f = fopen_c(filename, "w+");
 	LIFData *d = static_cast<LIFData*>(data);
 	log_array(f, d->_fire_count, d->num);
