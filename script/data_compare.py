@@ -48,6 +48,7 @@ def main(argv):
         column_merge.column_merge(inputfile, outputfile)
         file2 =  outputfile
 
+    print('Compare: ' + file1 + ' and ' + file2)
     diff = column_sub(file1, file2);
 
     return diff < 1e-5

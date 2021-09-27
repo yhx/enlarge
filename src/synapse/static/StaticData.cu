@@ -32,7 +32,7 @@ void *cudaAllocStaticPara(void *pCPU, size_t num)
 	// checkCudaErrors(cudaMemcpy(ret->pDst, p->pDst, sizeof(int)*num, cudaMemcpyHostToDevice));
 
 	// print_gmem("Before alloc weight");
-	printf("Static weight size: %ld\n", num);
+	// printf("Static weight size: %ld\n", num);
 	checkCudaErrors(cudaMalloc((void**)&(ret->pWeight), sizeof(real)*num));
 	checkCudaErrors(cudaMemset(ret->pWeight, 0, sizeof(real)*num));
 	checkCudaErrors(cudaMemcpy(ret->pWeight, p->pWeight, sizeof(real)*num, cudaMemcpyHostToDevice));
