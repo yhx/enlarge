@@ -18,12 +18,12 @@
 #include "../msg_utils/convert.h"
 #include "../net/Network.h"
 #include "../neuron/lif/LIFData.h"
-#include "MultiLevelSimulator.h"
+#include "MultiNCCLSimulator.h"
 
-MultiLevelSimulator::MultiLevelSimulator(Network *network, real dt) : Simulator(network, dt)
+MultiNCCLSimulator::MultiNCCLSimulator(Network *network, real dt) : Simulator(network, dt)
 {
-	_all_nets = NULL;
-	_all_datas = NULL;
+	_proc_nets = NULL;
+	_proc_datas = NULL;
 	_network_data = NULL;
 	_data = NULL;
 	MPI_Comm_rank(MPI_COMM_WORLD, &_proc_id);
@@ -32,10 +32,13 @@ MultiLevelSimulator::MultiLevelSimulator(Network *network, real dt) : Simulator(
 	int name_len = 0;
 	MPI_Get_processor_name(processor_name, &name_len);
 	printf("Processor %s, rank %d out of %d processors\n", processor_name, _proc_id, _proc_num);
-	_thread_num = 0;
+
+	_gpu_id = 0;
+	_gpu_num = 0;
+	_gpu_grp = 0;
 }
 
-MultiLevelSimulator::MultiLevelSimulator(const string &path, real dt) : Simulator(NULL, dt)
+MultiNCCLSimulator::MultiNCCLSimulator(const string &path, real dt) : Simulator(NULL, dt)
 {
 	_proc_nets = NULL;
 	_proc_datas = NULL;
@@ -52,56 +55,59 @@ MultiLevelSimulator::MultiLevelSimulator(const string &path, real dt) : Simulato
 	load_net(path);
 }
 
-MultiLevelSimulator::~MultiLevelSimulator()
+MultiNCCLSimulator::~MultiNCCLSimulator()
 {
 }
 
-int MultiLevelSimulator::mpi_init(int *argc, char ***argv)
+int MultiNCCLSimulator::mpi_init(int *argc, char ***argv)
 {
 	MPI_Init(argc, argv);
 	return 0;
 }
 
-int MultiLevelSimulator::run(real time, int gpu_num)
+int MultiNCCLSimulator::run(real time, int gpu_num)
 {
 	FireInfo log;
 	run(time, log, gpu_num);
 	return 0;
 }
 
-int MultiLevelSimulator::run(real time, FireInfo &log)
+int MultiNCCLSimulator::run(real time, FireInfo &log)
 {
 	run(time, log, 1);
 	return 0;
 }
 
-int MultiLevelSimulator::build_net(int num, SplitType split, const char *name, const AlgoPara *para)
+int MultiNCCLSimulator::build_net(int num, SplitType split, const char *name, const AlgoPara *para)
 {
 
 	SimInfo info(_dt);
 	info.save_mem = true;
 
-	if (!_all_nets) {
-		assert(num > 1);
-
+	if (!_proc_nets) {
+		if (num <= 1) {
+			num = _proc_num;
+		} else {
+			_proc_num = num;
+		}
 		_network->set_node_num(num);
-		_all_nets = _network->buildNetworks(info, split, name, para);
-		for (int i=0; i<num; i++) {
-			_all_nets[i]._simCycle = 0;
-			_all_nets[i]._nodeIdx = i;
-			_all_nets[i]._nodeNum = num;
-			_all_nets[i]._dt = _dt;
+		_proc_nets = _network->buildNetworks(info, split, name, para);
+		for (int i=0; i<_proc_num; i++) {
+			_proc_nets[i]._simCycle = 0;
+			_proc_nets[i]._nodeIdx = i;
+			_proc_nets[i]._nodeNum = _proc_num;
+			_proc_nets[i]._dt = _dt;
 		}
 	}
 
-	if (!_all_datas) {
-		_all_datas = _network->arrangeCrossNodeData(info);
+	if (!_proc_datas) {
+		_proc_datas = _network->arrangeCrossNodeData(info);
 	}
 
 	return 0;
 }
 
-int MultiLevelSimulator::save_net(const string &path)
+int MultiNCCLSimulator::save_net(const string &path)
 {
 	mkdir(path.c_str());
 	string name = path + "/meta.data";
@@ -114,12 +120,12 @@ int MultiLevelSimulator::save_net(const string &path)
 			mkdir(path_i.c_str());
 			saveDistriNet(_network_data, path_i);
 			saveCND(_data, path_i);
-	} else if (_all_nets && _all_datas) {
+	} else if (_proc_nets && _proc_datas) {
 		for (int i=0; i<_proc_num; i++) {
 			string path_i = path + "/" + std::to_string(i);
 			mkdir(path_i.c_str());
-			saveDistriNet(&(_all_nets[i]), path_i);
-			saveCND(&(_all_datas[i]), path_i);
+			saveDistriNet(&(_proc_nets[i]), path_i);
+			saveCND(&(_proc_datas[i]), path_i);
 		}
 	} else {
 		printf("Before save, build the net first\n");
@@ -129,16 +135,16 @@ int MultiLevelSimulator::save_net(const string &path)
 	return 0;
 }
 
-int MultiLevelSimulator::load_net(const string &path)
+int MultiNCCLSimulator::load_net(const string &path)
 {
 	string name = path + "/meta.data";
-	int num;
+	int proc_num;
 	FILE *f = fopen_c(name.c_str(), "r");
-	fread_c(&(num), 1, f);
+	fread_c(&(proc_num), 1, f);
 	fclose_c(f);
 
-	if (num != _proc_num * _thread_num) {
-		printf("Error: instance num mismatch network data\n");
+	if (_proc_num != proc_num) {
+		printf("Error: node num mismatch network data\n");
 		exit(-1);
 	}
 
@@ -149,22 +155,22 @@ int MultiLevelSimulator::load_net(const string &path)
 	return 0;
 }
 
-int MultiLevelSimulator::distribute(SimInfo &info, int sim_cycle)
+int MultiNCCLSimulator::distribute(SimInfo &info, int sim_cycle)
 {
 
 	printf("Distritubing Network\n");
 	if (_proc_id == 0) {
 		// print_mem("Finish Network");
 		// print_mem("Finish CND");
-		if (!(_all_nets && _all_datas)) {
-			build_net(_proc_num * _thread_num);
+		if (!(_proc_nets && _proc_datas)) {
+			build_net();
 		}
 
 		for (int i=0; i<_proc_num; i++) {
-			_all_nets[i]._simCycle = sim_cycle;
-			_all_nets[i]._nodeIdx = i;
-			_all_nets[i]._nodeNum = _proc_num;
-			_all_nets[i]._dt = _dt;
+			_proc_nets[i]._simCycle = sim_cycle;
+			_proc_nets[i]._nodeIdx = i;
+			_proc_nets[i]._nodeNum = _proc_num;
+			_proc_nets[i]._dt = _dt;
 		}
 	} else {
 		printf("Rank %d, Wait for network build\n", _proc_id);
@@ -204,7 +210,7 @@ int MultiLevelSimulator::distribute(SimInfo &info, int sim_cycle)
 	return 0;
 }
 
-int MultiLevelSimulator::run(real time, FireInfo &log, int gpu)
+int MultiNCCLSimulator::run(real time, FireInfo &log, int gpu)
 {
 
 	int sim_cycle = round(time/_dt);

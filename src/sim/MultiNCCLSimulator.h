@@ -2,8 +2,8 @@
  * usually just for fun
  * Sun December 13 2015
  */
-#ifndef MULTILEVELSIMULATOR_H
-#define MULTILEVELSIMULATOR_H
+#ifndef MULTINCCLSIMULATOR_H
+#define MULTINCCLSIMULATOR_H
 
 #include <string>
 
@@ -13,16 +13,16 @@
 
 using std::string;
 
-class MultiLevelSimulator : public Simulator {
+class MultiNCCLSimulator : public Simulator {
 public:
-	MultiLevelSimulator(Network *network, real dt);
-	MultiLevelSimulator(const string &path, real dt);
-	~MultiLevelSimulator();
+	MultiNCCLSimulator(Network *network, real dt);
+	MultiNCCLSimulator(const string &path, real dt);
+	~MultiNCCLSimulator();
 
 	using Simulator::run;
 
 	int mpi_init(int *argc, char ***argv);
-	int build_net(int num, SplitType split=SynapseBalance, const char *name="", const AlgoPara *para = NULL);
+	int build_net(int num = 0, SplitType split=SynapseBalance, const char *name="", const AlgoPara *para = NULL);
 	int save_net(const string &name);
 	int load_net(const string &name);
 	int distribute(SimInfo &, int);
@@ -38,10 +38,15 @@ public:
 protected:
 	int _proc_id;
 	int _proc_num;
-	int _thread_num;
+	int _gpu_id;
+	int _gpu_num;
+	int _gpu_grp;
 
-	DistriNetwork *_all_nets;
-	CrossNodeData *_all_datas;
+	ncclComm_t comm_gpu;
+	cudaStream_t _stream;
+
+	DistriNetwork *_proc_nets;
+	CrossNodeData *_proc_datas;
 };
 
 int run_proc_cpu(DistriNetwork *network, CrossMap *cnd, CrossSpike *msg);
@@ -49,5 +54,5 @@ int run_proc_gpu(DistriNetwork *network, CrossMap *cnd, CrossSpike *msg);
 
 #define ASYNC
 
-#endif /* MULTILEVELSIMULATOR_H */
+#endif /* MULTINCCLSIMULATOR_H */
 
