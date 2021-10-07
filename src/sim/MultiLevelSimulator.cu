@@ -14,12 +14,20 @@
 #include "../../msg_utils/helper/helper_c.h"
 #include "../../msg_utils/helper/helper_gpu.h"
 #include "../../msg_utils/msg_utils/msg_utils.h"
+#include "../../msg_utils/msg_utils/GPUManager.h"
 #include "../gpu_utils/runtime.h"
 #include "../gpu_utils/gpu_utils.h"
 #include "MultiLevelSimulator.h"
 // #include "../gpu_utils/GBuffers.h"
 
-int run_proc_gpu(DistriNetwork *network, CrossMap *map, CrossSpike *msg) {
+pthread_barrier_t g_proc_barrier;
+
+void * run_proc_gpu(void *para) {
+	RunPara * tmp = static_cast<RunPara*>(para);
+	DistriNetwork *network = tmp->_net;
+	CrossMap *cm = tmp->_cm;
+	CrossSpike **cs = tmp->_cs;
+	int thread_id = tmp->_thread_id;
 	// print_mem("Inside Run");
 
 	FILE *v_file = log_file_mpi("v", network->_nodeIdx);
@@ -32,14 +40,16 @@ int run_proc_gpu(DistriNetwork *network, CrossMap *map, CrossSpike *msg) {
 	FILE *input_e_file = log_file_mpi("input_e", network->_nodeIdx);
 #endif
 
+	gm.set(thread_id);
+	gm.lock();
 
 	GNetwork *pNetCPU = network->_network;
 	print_gmem("Before using GPU");
 	GNetwork *c_pNetGPU = copyGNetworkToGPU(pNetCPU);
 	// print_mem("Copied Network");
 
-	map->to_gpu();
-	msg->to_gpu();
+	cm->to_gpu();
+	cs[thread_id]->to_gpu();
 	// print_mem("Copied CND");
 
 	int nTypeNum = pNetCPU->nTypeNum;
@@ -54,7 +64,7 @@ int run_proc_gpu(DistriNetwork *network, CrossMap *map, CrossSpike *msg) {
 
 
 	//TODO Set GPU0 directly 
-	Buffer buffer(pNetCPU->bufferOffsets[nTypeNum], allNeuronNum, max_delay, msg->_gpu_rank);
+	Buffer buffer(pNetCPU->bufferOffsets[nTypeNum], allNeuronNum, max_delay, thread_id);
 	Buffer *g_buffer = buffer._gpu_array;
 
 	int *c_fired_sizes = hostMalloc<int>(max_delay+1);
@@ -133,7 +143,11 @@ int run_proc_gpu(DistriNetwork *network, CrossMap *map, CrossSpike *msg) {
 		int curr_delay = time % msg->_min_delay;
 		t3 = MPI_Wtime();
 		comm_time += t3-t2;
-		MPI_Barrier(MPI_COMM_WORLD);
+
+		pthread_barrier_wait(&g_proc_barrier);
+	    if (thread_id == 0) {	
+			MPI_Barrier(MPI_COMM_WORLD);
+		}
 		if (curr_delay >= min_delay-1) {
 			for (int i=0; i<proc_num; i++) {
 				send_count[i] += msg->_send_num[i];

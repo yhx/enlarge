@@ -27,13 +27,13 @@ public:
 	int load_net(const string &name);
 	int distribute(SimInfo &, int);
 
-	int run(real time, int gpu_num);
+	int run(real time, int thread_num);
 	virtual int run(real time, FireInfo &log);
-	virtual int run(real time, FireInfo &log, int gpu_num);
+	virtual int run(real time, FireInfo &log, int thread_num);
 
 public:
-	DistriNetwork *_network_data;
-	CrossNodeData *_data;
+	DistriNetwork **_network_data;
+	CrossNodeData **_data;
 
 protected:
 	int _proc_id;
@@ -44,8 +44,19 @@ protected:
 	CrossNodeData *_all_datas;
 };
 
-int run_proc_cpu(DistriNetwork *network, CrossMap *cnd, CrossSpike *msg);
-int run_proc_gpu(DistriNetwork *network, CrossMap *cnd, CrossSpike *msg);
+struct RunPara {
+	DistriNetwork *_net;
+	CrossMap *_cm;
+	CrossSpike **_cs;
+	int _thread_id;
+};
+
+// int run_proc_cpu(DistriNetwork *network, CrossMap *cnd, CrossSpike *msg);
+// int run_proc_gpu(DistriNetwork **network, CrossMap **cnd, CrossSpike **msg);
+
+extern pthread_barrier_t g_proc_barrier;
+
+void * run_thread_gpu(void *para);
 
 #define ASYNC
 

@@ -60,6 +60,7 @@ const int DNET_TAG = 100000;
 const int NET_TAG = 10000;
 const int TYPE_TAG = 200;
 const int CONN_TAG = 200;
+const int CND_TAG = 200;
 
 #endif /* CONSTANT_H */
 

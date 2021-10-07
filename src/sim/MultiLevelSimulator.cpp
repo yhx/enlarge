@@ -37,8 +37,8 @@ MultiLevelSimulator::MultiLevelSimulator(Network *network, real dt) : Simulator(
 
 MultiLevelSimulator::MultiLevelSimulator(const string &path, real dt) : Simulator(NULL, dt)
 {
-	_proc_nets = NULL;
-	_proc_datas = NULL;
+	_all_nets = NULL;
+	_all_datas = NULL;
 	_network_data = NULL;
 	_data = NULL;
 	MPI_Comm_rank(MPI_COMM_WORLD, &_proc_id);
@@ -62,17 +62,17 @@ int MultiLevelSimulator::mpi_init(int *argc, char ***argv)
 	return 0;
 }
 
-int MultiLevelSimulator::run(real time, int gpu_num)
+int MultiLevelSimulator::run(real time, int thread_num)
 {
 	FireInfo log;
-	run(time, log, gpu_num);
+	run(time, log, thread_num);
 	return 0;
 }
 
 int MultiLevelSimulator::run(real time, FireInfo &log)
 {
-	run(time, log, 1);
-	return 0;
+    printf("This api should not be called!\n");
+	return -1;
 }
 
 int MultiLevelSimulator::build_net(int num, SplitType split, const char *name, const AlgoPara *para)
@@ -106,7 +106,9 @@ int MultiLevelSimulator::save_net(const string &path)
 	mkdir(path.c_str());
 	string name = path + "/meta.data";
 	FILE *f = fopen_c(name.c_str(), "w");
-	fwrite_c(&(_proc_num), 1, f);
+
+	int num = _proc_num * _thread_num;
+	fwrite_c(&(num), 1, f);
 	fclose_c(f);
 
 	if (_network && _data) {
@@ -153,17 +155,18 @@ int MultiLevelSimulator::distribute(SimInfo &info, int sim_cycle)
 {
 
 	printf("Distritubing Network\n");
+	int num = _proc_num * _thread_num;
 	if (_proc_id == 0) {
 		// print_mem("Finish Network");
 		// print_mem("Finish CND");
 		if (!(_all_nets && _all_datas)) {
-			build_net(_proc_num * _thread_num);
+			build_net(num);
 		}
 
-		for (int i=0; i<_proc_num; i++) {
+		for (int i=0; i<num; i++) {
 			_all_nets[i]._simCycle = sim_cycle;
 			_all_nets[i]._nodeIdx = i;
-			_all_nets[i]._nodeNum = _proc_num;
+			_all_nets[i]._nodeNum = num;
 			_all_nets[i]._dt = _dt;
 		}
 	} else {
@@ -172,18 +175,30 @@ int MultiLevelSimulator::distribute(SimInfo &info, int sim_cycle)
 
 	MPI_Barrier(MPI_COMM_WORLD);
 
+	_network_data = malloc_c<DistriNetwork *>(_thread_num);
+	_data = malloc_c<CrossNodeData *>(_thread_num);
+
 	if (_proc_id == 0) {
-		_network_data = &(_proc_nets[0]);
-		_data = &(_proc_datas[0]);
+		for (int i=0; i<_thread_num; i++) {
+			_network_data[i] = &(_all_nets[i]);
+			_data[i] = &(_all_datas[i]);
+		}
 		// allocDataCND(_data);
 		// print_mem("AllocData CND");
 
-		for (int i=1; i<_proc_num; i++) {
-			printf("Send to %d, tag: %d\n", i, DATA_TAG);
-			sendDistriNet(&(_proc_nets[i]), i, DATA_TAG, MPI_COMM_WORLD);
-			printf("Send DistriNet to %d, tag: %d\n", i, DATA_TAG);
-			sendCND(&(_proc_datas[i]), i, DATA_TAG + DNET_TAG, MPI_COMM_WORLD);
-			printf("Send CND to %d, tag: %d\n", i, DATA_TAG);
+		for (int p=1; p<_proc_num; p++) {
+			int tag = DATA_TAG;
+			for (int t=0; t<_thread_num; t++) {
+				int dst = p;
+				int i = p * _thread_num + t;
+				printf("Send to %d, tag: %d\n", dst, tag);
+				sendDistriNet(&(_all_nets[i]), dst, tag, MPI_COMM_WORLD);
+				printf("Send DistriNet to %d, tag: %d\n", dst, tag);
+				tag += DNET_TAG;
+				sendCND(&(_all_datas[i]), dst, tag, MPI_COMM_WORLD);
+				printf("Send CND to %d, tag: %d\n", dst, tag);
+				tag += CND_TAG;
+			}
 		}
 		// network = initDistriNet(1, _dt);
 		// network->_network = _network->buildNetwork(info);
@@ -193,18 +208,23 @@ int MultiLevelSimulator::distribute(SimInfo &info, int sim_cycle)
 		// network->_dt = _dt;
 		// data = NULL;
 	} else {
-		printf("%d recv from %d, tag: %d\n", _proc_id, 0, DATA_TAG);
-		_network_data = recvDistriNet(0, DATA_TAG, MPI_COMM_WORLD);
-		printf("%d recv DistriNet from %d, tag: %d\n", _proc_id, 0, DATA_TAG);
-		_data = recvCND(0, DATA_TAG + DNET_TAG, MPI_COMM_WORLD);
-		printf("%d recv CND from %d, tag: %d\n", _proc_id, 0, DATA_TAG);
+		int tag = DATA_TAG;
+		for (int t=0; t<_thread_num; t++) {
+			printf("%d recv from %d, tag: %d\n", _proc_id, 0, tag);
+			_network_data[t] = recvDistriNet(0, tag, MPI_COMM_WORLD);
+			printf("%d recv DistriNet from %d, tag: %d\n", _proc_id, 0, tag);
+			tag += DNET_TAG;
+			_data[t] = recvCND(0, tag, MPI_COMM_WORLD);
+			printf("%d recv CND from %d, tag: %d\n", _proc_id, 0, tag);
+			tag += CND_TAG;
+		}
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
 
 	return 0;
 }
 
-int MultiLevelSimulator::run(real time, FireInfo &log, int gpu)
+int MultiLevelSimulator::run(real time, FireInfo &log, int thread_num)
 {
 
 	int sim_cycle = round(time/_dt);
@@ -222,21 +242,55 @@ int MultiLevelSimulator::run(real time, FireInfo &log, int gpu)
 		distribute(info, sim_cycle);
 	} 
 
-	if (_network_data->_simCycle != sim_cycle) {
-		_network_data->_simCycle = sim_cycle;
+	CrossMap **cm = malloc_c<CrossMap*>(_thread_num);
+	CrossSpike **cs = malloc_c<CrossSpike*>(_thread_num);
+
+	for (int i=0; i<_thread_num; i++) {
+		if (_network_data[i]->_simCycle != sim_cycle) {
+			_network_data[i]->_simCycle = sim_cycle;
+		}
+		cm[i] = convert2crossmap(_network_data[i]->_crossnodeMap);
+	    cs[i] = convert2crossspike(_data[i], _proc_id, gpu);
 	}
 
-	CrossMap *map = convert2crossmap(_network_data->_crossnodeMap);
-	CrossSpike *msg = convert2crossspike(_data, _proc_id, gpu);
 	
 
-	if (gpu > 0) {
-		run_proc_gpu(_network_data, map, msg);
-	} else {
-		run_proc_cpu(_network_data, map, msg);
+	assert(thread_num > 0);
+	pthread_barrier_init(&g_proc_barrier, NULL, thread_num);
+	pthread_t *thread_ids = malloc_c<pthread_t>(thread_num);
+	assert(thread_ids != NULL);
+
+	RunPara *paras = malloc_c<RunPara>(thread_num);
+
+	for (int i=0; i<thread_num; i++) {
+		paras[i]._net = _network_data[i];
+		paras[i]._cm = cm[i];
+		paras[i]._cs = cs[i];
+		paras[i]._thread_id = i;
+
+		int ret = pthread_create(&(thread_ids[i]), NULL, &run_thread_gpu, (void*)&(paras[i]));
+		assert(ret == 0);
 	}
-	delete map;
-	delete msg;
+
+	for (int i=0; i<device_count; i++) {
+		pthread_join(thread_ids[i], NULL);
+	}
+	pthread_barrier_destroy(&g_proc_barrier);
+	// if (gpu > 0) {
+	// 	run_proc_gpu(_network_data, map, msg);
+	// } else {
+	// 	run_proc_cpu(_network_data, map, msg);
+	// }
+	
+	free_c(paras);
+
+	for (int i=0; i<_thread_num; i++) {
+		delete cm[i];
+		delete cs[i];
+	}
+
+	free_c(cm);
+	free_c(cs);
 	MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Finalize();
 
