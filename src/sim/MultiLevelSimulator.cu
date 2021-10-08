@@ -22,7 +22,7 @@
 
 pthread_barrier_t g_proc_barrier;
 
-void * run_proc_gpu(void *para) {
+void * run_thread_gpu(void *para) {
 	RunPara * tmp = static_cast<RunPara*>(para);
 	DistriNetwork *network = tmp->_net;
 	CrossMap *cm = tmp->_cm;
