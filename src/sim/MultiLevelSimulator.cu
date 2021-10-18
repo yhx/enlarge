@@ -22,7 +22,7 @@
 
 pthread_barrier_t g_proc_barrier;
 
-void * run_thread_gpu(void *para) {
+void * run_thread_ml(void *para) {
 	RunPara * tmp = static_cast<RunPara*>(para);
 	DistriNetwork *network = tmp->_net;
 	CrossMap *cm = tmp->_cm;
@@ -134,10 +134,10 @@ void * run_thread_gpu(void *para) {
 		t2 = MPI_Wtime();
 		comp_time += t2-t1;
 #endif
-	    msg->fetch_gpu(map, g_buffer->_fire_table, g_buffer->_fired_sizes, g_buffer->_fire_table_cap, proc_num, max_delay, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
+	    cs[thread_id]->fetch_gpu(cm, g_buffer->_fire_table, g_buffer->_fired_sizes, g_buffer->_fire_table_cap, proc_num, max_delay, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
 
 		// checkCudaErrors(cudaMemcpy(gCrossDataGPU->_firedNum + network->_nodeIdx * proc_num, c_g_fired_n_num, sizeof(int)*proc_num, cudaMemcpyDeviceToHost));
-		msg->update_gpu(time);
+		cs[thread_id]->update_gpu(time);
 
 #ifdef PROF
 		int curr_delay = time % msg->_min_delay;
@@ -178,9 +178,9 @@ void * run_thread_gpu(void *para) {
 #endif
 
 #ifdef LOG_DATA
-		msg->log_gpu(time, (string("proc_") + std::to_string(network->_nodeIdx)).c_str());
+		cs[thread_id]->log_gpu(time, (string("proc_") + std::to_string(network->_nodeIdx)).c_str());
 #endif
-		msg->upload_gpu(g_buffer->_fire_table, g_buffer->_fired_sizes, buffer._fired_sizes, g_buffer->_fire_table_cap, max_delay, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
+		cs[thread_id]->upload_gpu(g_buffer->_fire_table, g_buffer->_fired_sizes, buffer._fired_sizes, g_buffer->_fire_table_cap, max_delay, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
 
 #ifdef PROF
 		cudaDeviceSynchronize();
