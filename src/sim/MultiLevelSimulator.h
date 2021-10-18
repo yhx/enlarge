@@ -56,7 +56,7 @@ struct RunPara {
 
 extern pthread_barrier_t g_proc_barrier;
 
-void * run_thread_gpu(void *para);
+void * run_thread_ml(void *para);
 
 #define ASYNC
 

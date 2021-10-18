@@ -112,12 +112,15 @@ int MultiLevelSimulator::save_net(const string &path)
 	fclose_c(f);
 
 	if (_network && _data) {
-			string path_i = path + "/" + std::to_string(_proc_id);
+		for (int i=0; i<_thread_num; i++) {
+			int idx = _proc_id * _thread_num + i;
+			string path_i = path + "/" + std::to_string(idx);
 			mkdir(path_i.c_str());
-			saveDistriNet(_network_data, path_i);
-			saveCND(_data, path_i);
+			saveDistriNet(_network_data[i], path_i);
+			saveCND(_data[i], path_i);
+		}
 	} else if (_all_nets && _all_datas) {
-		for (int i=0; i<_proc_num; i++) {
+		for (int i=0; i<_proc_num * _thread_num; i++) {
 			string path_i = path + "/" + std::to_string(i);
 			mkdir(path_i.c_str());
 			saveDistriNet(&(_all_nets[i]), path_i);
@@ -144,9 +147,14 @@ int MultiLevelSimulator::load_net(const string &path)
 		exit(-1);
 	}
 
-	string path_i = path + "/" + std::to_string(_proc_id);
-	_network_data = loadDistriNet(path_i);
-    _data = loadCND(path_i);
+	_network_data = malloc_c<DistriNetwork *>(_thread_num);
+	_data = malloc_c<CrossNodeData *>(_thread_num);
+
+	for (int i=0; i<_thread_num; i++) {
+		string path_i = path + "/" + std::to_string(_proc_id * _thread_num + i);
+		_network_data[i] = loadDistriNet(path_i);
+		_data[i] = loadCND(path_i);
+	}
 	
 	return 0;
 }
@@ -250,7 +258,7 @@ int MultiLevelSimulator::run(real time, FireInfo &log, int thread_num)
 			_network_data[i]->_simCycle = sim_cycle;
 		}
 		cm[i] = convert2crossmap(_network_data[i]->_crossnodeMap);
-	    cs[i] = convert2crossspike(_data[i], _proc_id, gpu);
+	    cs[i] = convert2crossspike(_data[i], _proc_id, _thread_num);
 	}
 
 	
@@ -265,14 +273,14 @@ int MultiLevelSimulator::run(real time, FireInfo &log, int thread_num)
 	for (int i=0; i<thread_num; i++) {
 		paras[i]._net = _network_data[i];
 		paras[i]._cm = cm[i];
-		paras[i]._cs = cs[i];
+		paras[i]._cs = cs;
 		paras[i]._thread_id = i;
 
-		int ret = pthread_create(&(thread_ids[i]), NULL, &run_thread_gpu, (void*)&(paras[i]));
+		int ret = pthread_create(&(thread_ids[i]), NULL, &run_thread_ml, (void*)&(paras[i]));
 		assert(ret == 0);
 	}
 
-	for (int i=0; i<device_count; i++) {
+	for (int i=0; i<thread_num; i++) {
 		pthread_join(thread_ids[i], NULL);
 	}
 	pthread_barrier_destroy(&g_proc_barrier);
