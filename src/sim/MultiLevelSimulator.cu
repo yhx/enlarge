@@ -113,7 +113,7 @@ void * run_thread_ml(void *para) {
 	print_gmem("After build");
 
 #ifdef LOG_DATA
-	map->log((string("proc_") + std::to_string(network->_nodeIdx)).c_str());
+	cm->log((string("proc_") + std::to_string(network->_nodeIdx)).c_str());
 #endif
 
 	// to_attach();
@@ -140,7 +140,7 @@ void * run_thread_ml(void *para) {
 		cs[thread_id]->update_gpu(time);
 
 #ifdef PROF
-		int curr_delay = time % msg->_min_delay;
+		int curr_delay = time % cs[thread_id]->_min_delay;
 		t3 = MPI_Wtime();
 		comm_time += t3-t2;
 
@@ -150,8 +150,8 @@ void * run_thread_ml(void *para) {
 		}
 		if (curr_delay >= min_delay-1) {
 			for (int i=0; i<proc_num; i++) {
-				send_count[i] += msg->_send_num[i];
-				recv_count[i] += msg->_recv_num[i];
+				send_count[i] += cs[thread_id]->_send_num[i];
+				recv_count[i] += cs[thread_id]->_recv_num[i];
 			}
 		}
 		t6 = MPI_Wtime();
@@ -224,7 +224,7 @@ void * run_thread_ml(void *para) {
 	printf("Thread %d Data Send:%s\n", network->_nodeIdx, send.c_str());
 	printf("Thread %d Data Recv:%s\n", network->_nodeIdx, recv.c_str());
 
-	printf("Comm stat: cpu_wait_gpu %lf; gpu_wait %lf; cpu_comm %lf; gpu_comm %lf\n", msg->_cpu_wait_gpu, msg->_gpu_wait, msg->_cpu_time, msg->_gpu_time);
+	printf("Comm stat: cpu_wait_gpu %lf; gpu_wait %lf; cpu_comm %lf; gpu_comm %lf\n", cs[thread_id]->_cpu_wait_gpu, cs[thread_id]->_gpu_wait, cs[thread_id]->_cpu_time, cs[thread_id]->_gpu_time);
 #endif
 
 	char name[512];
