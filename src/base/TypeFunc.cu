@@ -7,29 +7,35 @@
 
 #include "../neuron/lif/LIFData.h"
 #include "../synapse/static/StaticData.h"
+#include "../synapse/poisson/PoissonData.h"
 
 void *(*cudaAllocType[])(void *pCPU, size_t num) = {
 	cudaAllocLIF,
-	cudaAllocStatic
+	cudaAllocStatic,
+	cudaAllocPoisson
 };
 
 int (*cudaFetchType[])(void *pCPU, void *pGPU, size_t num) = {
 	cudaFetchLIF,
-	cudaFetchStatic
+	cudaFetchStatic,
+	cudaFetchPoisson
 };
 
 int (*cudaFreeType[])(void *) = {
 	cudaFreeLIF,
-	cudaFreeStatic
+	cudaFreeStatic,
+	cudaFreePoisson
 };
 
 void (*cudaUpdateType[])(Connection *, void *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int, BlockSize *) = {
 	cudaUpdateLIF,
-	cudaUpdateStatic
+	cudaUpdateStatic,
+	cudaUpdatePoisson
 };
 
 int (*cudaLogRateNeuron[])(void *cpu, void *gpu, const char *name) = {
 	cudaLogRateLIF,
+	NULL,
 	NULL
 };
 

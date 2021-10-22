@@ -1,8 +1,10 @@
 
-#ifndef PoissonDATA_H
-#define PoissonDATA_H
+#ifndef POISSONDATA_H
+#define POISSONDATA_H
 
 #include <stdio.h>
+#include <curand_kernel.h>
+#include <curand.h>
 #include "mpi.h"
 
 #include "../../net/Connection.h"
@@ -10,15 +12,25 @@
 #include "../../base/type.h"
 #include "../../utils/BlockSize.h"
 
+/**
+ * PoissonData is used to manage data of poisson synapses.
+ * It contains synapse number `num` and weights of each 
+ * synapses `pWeight`. 
+ **/
 struct PoissonData {
 	bool is_view;
 	size_t num;
 
 	// int *pDst;
 	real *pWeight;
+	real *pMean; 	// 均值
+	curandState *pState;	// poisson state for CUDA
 };
 
-
+/**
+ * Functions related with CPU. They are implemented in 
+ * PoissonData.cpp
+ **/
 size_t getPoissonSize();
 void *mallocPoisson();
 void *allocPoisson(size_t num);
@@ -32,6 +44,11 @@ bool isEqualPoisson(void *p1, void *p2, size_t num, uinteger_t *shuffle1=NULL, u
 
 int shufflePoisson(void *p, uinteger_t *shuffle, size_t num);
 
+/**
+ * Funcions headed with cuda are related to GPU manipulations.
+ * They are implemented in PoissonData.cu (mainly for memory
+ * manipulations) and PoissonData.kernel.cu (mainly for computation).
+ **/ 
 void *cudaMallocPoisson();
 void *cudaAllocPoisson(void *pCPU, size_t num);
 void *cudaAllocPoissonPara(void *pCPU, size_t num);
@@ -42,6 +59,9 @@ int cudaPoissonParaToGPU(void *pCPU, void *pGPU, size_t num);
 int cudaPoissonParaFromGPU(void *pCPU, void *pGPU, size_t num);
 void cudaUpdatePoisson(Connection *conn, void *data, real *buffer, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t start_id, int t, BlockSize *pSize);
 
+/**
+ * Functions related with MPI. 
+ **/
 int sendPoisson(void *data, int dest, int tag, MPI_Comm comm);
 void * recvPoisson(int src, int tag, MPI_Comm comm);
 

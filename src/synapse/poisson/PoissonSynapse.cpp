@@ -9,7 +9,7 @@
 
 // const Type PoissonSynapse::type = Poisson;
 
-PoissonSynapse::PoissonSynapse(real weight, real delay, real tau_syn, real dt, size_t num)
+PoissonSynapse::PoissonSynapse(real mean, real weight, real delay, real tau_syn, real dt, size_t num)
 	: Synapse(Poisson, num)
 {
 	int delay_steps = static_cast<int>(round(delay/dt));
@@ -21,14 +21,16 @@ PoissonSynapse::PoissonSynapse(real weight, real delay, real tau_syn, real dt, s
 
 	_weight.insert(_weight.end(), num, weight);
 	_delay.insert(_delay.end(), num, delay_steps);
+	_mean.insert(_mean.end(), num, mean);
 	assert(_num == _weight.size());
 }
 
-PoissonSynapse::PoissonSynapse(const real *weight, const real *delay, const real *tau_syn, real dt, size_t num)
+PoissonSynapse::PoissonSynapse(const real *mean, const real *weight, const real *delay, const real *tau_syn, real dt, size_t num)
 	: Synapse(Poisson, num)
 {
 	_weight.resize(num);
 	_delay.resize(num);
+	_mean.resize(num);
 
 	for (size_t i=0; i<num; i++) {
 		int delay_steps = static_cast<int>(round(delay[i]/dt));
@@ -40,15 +42,17 @@ PoissonSynapse::PoissonSynapse(const real *weight, const real *delay, const real
 		}
 		_weight[i] = w;
 		_delay[i] = delay_steps;
+		_mean[i] = mean[i];
 	}
 
 	assert(_num == _weight.size());
 }
 
-PoissonSynapse::PoissonSynapse(const real *weight, const real *delay, const real tau_syn, real dt, size_t num)
+PoissonSynapse::PoissonSynapse(const real *mean, const real *weight, const real *delay, const real tau_syn, real dt, size_t num)
 	: Synapse(Poisson, num)
 {
 	_weight.resize(num);
+	_mean.resize(num);
 	_delay.resize(num);
 
 	for (size_t i=0; i<num; i++) {
@@ -60,6 +64,7 @@ PoissonSynapse::PoissonSynapse(const real *weight, const real *delay, const real
 		}
 		_weight[i] = w;
 		_delay[i] = delay_steps;
+		_mean[i] = mean[i];
 	}
 
 	assert(_num == _weight.size());
@@ -75,6 +80,7 @@ PoissonSynapse::~PoissonSynapse()
 	_num = 0;
 	_delay.clear();
 	_weight.clear();
+	_mean.clear();
 }
 
 int PoissonSynapse::append(const Synapse *syn, size_t num) 
@@ -85,10 +91,12 @@ int PoissonSynapse::append(const Synapse *syn, size_t num)
 		ret = num;
 		_weight.insert(_weight.end(), num, s->_weight[0]);
 		_delay.insert(_delay.end(), num, s->_delay[0]);
+		_mean.insert(_mean.end(), num, s->_mean[0]);
 	} else {
 		ret = s->_num;
 		_weight.insert(_weight.end(), s->_weight.begin(), s->_weight.end());
 		_delay.insert(_delay.end(), s->_delay.begin(), s->_delay.end());
+		_mean.insert(_mean.end(), s->_mean.begin(), s->_mean.end());
 	}
 	_num += ret;
 	assert(_num == _weight.size());
@@ -102,7 +110,14 @@ void * PoissonSynapse::packup()
 
 	p->num = _num;
 	p->pWeight = _weight.data();
+	p->pMean = _mean.data();
 	p->is_view = true;
+	p->pState = (curandState*)malloc(sizeof(curandState) * _num);
+	
+	// for (size_t i = 0; i < _num; ++i) {
+	// 	curand_init(i, i, i, p->pState[i]); 
+	// }
+	// p->pState = gpuMalloc<curandState>(_num);
 
 	return p;
 }
@@ -112,6 +127,7 @@ int PoissonSynapse::packup(void *data, size_t dst, size_t src)
 	PoissonData *p = static_cast<PoissonData *>(data);
 
 	p->pWeight[dst] = _weight[src];
+	p->pMean[dst] = _mean[src];
 
 	return 0;
 }

@@ -19,7 +19,8 @@ enum Type {
     // Izhikevich=1,
     // TraubMiles=2,
 	// TJ,
-	Static=1,
+	Static = 1,
+	Poisson = 2,
 	// STDP,
 	TYPESIZE,
 	UNSET

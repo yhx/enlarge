@@ -26,6 +26,8 @@ int allocPoissonPara(void *pCPU, size_t num)
 
 	p->num = num;
 	p->pWeight = malloc_c<real>(num);
+	p->pMean = malloc_c<real>(num);
+	// p->pState = malloc_c<curandState>(num);
 	p->is_view = false;
 
 	return 0;
@@ -49,6 +51,10 @@ int freePoissonPara(void *pCPU)
 	if (!p->is_view) {
 		free(p->pWeight);
 		p->pWeight = NULL;
+		free(p->pMean);
+		p->pMean = NULL;
+		// free(p->pState);
+		// p->pState = NULL;
 	}
 
 	return 0;
@@ -78,7 +84,8 @@ int savePoisson(void *pCPU, size_t num, const string &path)
 	fwrite_c(&(num), 1, f);
 	// fwrite(p->pDst, sizeof(int), num, f);
 	fwrite_c(p->pWeight, num, f);
-
+	fwrite_c(p->pMean, num, f);
+	// fwrite_c(p->pState, num, f);
 	fclose_c(f);
 
 	return 0;
@@ -97,7 +104,8 @@ void *loadPoisson(size_t num, const string &path)
 
 	// fread(p->pDst, sizeof(int), num, f);
 	fread_c(p->pWeight, num, f);
-
+	fread_c(p->pMean, num, f);
+	// fread_c(p->pState, num, f);
 	fclose_c(f);
 
 	return p;
@@ -112,7 +120,8 @@ bool isEqualPoisson(void *p1, void *p2, size_t num, uinteger_t *shuffle1, uinteg
 	// ret = ret && isEqualArray(t1->pDst, t2->pDst, num);
 
 	ret = ret && isEqualArray(t1->pWeight, t2->pWeight, num, shuffle1, shuffle2);
-
+	ret = ret && isEqualArray(t1->pMean, t2->pMean, num, shuffle1, shuffle2);
+	// ret = reg && isEqualArray(t1->pState, tw->pState, num, shuffle1, shuffle2);
 	return ret;
 }
 
@@ -123,9 +132,15 @@ int shufflePoisson(void *p, uinteger_t *shuffle, size_t num)
 
 	real *tmp = malloc_c<real>(d->num);
 	memcpy_c(tmp, d->pWeight, d->num);
+	real *tmp2 = malloc_c<real>(d->num);
+	memcpy_c(tmp, d->pMean, d->num);
+	// real *tmp3 = malloc_c<curandState>(d->num);
+	// memcpy_c(tmp, d->pState, d->num);
 
 	for (size_t i=0; i<num; i++) {
 		d->pWeight[i] = tmp[shuffle[i]];
+		d->pMean[i] = tmp2[shuffle[i]];
+		// d->pState[i] = tmp3[shuffle[i]];
 	}
 
 	return num;

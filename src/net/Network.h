@@ -32,6 +32,9 @@ typedef map<int, map<Type, size_t>> CrossTypeInfo_t;
 typedef map<int, size_t> CrossInfo_t;
 
 class Network {
+/**
+ * used to store the connections and neurons info.
+ **/
 public:
 	Network(real dt, int node_num = 1);
 	~Network();
@@ -46,19 +49,26 @@ public:
 	template<class N>
 	Population* createPopulation(size_t num, N templ);
 
+	// add `Type type` for all connect() to support poisson connection
 	template<class S>
 	int connect(Population *pSrc, Population *pDst, S templ, SpikeType sp = Exc);
 	template<class S>
-	int connect(Population *p_src, size_t src, Population *p_dst, size_t dst, S syn, SpikeType s_type);
+	int connect(Population *p_src, size_t src, Population *p_dst, size_t dst, S syn, SpikeType sp);
 
 	int connect_(ID src, ID dst, ID syn, unsigned int delay);
 
-	int connect(Population *p_src, Population *p_dst, real weight, real delay, real tau, SpikeType type=Exc);
-	int connect(Population *p_src, Population *p_dst, real *weight, real *delay, real *tau, SpikeType *type, size_t size);
+	int connect(Population *p_src, Population *p_dst, real weight, real delay, real tau, SpikeType sp=Exc);
+	int connect(Population *p_src, Population *p_dst, real *weight, real *delay, real *tau, SpikeType *sp, size_t size);
 	int connect(Population *p_src, size_t src, Population *p_dst, size_t dst, real weight, real delay, real tau, SpikeType=Exc);
 
-	int connect(Population *p_src, Population *p_dst, real *weight, real *delay, real tau, SpikeType type, size_t size);
+	int connect(Population *p_src, Population *p_dst, real *weight, real *delay, real tau, SpikeType sp, size_t size);
 	int connect(Population *p_src, Population *p_dst, real *weight, real *delay, SpikeType *sp, size_t size);
+
+	/**
+	 * connect_poisson_generator用于给目的神经元p_dst连接上poisson generator。
+	 */
+	int connect_poisson_generator_(ID dst, ID syn, unsigned int delay);
+	int connect_poisson_generator(Population *p_dst, real *mean, real *weight, real *delay, SpikeType *sp);
 
 	// int connectOne2One(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t size);
 	// int connectConv(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t height, size_t width, size_t k_height, size_t k_width);
@@ -103,6 +113,13 @@ private:
 	// CrossNodeMap* arrangeCrossNodeMap(size_t n_num, int node_idx, int node_num);
 
 public:
+	/**
+	 * `_poisson_synapse2delay` is used only in poisson synapses. 
+	 * `_poisson_synapse2delay[i]` is the delay of poisson synapse's ID.
+	 * It used to generate dst attribute in class `Connection`.
+	 **/
+	// vector<map<unsigned int, vector<ID>>> _poisson_synapse2dst;
+	// vector<delay, vector<unsigned int>> _poisson_synapse2dst;
 	/** Cross Node Data **/
 	map<Type, vector<int>> _idx2node;
 	// map<ID, int> _nid2node;
@@ -132,11 +149,24 @@ public:
 	// Number of synapses for different types on different nodes accessed by _global_ntype_num[node][type]
 	// vector<map<Type, unsigned long long> > _globalSTypeNum;
 
-	map<Type, Neuron*> _neurons;
-	map<Type, Synapse*> _synapses;
+	// use polymorphic to store specific neurons and synapses info
+	map<Type, Neuron*> _neurons;  // 根据神经元类型type获取对应类型所有神经元
+	map<Type, Synapse*> _synapses;  // 根据突触类型type获取对应类型所有突触
 	vector<Population *> _populations;
 
-	map<Type, vector<map<unsigned int, vector<ID>>>> _conn_n2s;
+	/**
+	 * _conn_n2s[src.type()][src.id()][delay].push_back(syn);
+	 * 根据Type获得'神经元到突触的连接'
+	 * 通过源神经元和delay获得对应的突触
+	 * 前提：已经获得了源神经元的类型、源神经元的id、突触延迟->得到这个源神经元的所有突触
+	 **/
+	map<Type, vector<map<unsigned int, vector<ID>>>> _conn_n2s; 
+	/**
+	 * conn_s2n[syn.type()][syn.id()] = dst;
+	 * 根据Type获取对应的突触连接ID的向量
+	 * 通过突触类型得到突触连接的目的节点
+	 * 前提：已经获得了突触的类型和突触的id的信息->得到突触连接的目的神经元
+	 */
 	map<Type, vector<ID>> _conn_s2n;
 	// map<ID, map<unsigned int, vector<ID>>> n2s_conn;
 	// map<ID, ID> s2n_conn;

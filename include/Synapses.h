@@ -8,5 +8,8 @@
 #include "../src/synapse/static/StaticSynapse.h"
 #include "../src/synapse/static/StaticData.h"
 
+#include "../src/synapse/poisson/PoissonSynapse.h"
+#include "../src/synapse/poisson/PoissonData.h"
+
 #endif /* SYNAPSES_H */
 

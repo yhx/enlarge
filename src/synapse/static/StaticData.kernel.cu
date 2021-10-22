@@ -56,6 +56,7 @@ __global__ void update_dense_static_hit(Connection *connection, StaticData *data
 
 void cudaUpdateStatic(Connection * connection, void *data, real *buffer, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t start_id, int time, BlockSize *pSize)
 {
+	// std::cout << pSize->gridSize << " " << pSize->blockSize << std::endl;
 	//update_static_hit<<<pSize->gridSize, pSize->blockSize>>>((StaticData*)data, num, start_id);
 	//reset_active_synapse<<<1, 1>>>();
 	update_dense_static_hit<<<pSize->gridSize, pSize->blockSize>>>((Connection *)connection,  (StaticData *)data, buffer, firedTable, firedTableSizes, firedTableCap, num, start_id, time);

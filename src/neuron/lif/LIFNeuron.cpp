@@ -11,7 +11,7 @@
 
 LIFNeuron::LIFNeuron(real v_init, real v_rest, real v_reset, real cm, real tau_m, real tau_refrac, real tau_syn_E, real tau_syn_I, real v_thresh, real i_offset, real dt, size_t num) : Neuron(LIF, num){
 
-	real rm = (fabs(cm) > ZERO)?(tau_m/cm):1.0;
+	real rm = (fabs(cm) > ZERO)?(tau_m/cm):1.0;			// 
 	real Cm = (tau_m>0)?exp(-dt/tau_m):0.0;
 	real Ce = (tau_syn_E > 0)?exp(-dt/tau_syn_E):0.0;
 	real Ci = (tau_syn_I > 0)?exp(-dt/tau_syn_I):0.0;

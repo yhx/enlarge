@@ -9,15 +9,16 @@ int main(int argc, char **argv)
 {
 	time_t start, end;
 	start = clock(); //time(NULL);
-	if (argc != 3)
-	{
-		printf("Need 2 paras. For example\n FR 1%%: %s depth num_neuron\n", argv[0]);
-		// printf("Need 7 paras. For example\n FR 1%%: %s depth num_neuron 0.7 0.5 0.6 0.3 6\n FR 5%%: %s depth num_neuron 0.7 0.9 0.6 0.2 6\n FR 20%%: %s depth num_neuron 1.3 1 2 1 50\n FR 50%%: %s depth num_neuron 2.7 3 2 1 20\n FR 65%%: %s depth num_neuron 4 2 5 3 20\n", argv[0], argv[0], argv[0], argv[0], argv[0]);
-		return 0;
-	}
+	// if (argc != 3)
+	// {
+	// 	printf("Need 2 paras. For example\n FR 1%%: %s depth num_neuron\n", argv[0]);
+	// 	// printf("Need 7 paras. For example\n FR 1%%: %s depth num_neuron 0.7 0.5 0.6 0.3 6\n FR 5%%: %s depth num_neuron 0.7 0.9 0.6 0.2 6\n FR 20%%: %s depth num_neuron 1.3 1 2 1 50\n FR 50%%: %s depth num_neuron 2.7 3 2 1 20\n FR 65%%: %s depth num_neuron 4 2 5 3 20\n", argv[0], argv[0], argv[0], argv[0], argv[0]);
+	// 	return 0;
+	// }
 	
-	const int depth = atoi(argv[1]);  // 网络深度  
-	const int N = atoi(argv[2]);  // 每层神经元的数量
+	// const int depth = atoi(argv[1]);  // 网络深度  
+	// const int N = atoi(argv[2]);  // 每层神经元的数量
+	const int N = 10;
 
 	// parameter for LIF model
 	const real fthreshold = -54e-3;
@@ -38,28 +39,32 @@ int main(int argc, char **argv)
 	const real dt = 0.5e-4;
 	Network c(dt);
 
-	Population *g[depth + 1];
+	Population *g[5];
 
     const int diff_num = 5000;
 
-	g[0] = c.createPopulation(1, N, LIFNeuron(fv, v_rest, freset, c_m, tau_m, frefractory, tau_syn_e, tau_syn_i, fthreshold, i_offset, dt));
+	g[0] = c.createPopulation(1, N, LIFNeuron(fv, v_rest, freset, c_m, tau_m, frefractory, tau_syn_e, tau_syn_i, fthreshold, 0, dt));
+	g[1] = c.createPopulation(1, N, LIFNeuron(fv, v_rest, freset, c_m, tau_m, frefractory, tau_syn_e, tau_syn_i, fthreshold, 0, dt));
 
 	real *delay = getConstArray((real)1e-4, N * N);
 
-	const real wp_0 = 2.4;
-	real *weightp_0 = getConstArray((real)(1e-9) * wp_0 / N, N * N);
+	const real w = 2.4;
+	real *weight = getConstArray((real)(1e-9) * w / N, N * N);
 
 	enum SpikeType type = Inh;
 	SpikeType *inh_con = getConstArray(type, N * N);
+	real poisson_mean = 4;
+	real *p_m = getConstArray(poisson_mean, N);
 
-    c.connect(g[0], g[0], weightp_0, delay, NULL, N * N);
+    c.connect_poisson_generator(g[0], p_m, weight, delay, NULL);
+	c.connect(g[0], g[1], weight, delay, NULL, N * N);
 
 	c.log_graph();
 
 	cout << "finish build network!" << endl;
 	cout << "node number: " << c._node_num << endl;
 
-	delArray(weightp_0);
+	delArray(weight);
 	delArray(inh_con);
 
 #if 0

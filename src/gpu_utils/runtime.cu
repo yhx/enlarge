@@ -242,5 +242,8 @@ BlockSize * getBlockSize(int nSize, int sSize)
 	ret[Static].blockSize = 128;
 	ret[Static].gridSize = (upzero_else_set_one(nSize) + (ret[Static].blockSize) - 1) / (ret[Static].blockSize);
 
+	ret[Poisson].blockSize = 128;
+	ret[Poisson].gridSize = (upzero_else_set_one(nSize) + (ret[Poisson].blockSize) - 1) / (ret[Poisson].blockSize);
+
 	return ret;
 }

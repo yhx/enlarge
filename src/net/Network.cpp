@@ -83,17 +83,20 @@ int Network::set_node_num(int node_num)
 	return _node_num;
 }
 
+/**
+ * 根据对应类型（type）的突触数量（size）修改_conn_n2s和_conn_s2n的大小
+ **/
 size_t Network::add_type_conn(Type type, size_t size)
 {
-	if (type < Static) {
-		if (_conn_n2s.find(type) == _conn_n2s.end()) {
-			_conn_n2s[type].resize(size);
-		} else {
-			size_t tmp = _conn_n2s[type].size();
+	if (type < Static) {  // 如果是神经元的类型 
+		if (_conn_n2s.find(type) == _conn_n2s.end()) {  // 如果当前没有这个type类型的突触
+			_conn_n2s[type].resize(size);  // 则增加增加一个（将对应突触类型的突触数量置为1）
+		} else {  // 已经有这种类型的突触，则直接修改该类型
+			size_t tmp = _conn_n2s[type].size();  
 			_conn_n2s[type].resize(tmp + size);
 		}
 		return _conn_n2s[type].size();
-	} else {
+	} else {  // 如果是突触的类型
 		if (_conn_s2n.find(type) == _conn_s2n.end()) {
 			_conn_s2n[type].resize(size);
 		} else {
@@ -255,13 +258,60 @@ int Network::connect(Population *p_src, size_t src, Population *p_dst, size_t ds
 	}
 	add_type_conn(type, 1);
 
-	size_t s_offset = offset;
+	size_t s_offset = offset;  // s_offset为当前存储Type类型突触的数组的最后位置
 	connect_(ID(p_src->type(), 0, p_src->offset()+src), 
 			ID(p_dst->type(), sp, p_dst->offset()+dst),
 			ID(type, 0, s_offset),
 			_synapses[type]->delay()[s_offset]);
 
 	return 1;
+}
+
+int Network::connect_poisson_generator_(ID dst, ID syn, unsigned int delay)
+{
+	_conn_s2n[syn.type()][syn.id()] = dst;
+	// _poisson_synapse2delay[syn.id()] = delay;
+	// _poisson_synapse2delay.push_back(pair<ID, unsigned int>(syn, delay));
+	return 1;
+}
+
+/**
+ * 用于build生成poisson分布脉冲的poisson突触，针对每一个目的神经元都会连接上一个poissonSynapse
+ * p_dst: target neuron
+ * mean：poisson mean
+ * weight: synapse weight
+ * delay: synapse delay
+ * sp: spike type, i.e., excitory synapse `Exc` or inhibitory synapse `Inh`
+ **/
+int Network::connect_poisson_generator(Population *p_dst, real *mean, real *weight, real *delay, SpikeType *sp) {
+	size_t dst_size = p_dst->size();  	// 获取目的神经元的数量
+	size_t size = dst_size;			  	// 由于是一对一连接，所以突触数量等于目的神经元数量
+
+	// _poisson_synapse2delay.resize(_poisson_synapse2delay.size() + dst_size);
+
+	// 将突触添加到_synapses中
+	Type type = Poisson;			 	// 突触连接类型为poisson
+	size_t offset = 0;
+	if (_synapses.find(type) == _synapses.end()) {
+		_synapses[type] = new PoissonSynapse(mean, weight, delay, 0.0, _dt, size);
+	} else {
+		offset = _synapses[type]->size();
+		PoissonSynapse t(mean, weight, delay, 0.0, _dt, size);
+		_synapses[type]->append(&t, size);
+	}
+	add_type_conn(type, size);
+
+	int count = 0;
+	for (size_t d = 0; d < dst_size; d++) {
+		size_t s_offset = offset + d;		// specific synapse id in synapse array 
+		SpikeType sp_t = sp ? sp[d] : Exc;  // synapse type
+		connect_poisson_generator_(ID(p_dst->type(), sp_t, p_dst->offset() + d),
+								ID(type, 0, s_offset),
+								_synapses[type]->delay()[s_offset]);
+		count++;
+	}
+
+	return count;
 }
 
 // int Network::connectOne2One(Population *pSrc, Population *pDst, real *weight, real *delay, SpikeType *type, size_t size) {

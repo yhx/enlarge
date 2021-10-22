@@ -7,74 +7,89 @@
 
 #include "../neuron/lif/LIFData.h"
 #include "../synapse/static/StaticData.h"
+#include "../synapse/poisson/PoissonData.h"
 
 size_t (*getTypeSize[])() = {
 	getLIFSize,
-	getStaticSize
+	getStaticSize,
+	getPoissonSize
 };
 
 void* (*mallocType[])() = {
 	mallocLIF,
-	mallocStatic
+	mallocStatic,
+	mallocPoisson
 };
 
 void* (*allocType[])(size_t num) = {
 	allocLIF,
-	allocStatic
+	allocStatic,
+	allocPoisson
 };
 
 int (*freeType[])(void *pCPU) = {
 	freeLIF,
-	freeStatic
+	freeStatic,
+	freePoisson
 };
 
 int (*allocTypePara[])(void *pCPU, size_t num) = {
 	allocLIFPara,
-	allocStaticPara
+	allocStaticPara,
+	allocPoissonPara
 };
 
 int (*freeTypePara[])(void *pCPU) = {
 	freeLIFPara,
-	freeStaticPara
+	freeStaticPara,
+	freePoissonPara
 };
 
 int (*saveType[])(void *pCPU, size_t num, const string &path) = {
 	saveLIF,
-	saveStatic
+	saveStatic,
+	savePoisson
 };
 
 void* (*loadType[])(size_t num, const string &path) = {
 	loadLIF,
-	loadStatic
+	loadStatic,
+	loadPoisson
 };
 
 void (*updateType[])(Connection *, void *, real *, uinteger_t *, uinteger_t*,  size_t, size_t, size_t, int) = {
 	updateLIF,
-	updateStatic
+	updateStatic,
+	updatePoisson
 };
 
 bool (*isEqualType[])(void *p1, void *p2, size_t num, uinteger_t *shuffle1, uinteger_t *shuffle2) = {
 	isEqualLIF,
-	isEqualStatic
+	isEqualStatic,
+	isEqualPoisson
 };
 
 int (*logRateNeuron[])(void *p1, const char *name) = {
 	logRateLIF,
+	NULL,
 	NULL
 };
 
 int (*shuffleSynapse[])(void *p1, uinteger_t *shuffle1, size_t num) = {
 	NULL,
-	shuffleStatic
+	shuffleStatic,
+	shufflePoisson
 };
 
 int (*sendType[])(void *data, int dest, int tag, MPI_Comm comm) = {
 	sendLIF,
-	sendStatic
+	sendStatic,
+	sendPoisson
 };
 
 void * (*recvType[])(int src, int tag, MPI_Comm comm) = {
 	recvLIF,
-	recvStatic
+	recvStatic,
+	recvPoisson
 };
 
