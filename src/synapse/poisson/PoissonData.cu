@@ -38,6 +38,7 @@ void *cudaAllocPoissonPara(void *pCPU, size_t num)
 	PoissonData *p = (PoissonData*)pCPU;
 	PoissonData *ret = (PoissonData*)malloc(sizeof(PoissonData)*1);
 	memset(ret, 0, sizeof(PoissonData)*1);
+	memcpy(ret, p, sizeof(PoissonData)*1);
 	
 	// copy poisson synapse weight from CPU to GPU 
 	checkCudaErrors(cudaMalloc((void**)&(ret->pWeight), sizeof(real)*num));

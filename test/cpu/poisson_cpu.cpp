@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     const int diff_num = 5000;
 
 	g[0] = c.createPopulation(1, N, LIFNeuron(fv, v_rest, freset, c_m, tau_m, frefractory, tau_syn_e, tau_syn_i, fthreshold, 0, dt));
-	// g[1] = c.createPopulation(1, N, LIFNeuron(fv, v_rest, freset, c_m, tau_m, frefractory, tau_syn_e, tau_syn_i, fthreshold, 0, dt));
+	g[1] = c.createPopulation(1, N, LIFNeuron(fv, v_rest, freset, c_m, tau_m, frefractory, tau_syn_e, tau_syn_i, fthreshold, 0, dt));
 
 	real *delay = getConstArray((real)1e-4, N * N);
 
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 	real *p_m = getConstArray(poisson_mean, N);
 
     c.connect_poisson_generator(g[0], p_m, weight, delay, NULL);
-	// c.connect(g[0], g[1], weight, delay, NULL, N * N);
+	c.connect(g[0], g[1], weight, delay, NULL, N * N);
 
 	c.log_graph();
 
@@ -74,3 +74,4 @@ int main(int argc, char **argv)
 	printf("exec time=%lf seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
 	return 0;
 }
+

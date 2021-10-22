@@ -21,25 +21,37 @@ void Network::update_status_splited()
 	_crossnodeNeuronsSend.resize(_node_num);
 	_crossnodeNeuronsRecv.resize(_node_num);
 	for (auto t_iter = _neurons.begin(); t_iter != _neurons.end(); t_iter++) {
-		Type t = t_iter->first;
+		Type t = t_iter->first;  // neuron type
 		for (size_t i=0; i<t_iter->second->size(); i++) {
-			bool cross_node = false;
+			bool cross_node = false;  // 是否有跨节点连接，默认为false
 			ID id(t, 0, i);
 			unsigned n_node = _idx2node[t][i];
 			_neuron_nums[n_node][t] += 1;
+			// 遍历神经元连接的所有突触
 			for (auto iter = _conn_n2s[t][i].begin(); iter != _conn_n2s[t][i].end(); iter++) {
 				for (auto siter = iter->second.begin(); siter != iter->second.end(); siter++) {
-					unsigned int s_node = _idx2node[siter->type()][siter->id()];
+					unsigned int s_node = _idx2node[siter->type()][siter->id()];  // 突触节点
 					_synapse_nums[s_node][siter->type()] += 1;
 					if (n_node != s_node) {
 						cross_node = true;
-						_crossnodeNeuronsRecv[s_node].insert(id);
+						_crossnodeNeuronsRecv[s_node].insert(id);  // 放到跨界点的buffer中去
 					}
 				}
 			}
 			if (cross_node) {
 				_crossnodeNeuronsSend[n_node].insert(id);
 			}
+		}
+	}
+
+	/**
+	 * Deal with poisson synapse. 
+	 * Add synapse total number in corresponding node.
+	 **/
+	if (_synapses.find(Poisson) != _synapses.end()) {
+		for (size_t i = 0; i < _synapses[Poisson]->size(); i++) {
+			unsigned int s_node = _idx2node[Poisson][i];  // i-th突触所在节点
+			_synapse_nums[s_node][Poisson] += 1;
 		}
 	}
 
@@ -168,6 +180,26 @@ int Network::arrangeLocal(DistriNetwork *net, CrossTypeInfo_t &type_offset, Cros
 
 		}
 	}
+
+	/**
+	 * Deal with poisson synapse.
+	 */
+	if (_conn_s2n.find(Poisson) != _conn_s2n.end()) {
+		for (int i = 0; i < _conn_s2n[Poisson].size(); ++i) {
+			// unsigned int s_node = _idx2node[_conn_s2n[Poisson][i].type()][_conn_s2n[Poisson][i].id()];
+			unsigned int s_node = _idx2node[Poisson][i];
+			ID s_id(Poisson, 0, i);  // 当前突触的id
+			unsigned int s_idx = type_offset[s_node][Poisson];
+			_id2node_idx[s_id] = synapse_count[s_node][Poisson];  // 当前类型突触的开始编号
+			_synapses[Poisson]->packup(net[s_node]._network->ppSynapses[s_idx], synapse_count[s_node][Poisson], i);
+			Connection * c = net[s_node]._network->ppConnections[s_idx];
+			c->pSidMap[synapse_count[s_node][Poisson]] = synapse_count[s_node][Poisson];
+			ID target = _conn_s2n[Poisson][i];
+			c->dst[synapse_count[s_node][Poisson]] = _buffer_offsets[s_node][target.type()] + target.offset() * _neuron_nums[s_node][target.type()] + _id2node_idx[target.mask_offset()];
+			synapse_count[s_node][Poisson]++;
+		}
+	}
+
 
 	return 0;
 }

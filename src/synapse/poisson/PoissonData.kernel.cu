@@ -36,14 +36,5 @@ __global__ void update_dense_poisson_hit(Connection *connection, PoissonData *da
 
 void cudaUpdatePoisson(Connection * connection, void *data, real *buffer, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t start_id, int time, BlockSize *pSize)
 {
-	std::cout << "poisson cuda kernel: " << std::endl;
-	// pSize->gridSize = 1;
-	// pSize->blockSize = 128;
-	std::cout << pSize->gridSize << " " << pSize->blockSize << std::endl;
-	// std::cout << "buffer: ";
-	// for (int i = 0; i < num; ++i)
-	// 	std::cout << buffer[i] << " ";
-	// std::cout << std::endl;
-	// curand_setup_poisson_init_state<<<pSize->gridSize, pSize->blockSize>>>((PoissonData *)data);
 	update_dense_poisson_hit<<<pSize->gridSize, pSize->blockSize>>>((Connection *)connection,  (PoissonData *)data, buffer, firedTable, firedTableSizes, firedTableCap, num, start_id, time);
 }

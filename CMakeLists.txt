@@ -54,7 +54,7 @@ elseif (CMAKE_BUILD_TYPE_UPPER STREQUAL "DEBUG")
 		SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -std=c++11 -O0 -Wall -g -ggdb -fPIC -D DEBUG -pthread")
 	ENDIF ( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
 	#SET(CUDA_NVCC_FLAGS_DEBUG "-std=c++11;-g;-G;-lineinfo;-Xcompiler;-arch=sm_60")
-	SET(CUDA_NVCC_FLAGS_DEBUG "-std=c++11;-g;-G;-D DEBUG;-lcufft;-gencode=arch=compute_60,code=sm_60;-gencode=arch=compute_61,code=sm_61;-gencode=arch=compute_70,code=sm_70;-gencode=arch=compute_75,code=sm_75;-gencode=arch=compute_80,code=sm_80")
+	SET(CUDA_NVCC_FLAGS_DEBUG "-std=c++11;-O0;-g;-G;-D DEBUG;-lcufft;-gencode=arch=compute_60,code=sm_60;-gencode=arch=compute_61,code=sm_61;-gencode=arch=compute_70,code=sm_70;-gencode=arch=compute_75,code=sm_75;-gencode=arch=compute_80,code=sm_80")
 endif (CMAKE_BUILD_TYPE_UPPER STREQUAL "RELEASE")
 
 OPTION(USE_DOUBLE "Use double" OFF) # Disabled by default

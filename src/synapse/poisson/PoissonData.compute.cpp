@@ -22,6 +22,7 @@ void updatePoisson(Connection *connection, void *_data, real *buffer, uinteger_t
 	for (size_t i = 0; i < data->num; i++) {  // 对于所有poisson突触
 		std::poisson_distribution<int> pd(data->pMean[connection->pSidMap[i]]);
 		buffer[connection->dst[i]] += pd(generator) * data->pWeight[connection->pSidMap[i]];
+		// buffer[connection->dst[i]] += 2 * data->pWeight[connection->pSidMap[i]];
 		// std::cout << connection->dst[i] << std::endl; 
 	}
 	// }

@@ -154,12 +154,14 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 	// 	// calculate target neuron index in `buffer` array
 	// 	c->dst[i] = _buffer_offsets[0][target.type()] + target.offset() * _neurons[target.type()]->size() + target.id();
 	// }
-	int s_idx = tp2idx[Poisson];  // gain poisson synapses start index in ppConections
-	Connection * c = ret->ppConnections[s_idx];		// gain poisson connection array
-	for (int i = 0; i < _conn_s2n[Poisson].size(); ++i) {
-		ID target = _conn_s2n[Poisson][i];		// target neuron of poisson synapse
-		// calculate target neuron index in `buffer` array
-		c->dst[i] = _buffer_offsets[0][target.type()] + target.offset() * _neurons[target.type()]->size() + target.id();
+	if (_conn_s2n.find(Poisson) != _conn_s2n.end()) {
+		int s_idx = tp2idx[Poisson];  // gain poisson synapses start index in ppConections
+		Connection * c = ret->ppConnections[s_idx];		// gain poisson connection array
+		for (int i = 0; i < _conn_s2n[Poisson].size(); ++i) {
+			ID target = _conn_s2n[Poisson][i];		// target neuron of poisson synapse
+			// calculate target neuron index in `buffer` array
+			c->dst[i] = _buffer_offsets[0][target.type()] + target.offset() * _neurons[target.type()]->size() + target.id();
+		}
 	}
 
 	for (size_t st=0; st<s_type_num; st++) {

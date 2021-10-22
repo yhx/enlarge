@@ -21,6 +21,9 @@ int sendPoisson(void *data_, int dest, int tag, MPI_Comm comm)
 	ret = MPI_Send(data->pMean, data->num, MPI_U_REAL, dest, tag+2, comm);
 	assert(ret == MPI_SUCCESS);
 
+	// ret = MPI_Send(data->pState, data->num*sizeof(curandState), MPI_UNSIGNED_CHAR, dest, tag+2, comm);
+	// assert(ret == MPI_SUCCESS);
+
 	return ret;
 }
 
@@ -43,6 +46,8 @@ void * recvPoisson(int src, int tag, MPI_Comm comm)
 
 	ret = MPI_Recv(net->pMean, net->num, MPI_U_REAL, src, tag+2, comm, &status);
 	assert(ret == MPI_SUCCESS);
+
+	
 
 	return net;
 }
