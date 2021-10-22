@@ -103,7 +103,7 @@ GNetwork* Network::buildNetwork(const SimInfo &info)
 		tp2idx[iter->first] = s_t;
 		s_t++;
 	}
-	assert(ret->pSynapseNums[n_type_num] == _synapse_num);
+	assert(ret->pSynapseNums[s_type_num] == _synapse_num);
 
 	ret->ppConnections = malloc_c<Connection*>(s_type_num); 
 	for (size_t i=0; i<s_type_num; i++) {
