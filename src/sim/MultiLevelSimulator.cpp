@@ -305,7 +305,7 @@ int MultiLevelSimulator::run(real time, FireInfo &log, int thread_num)
 	return 0;
 }
 
-int run_proc_cpu(DistriNetwork *network, CrossMap *map, CrossSpike *msg) {
+int run_thread_ml(void *para) {
 	FILE *v_file = log_file_mpi("v", network->_nodeIdx);
 	FILE *sim_file = log_file_mpi("sim", network->_nodeIdx);
 #ifdef LOG_DATA

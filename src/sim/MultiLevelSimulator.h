@@ -29,7 +29,7 @@ public:
 
 	int run(real time, int thread_num);
 	virtual int run(real time, FireInfo &log);
-	virtual int run(real time, FireInfo &log, int thread_num);
+	virtual int run(real time, FireInfo &log, int thread_num, bool gpu);
 
 public:
 	DistriNetwork **_network_data;
