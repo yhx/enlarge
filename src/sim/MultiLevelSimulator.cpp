@@ -65,7 +65,7 @@ int MultiLevelSimulator::mpi_init(int *argc, char ***argv)
 int MultiLevelSimulator::run(real time, int thread_num)
 {
 	FireInfo log;
-	run(time, log, thread_num);
+	run(time, log, thread_num, false);
 	return 0;
 }
 
@@ -232,7 +232,7 @@ int MultiLevelSimulator::distribute(SimInfo &info, int sim_cycle)
 	return 0;
 }
 
-int MultiLevelSimulator::run(real time, FireInfo &log, int thread_num)
+int MultiLevelSimulator::run(real time, FireInfo &log, int thread_num, bool gpu)
 {
 
 	int sim_cycle = round(time/_dt);
@@ -268,16 +268,23 @@ int MultiLevelSimulator::run(real time, FireInfo &log, int thread_num)
 	pthread_t *thread_ids = malloc_c<pthread_t>(thread_num);
 	assert(thread_ids != NULL);
 
+	ProcBuf pbuf(cs, _proc_id, _proc_num, _thread_num, cs[0]->_min_delay);
+
 	RunPara *paras = malloc_c<RunPara>(thread_num);
 
 	for (int i=0; i<thread_num; i++) {
 		paras[i]._net = _network_data[i];
 		paras[i]._cm = cm[i];
-		paras[i]._cs = cs;
+		paras[i]._pbuf = &pbuf;
 		paras[i]._thread_id = i;
 
-		int ret = pthread_create(&(thread_ids[i]), NULL, &run_thread_ml, (void*)&(paras[i]));
-		assert(ret == 0);
+		if (gpu) {
+			int ret = pthread_create(&(thread_ids[i]), NULL, &run_gpu_ml, (void*)&(paras[i]));
+			assert(ret == 0);
+		} else {
+			int ret = pthread_create(&(thread_ids[i]), NULL, &run_thread_ml, (void*)&(paras[i]));
+			assert(ret == 0);
+		}
 	}
 
 	for (int i=0; i<thread_num; i++) {
@@ -305,7 +312,13 @@ int MultiLevelSimulator::run(real time, FireInfo &log, int thread_num)
 	return 0;
 }
 
-int run_thread_ml(void *para) {
+void * run_thread_ml(void *para) {
+	RunPara * tmp = static_cast<RunPara*>(para);
+	DistriNetwork *network = tmp->_net;
+	CrossMap *cm = tmp->_cm;
+	ProcBuf *pbuf = tmp->_pbuf;
+	int thread_id = tmp->_thread_id;
+
 	FILE *v_file = log_file_mpi("v", network->_nodeIdx);
 	FILE *sim_file = log_file_mpi("sim", network->_nodeIdx);
 #ifdef LOG_DATA
@@ -325,12 +338,12 @@ int run_thread_ml(void *para) {
 	// int nodeSynapseNum = pNetCPU->pSynapseNums[sTypeNum];
 
 	int max_delay = pNetCPU->ppConnections[0]->maxDelay;
-	// int min_delay = pNetCPU->ppConnections[0]->minDelay;
+	int min_delay = pNetCPU->ppConnections[0]->minDelay;
 	// assert(min_delay == msg->_min_delay);
 
 	pInfoGNetwork(pNetCPU, string("Proc ") + std::to_string(network->_nodeIdx)); 
 
-	int proc_num = msg->_proc_num;
+	int proc_num = pbuf->_proc_num;
 
 	Buffer buffer(pNetCPU->bufferOffsets[nTypeNum], allNeuronNum, max_delay);
 
@@ -374,9 +387,9 @@ int run_thread_ml(void *para) {
 #endif
 		// int curr_delay = time % msg->_min_delay;
 
-		msg->fetch_cpu(map, buffer._fire_table, buffer._fired_sizes, buffer._fire_table_cap, proc_num, max_delay, time);
+		pbuf->fetch_cpu(thread_id, cm, buffer._fire_table, buffer._fired_sizes, buffer._fire_table_cap, proc_num, max_delay, time);
 
-		msg->update_cpu(time);
+		pbuf->update_cpu(thread_id, time, &g_proc_barrier);
 
 #endif
 #ifdef PROF
@@ -410,9 +423,9 @@ int run_thread_ml(void *para) {
 #endif
 
 #ifdef LOG_DATA
-		msg->log_cpu(time, (string("proc_") + std::to_string(network->_nodeIdx)).c_str());
+		// msg->log_cpu(time, (string("proc_") + std::to_string(network->_nodeIdx)).c_str());
 #endif
-		msg->upload_cpu(buffer._fire_table, buffer._fired_sizes, buffer._fire_table_cap, max_delay, time);
+		pbuf->upload_cpu(thread_id, buffer._fire_table, buffer._fired_sizes, buffer._fire_table_cap, min_delay, time);
 
 #ifdef PROF
 		gettimeofday(&t5, NULL);
