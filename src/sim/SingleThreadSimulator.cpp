@@ -93,13 +93,18 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 		}
 
 #ifdef LOG_DATA
-		int copy_idx = getIndex(pNetCPU->pNTypes, nTypeNum, LIF);
-		LIFData *c_lif = (LIFData *)pNetCPU->ppNeurons[copy_idx];
-		real *c_vm = c_lif->pV_m;
+		// int copy_idx = getIndex(pNetCPU->pNTypes, nTypeNum, LIF);
+		// LIFData *c_lif = (LIFData *)pNetCPU->ppNeurons[copy_idx];
+		for (size_t i = 0; i < nTypeNum; i++) {
+			real *c_vm = getVNeuron[pNetCPU->pNTypes[i]](pNetCPU->ppNeurons[i]);
+			log_array(v_file, c_vm, pNetCPU->pNeuronNums[i+1] - pNetCPU->pNeuronNums[i]);
+		}
+		
+		// real *c_vm = c_lif->pV_m;
 
 		int copy_size = buffer._fired_sizes[currentIdx];
 
-		log_array(v_file, c_vm, pNetCPU->pNeuronNums[copy_idx+1] - pNetCPU->pNeuronNums[copy_idx]);
+		// log_array(v_file, c_vm, pNetCPU->pNeuronNums[copy_idx+1] - pNetCPU->pNeuronNums[copy_idx]);
 
 		log_array(log_file, buffer._fire_table  + totalNeuronNum * currentIdx, copy_size);
 

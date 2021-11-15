@@ -64,6 +64,7 @@ public:
 	int connect(Population *p_src, Population *p_dst, real *weight, real *delay, real tau, SpikeType sp, size_t size);
 	int connect(Population *p_src, Population *p_dst, real *weight, real *delay, SpikeType *sp, size_t size);
 
+	int connect(Population *p_src, Population *p_dst, int *idx_src, int *idx_dst, int synapse_num, real *weight, real *delay, SpikeType *sp);
 	/**
 	 * connect_poisson_generator用于给目的神经元p_dst连接上poisson generator。
 	 */
@@ -168,6 +169,12 @@ public:
 	 * 前提：已经获得了突触的类型和突触的id的信息->得到突触连接的目的神经元
 	 */
 	map<Type, vector<ID>> _conn_s2n;
+
+	/**
+	 * _conn_sd2n[syn.type()][delay][syn.id()] = dst;
+	 * 根据突触类型、突触id以及delay获取目的神经元ID
+	 **/
+	map<Type, map<int, vector<pair<int, ID> > > > _conn_sd2n;
 	// map<ID, map<unsigned int, vector<ID>>> n2s_conn;
 	// map<ID, ID> s2n_conn;
 
@@ -221,7 +228,6 @@ Population * Network::createPopulation(size_t num, N templ)
 	add_type_conn(type, num);
 
 	_populations.push_back(pp1);
-
 	return pp1;
 }
 

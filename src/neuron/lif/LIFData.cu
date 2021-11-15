@@ -206,3 +206,7 @@ int cudaLogRateLIF(void *cpu, void *gpu, const char *name)
 	return logRateLIF(cpu, name);
 }
 
+real * cudaGetVLIF(void *data) {
+	LIFData *c_g_lif = FROMGPU(static_cast<LIFData *>(data), 1);
+	return c_g_lif->pV_m;
+}

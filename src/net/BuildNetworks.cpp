@@ -185,21 +185,26 @@ int Network::arrangeLocal(DistriNetwork *net, CrossTypeInfo_t &type_offset, Cros
 	 * Deal with poisson synapse.
 	 */
 	if (_conn_s2n.find(Poisson) != _conn_s2n.end()) {
-		for (int i = 0; i < _conn_s2n[Poisson].size(); ++i) {
-			// unsigned int s_node = _idx2node[_conn_s2n[Poisson][i].type()][_conn_s2n[Poisson][i].id()];
-			unsigned int s_node = _idx2node[Poisson][i];
-			ID s_id(Poisson, 0, i);  // 当前突触的id
-			unsigned int s_idx = type_offset[s_node][Poisson];
-			_id2node_idx[s_id] = synapse_count[s_node][Poisson];  // 当前类型突触的开始编号
-			_synapses[Poisson]->packup(net[s_node]._network->ppSynapses[s_idx], synapse_count[s_node][Poisson], i);
-			Connection * c = net[s_node]._network->ppConnections[s_idx];
-			c->pSidMap[synapse_count[s_node][Poisson]] = synapse_count[s_node][Poisson];
-			ID target = _conn_s2n[Poisson][i];
-			c->dst[synapse_count[s_node][Poisson]] = _buffer_offsets[s_node][target.type()] + target.offset() * _neuron_nums[s_node][target.type()] + _id2node_idx[target.mask_offset()];
-			synapse_count[s_node][Poisson]++;
+		if (_conn_sd2n[Poisson].find(delay) != _conn_sd2n[Poisson].end()) {  // if has specific delay
+			for (auto pr = _conn_sd2n[Poisson][delay].begin(); pr < _conn_sd2n[Poisson][delay].end(); pr++) {
+				// pr is pair<src_idx, dst_ID>
+			// for (int i = 0; i < _conn_s2n[Poisson].size(); ++i) {
+				int i = pr->first;  // src node index
+				unsigned int s_node = _idx2node[Poisson][i];
+				ID s_id(Poisson, 0, i);  // 当前突触的id
+				unsigned int s_idx = type_offset[s_node][Poisson];
+				_id2node_idx[s_id] = synapse_count[s_node][Poisson];  // 当前类型突触的开始编号
+				_synapses[Poisson]->packup(net[s_node]._network->ppSynapses[s_idx], synapse_count[s_node][Poisson], i);
+				Connection * c = net[s_node]._network->ppConnections[s_idx];
+				c->pSidMap[synapse_count[s_node][Poisson]] = synapse_count[s_node][Poisson];
+				// ID target = _conn_s2n[Poisson][i];
+				ID target = pr->second;
+				c->dst[synapse_count[s_node][Poisson]] = _buffer_offsets[s_node][target.type()] + target.offset() * _neuron_nums[s_node][target.type()] + _id2node_idx[target.mask_offset()];
+				synapse_count[s_node][Poisson]++;
+			// }
+			}
 		}
 	}
-
 
 	return 0;
 }
@@ -317,7 +322,7 @@ DistriNetwork* Network::buildNetworks(const SimInfo &info, SplitType split, cons
 		}
 	}
 
-	for (int  node_t = 0; node_t < _node_num; node_t++) {
+	for (int node_t = 0; node_t < _node_num; node_t++) {
 		assert(cross_idx[node_t] == _crossnodeNeuronsSend[node_t].size());
 		assert(node_n_offset[node_t] == _crossnodeNeuronsRecv[node_t].size());
 		for (auto i = _synapse_nums[node_t].begin(); i != _synapse_nums[node_t].end(); i++) {

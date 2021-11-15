@@ -50,5 +50,10 @@ extern void * (*recvType[TYPESIZE])(int src, int tag, MPI_Comm comm);
 
 extern BlockSize * getBlockSize(int nSize, int sSize);
 
-#endif /* TYPEFUNC_H */
+// extern Type * (*castType[TYPESIZE])(void *data);
 
+extern real * (*getVNeuron[TYPESIZE])(void *data);
+
+extern real * (*cudaGetVNeuron[TYPESIZE])(void *data);
+
+#endif /* TYPEFUNC_H */

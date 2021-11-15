@@ -93,7 +93,7 @@ __device__ int commit2globalTable(T1 *shared_buf, const T2 size, T1 *global_buf,
 	__syncthreads();
 
 	for (T2 idx=threadIdx.x; idx<size; idx+=blockDim.x) {
-		global_buf[offset + start_loc + idx] = shared_buf[idx];
+		global_buf[offset + start_loc + idx] = shared_buf[idx];  // 将shared buffer中的元素添加到global buffer中
 	}
 
 	return 0;

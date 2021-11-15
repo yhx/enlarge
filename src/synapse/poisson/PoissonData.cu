@@ -123,4 +123,3 @@ int cudaFreePoissonPara(void *pGPU)
 
 	return 0;
 }
-

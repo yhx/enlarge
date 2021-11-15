@@ -217,6 +217,9 @@ BlockSize * getBlockSize(int nSize, int sSize)
 	ret[LIF].blockSize = 128;
 	ret[LIF].gridSize = (upzero_else_set_one(nSize) + (ret[LIF].blockSize) - 1) / (ret[LIF].blockSize);
 
+	ret[IAF].blockSize = 128;
+	ret[IAF].gridSize = (upzero_else_set_one(nSize) + (ret[IAF].blockSize) - 1) / (ret[IAF].blockSize);
+
 	// cudaOccupancyMaxPotentialBlockSize(&(ret[Constant].minGridSize), &(ret[Constant].blockSize), update_constant_neuron, 0, nSize); 
 	// ret[Constant].gridSize = (upzero_else_set_one(nSize) + (ret[Constant].blockSize) - 1) / (ret[Constant].blockSize);
 
@@ -241,6 +244,7 @@ BlockSize * getBlockSize(int nSize, int sSize)
 	// cudaOccupancyMaxPotentialBlockSize(&(ret[Static].minGridSize), &(ret[Static].blockSize), update_static_hit, 0, sSize); 
 	ret[Static].blockSize = 128;
 	ret[Static].gridSize = (upzero_else_set_one(nSize) + (ret[Static].blockSize) - 1) / (ret[Static].blockSize);
+	// ret[Static].gridSize = (upzero_else_set_one(nSize) + (ret[Static].blockSize) - 1) / (16);
 
 	ret[Poisson].blockSize = 128;
 	ret[Poisson].gridSize = (upzero_else_set_one(nSize) + (ret[Poisson].blockSize) - 1) / (ret[Poisson].blockSize);

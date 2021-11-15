@@ -13,11 +13,11 @@ PoissonSynapse::PoissonSynapse(real mean, real weight, real delay, real tau_syn,
 	: Synapse(Poisson, num)
 {
 	int delay_steps = static_cast<int>(round(delay/dt));
-	assert(fabs(tau_syn) > ZERO);
-	if (fabs(tau_syn) > ZERO) {
-		real c1 = exp(-(delay-dt*delay_steps)/tau_syn);
-		weight = weight * c1;
-	}
+	// assert(fabs(tau_syn) > ZERO);
+	// if (fabs(tau_syn) > ZERO) {
+	// 	real c1 = exp(-(delay-dt*delay_steps)/tau_syn);
+	// 	weight = weight * c1;
+	// }
 
 	_weight.insert(_weight.end(), num, weight);
 	_delay.insert(_delay.end(), num, delay_steps);
@@ -34,12 +34,12 @@ PoissonSynapse::PoissonSynapse(const real *mean, const real *weight, const real 
 
 	for (size_t i=0; i<num; i++) {
 		int delay_steps = static_cast<int>(round(delay[i]/dt));
-		assert(fabs(tau_syn[i]) > ZERO);
+		// assert(fabs(tau_syn[i]) > ZERO);
 		real w = weight[i];
-		if (fabs(tau_syn[i]) > ZERO) {
-			real c1 = exp(-(delay[i]-dt*delay_steps)/tau_syn[i]);
-			w = w * c1;
-		}
+		// if (fabs(tau_syn[i]) > ZERO) {
+		// 	real c1 = exp(-(delay[i]-dt*delay_steps)/tau_syn[i]);
+		// 	w = w * c1;
+		// }
 		_weight[i] = w;
 		_delay[i] = delay_steps;
 		_mean[i] = mean[i];

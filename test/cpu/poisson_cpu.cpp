@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 	
 	// const int depth = atoi(argv[1]);  // 网络深度  
 	// const int N = atoi(argv[2]);  // 每层神经元的数量
-	const int N = 100;
+	const int N = 10;
 
 	// parameter for LIF model
 	const real fthreshold = -54e-3;

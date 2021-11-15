@@ -15,6 +15,7 @@
 using std::string;
 
 #define access_(array, a, b) ((array)[a*num + b])
+#define access_connection_(array, a, num, b) ((array[a*(num) + b]))
 
 struct Connection {
 	//int *pSynapsesIdx; 
