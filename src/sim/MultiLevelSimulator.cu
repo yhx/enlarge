@@ -14,6 +14,7 @@
 #include "../../msg_utils/helper/helper_c.h"
 #include "../../msg_utils/helper/helper_gpu.h"
 #include "../../msg_utils/msg_utils/msg_utils.h"
+#include "../../msg_utils/msg_utils/ProcBuf.h"
 #include "../../msg_utils/msg_utils/GPUManager.h"
 #include "../gpu_utils/runtime.h"
 #include "../gpu_utils/gpu_utils.h"
@@ -22,11 +23,11 @@
 
 pthread_barrier_t g_proc_barrier;
 
-void * run_thread_ml(void *para) {
+void * run_gpu_ml(void *para) {
 	RunPara * tmp = static_cast<RunPara*>(para);
 	DistriNetwork *network = tmp->_net;
 	CrossMap *cm = tmp->_cm;
-	CrossSpike **cs = tmp->_cs;
+	ProcBuf *pbuf = tmp->_pbuf;
 	int thread_id = tmp->_thread_id;
 	// print_mem("Inside Run");
 
@@ -49,7 +50,7 @@ void * run_thread_ml(void *para) {
 	// print_mem("Copied Network");
 
 	cm->to_gpu();
-	cs[thread_id]->to_gpu();
+	pbuf->to_gpu();
 	// print_mem("Copied CND");
 
 	int nTypeNum = pNetCPU->nTypeNum;
@@ -134,13 +135,13 @@ void * run_thread_ml(void *para) {
 		t2 = MPI_Wtime();
 		comp_time += t2-t1;
 #endif
-	    cs[thread_id]->fetch_gpu(cm, g_buffer->_fire_table, g_buffer->_fired_sizes, g_buffer->_fire_table_cap, proc_num, max_delay, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
+	    pbuf->fetch_gpu(thread_id, cm, g_buffer->_fire_table, g_buffer->_fired_sizes, g_buffer->_fire_table_cap, max_delay, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
 
 		// checkCudaErrors(cudaMemcpy(gCrossDataGPU->_firedNum + network->_nodeIdx * proc_num, c_g_fired_n_num, sizeof(int)*proc_num, cudaMemcpyDeviceToHost));
-		cs[thread_id]->update_gpu(time);
+		pbuf->update_gpu(thread_id, time, &g_proc_barrier);
 
 #ifdef PROF
-		int curr_delay = time % cs[thread_id]->_min_delay;
+		int curr_delay = time % pbuf->_min_delay;
 		t3 = MPI_Wtime();
 		comm_time += t3-t2;
 
@@ -150,8 +151,8 @@ void * run_thread_ml(void *para) {
 		}
 		if (curr_delay >= min_delay-1) {
 			for (int i=0; i<proc_num; i++) {
-				send_count[i] += cs[thread_id]->_send_num[i];
-				recv_count[i] += cs[thread_id]->_recv_num[i];
+				send_count[i] += pbuf->_send_num[i];
+				recv_count[i] += pbuf->_recv_num[i];
 			}
 		}
 		t6 = MPI_Wtime();
@@ -178,9 +179,9 @@ void * run_thread_ml(void *para) {
 #endif
 
 #ifdef LOG_DATA
-		cs[thread_id]->log_gpu(time, (string("proc_") + std::to_string(network->_nodeIdx)).c_str());
+		// cs[thread_id]->log_gpu(time, (string("proc_") + std::to_string(network->_nodeIdx)).c_str());
 #endif
-		cs[thread_id]->upload_gpu(g_buffer->_fire_table, g_buffer->_fired_sizes, buffer._fired_sizes, g_buffer->_fire_table_cap, max_delay, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
+		pbuf->upload_gpu(thread_id, g_buffer->_fire_table, g_buffer->_fired_sizes, buffer._fired_sizes, g_buffer->_fire_table_cap, max_delay, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
 
 #ifdef PROF
 		cudaDeviceSynchronize();
@@ -224,7 +225,7 @@ void * run_thread_ml(void *para) {
 	printf("Thread %d Data Send:%s\n", network->_nodeIdx, send.c_str());
 	printf("Thread %d Data Recv:%s\n", network->_nodeIdx, recv.c_str());
 
-	printf("Comm stat: cpu_wait_gpu %lf; gpu_wait %lf; cpu_comm %lf; gpu_comm %lf\n", cs[thread_id]->_cpu_wait_gpu, cs[thread_id]->_gpu_wait, cs[thread_id]->_cpu_time, cs[thread_id]->_gpu_time);
+	// printf("Comm stat: cpu_wait_gpu %lf; gpu_wait %lf; cpu_comm %lf; gpu_comm %lf\n", cs[thread_id]->_cpu_wait_gpu, cs[thread_id]->_gpu_wait, cs[thread_id]->_cpu_time, cs[thread_id]->_gpu_time);
 #endif
 
 	char name[512];

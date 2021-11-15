@@ -8,7 +8,7 @@
 #include <string>
 
 #include "../../msg_utils/msg_utils/CrossMap.h"
-#include "../../msg_utils/msg_utils/CrossSpike.h"
+#include "../../msg_utils/msg_utils/ProcBuf.h"
 #include "../interface/Simulator.h"
 
 using std::string;
@@ -29,7 +29,7 @@ public:
 
 	int run(real time, int thread_num);
 	virtual int run(real time, FireInfo &log);
-	virtual int run(real time, FireInfo &log, int thread_num);
+	virtual int run(real time, FireInfo &log, int thread_num, bool gpu);
 
 public:
 	DistriNetwork **_network_data;
@@ -47,7 +47,7 @@ protected:
 struct RunPara {
 	DistriNetwork *_net;
 	CrossMap *_cm;
-	CrossSpike **_cs;
+	ProcBuf *_pbuf;
 	int _thread_id;
 };
 
@@ -57,6 +57,7 @@ struct RunPara {
 extern pthread_barrier_t g_proc_barrier;
 
 void * run_thread_ml(void *para);
+void * run_gpu_ml(void *para);
 
 #define ASYNC
 
