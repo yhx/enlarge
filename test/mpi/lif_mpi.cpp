@@ -22,7 +22,7 @@ int main(int argc, char **argv)
 	// 	load = true;
 	// }
 
-	const int N = 500;
+	const int N = 5;
 
 	real dt = 1.0e-4;
 	Network c(dt);

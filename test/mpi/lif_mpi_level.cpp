@@ -67,7 +67,7 @@ int main(int argc, char **argv)
 	}
 
 	MLSim ml(&c, dt);
-	ml.run(0.1, 1);
+	ml.run(0.1, 2);
 
 	return 0;
 } 

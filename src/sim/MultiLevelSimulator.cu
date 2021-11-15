@@ -135,7 +135,7 @@ void * run_gpu_ml(void *para) {
 		t2 = MPI_Wtime();
 		comp_time += t2-t1;
 #endif
-	    pbuf->fetch_gpu(thread_id, cm, g_buffer->_fire_table, g_buffer->_fired_sizes, g_buffer->_fire_table_cap, proc_num, max_delay, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
+	    pbuf->fetch_gpu(thread_id, cm, g_buffer->_fire_table, g_buffer->_fired_sizes, g_buffer->_fire_table_cap, max_delay, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
 
 		// checkCudaErrors(cudaMemcpy(gCrossDataGPU->_firedNum + network->_nodeIdx * proc_num, c_g_fired_n_num, sizeof(int)*proc_num, cudaMemcpyDeviceToHost));
 		pbuf->update_gpu(thread_id, time, &g_proc_barrier);
