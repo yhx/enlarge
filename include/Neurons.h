@@ -8,6 +8,7 @@
 // #include "../src/neuron/constant/ConstantNeuron.h"
 // #include "../src/neuron/array/ArrayNeuron.h"
 #include "../src/neuron/lif/LIFNeuron.h"
+#include "../src/neuron/iaf/IAFNeuron.h"
 
 // #include "../src/neuron/mem/MemNeuron.h"
 
@@ -23,6 +24,7 @@
 // #include "../src/neuron/constant/GConstantNeurons.h"
 // #include "../src/neuron/array/GArrayNeurons.h"
 #include "../src/neuron/lif/LIFData.h"
+#include "../src/neuron/iaf/IAFData.h"
 
 // #include "../src/neuron/mem/GMemNeurons.h"
 // #include "../src/neuron/poisson/GPoissonNeurons.h"
