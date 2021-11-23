@@ -98,7 +98,6 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 		copy_idx = life_idx;
 	}
 
-	COPYFROMGPU(buffer._data, g_buffer->_data, buffer._data_size);
 #endif
 
 	for (int i=0; i<nTypeNum; i++) {
@@ -150,6 +149,10 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 		t1 = MPI_Wtime();
 #endif
 		update_time<<<1, 1>>>(g_buffer->_fired_sizes, maxDelay, time);
+
+#ifdef LOG_DATA
+		COPYFROMGPU(buffer._data, g_buffer->_data, buffer._data_size);
+#endif
 
 		for (int i=0; i<nTypeNum; i++) {
 			assert(c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i] > 0);
