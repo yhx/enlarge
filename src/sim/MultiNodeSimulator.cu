@@ -97,6 +97,8 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 		c_g_vm = c_g_iaf->pV_m;
 		copy_idx = life_idx;
 	}
+
+	COPYFROMGPU(buffer._data, g_buffer->_data, buffer._data_size);
 #endif
 
 	for (int i=0; i<nTypeNum; i++) {
@@ -297,6 +299,8 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 			fprintf(v_file, "%.10lf ", c_vm[i]);
 		}
 		fprintf(v_file, "\n");
+
+		log_array(input_e_file, buffer._data, buffer._data_size);
 #endif
 	}
 	te = MPI_Wtime();
