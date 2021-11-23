@@ -71,5 +71,7 @@ int add##name##Connection(void *pCpu, int *pSynapsesDst) \
 		free(mem_t); \
 	} while(0)
 
+#define INIT_PARAMETER(v, num, p) (v).insert((v).end(), num, p->v[0]);
+
 #endif /* MACROS_H */
 
