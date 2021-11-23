@@ -32,6 +32,16 @@ struct CrossNodeData {
 	// cap _node_num * delay
 	integer_t *_send_num;
 	uinteger_t *_send_data;
+
+	
+#ifdef PROF
+public:
+	double _cpu_wait_gpu;
+	double _gpu_wait;
+	double _gpu_time;
+	double _comm_time;
+	double _cpu_time;
+#endif
 };
 
 void allocParaCND(CrossNodeData *data, int node_num, int delay);

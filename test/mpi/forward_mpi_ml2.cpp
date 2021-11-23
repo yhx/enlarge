@@ -41,8 +41,8 @@ int main(int argc, char **argv)
 		sprintf(name, "%s_%d_%d_%d_%d_%d", "standard_mpi", parts, depth, N, fr, delay_step); 
 	}
 
-	MLSim mn(name, dt);	//gpu
-	mn.run(run_time, 2);	
+	MLSim mn(name, dt, 2);	
+	mn.run(run_time, 2, true);	//gpu
 
 	end=clock(); //time(NULL);
 	printf("exec time=%lf seconds\n",(double)(end-start) / CLOCKS_PER_SEC);

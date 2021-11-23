@@ -31,6 +31,14 @@ CrossNodeData * copyCNDtoGPU(CrossNodeData *data)
 
     gpu->_send_data = gpuMalloc<uinteger_t>(data->_send_offset[num]);
 
+#ifdef PROF
+	gpu->_cpu_wait_gpu = 0;
+	gpu->_gpu_wait = 0;
+	gpu->_gpu_time = 0;
+	gpu->_comm_time = 0;
+	gpu->_cpu_time = 0;
+#endif
+
 	return gpu;
 }
 
@@ -124,8 +132,15 @@ int fetch_cnd_gpu(CrossNodeData *gpu, CrossNodeData *cpu)
 	int num = cpu->_node_num;
 	int size = cpu->_node_num * cpu->_min_delay;
 
+#ifdef PROF
+	double ts = MPI_Wtime();
+#endif
 	checkCudaErrors(cudaMemcpy(cpu->_send_start, gpu->_send_start, sizeof(int)*(size+num), cudaMemcpyDeviceToHost));
 	checkCudaErrors(cudaMemcpy(cpu->_send_data, gpu->_send_data, sizeof(int)*(cpu->_send_offset[num]), cudaMemcpyDeviceToHost));
+#ifdef PROF
+	double te = MPI_Wtime();
+	gpu->_cpu_wait_gpu += te - ts;
+#endif
 
 	return 0;
 }

@@ -16,7 +16,7 @@ using std::string;
 class MultiLevelSimulator : public Simulator {
 public:
 	MultiLevelSimulator(Network *network, real dt);
-	MultiLevelSimulator(const string &path, real dt);
+	MultiLevelSimulator(const string &path, real dt, int thread_num);
 	~MultiLevelSimulator();
 
 	using Simulator::run;
@@ -28,6 +28,7 @@ public:
 	int distribute(SimInfo &, int);
 
 	int run(real time, int thread_num);
+	virtual int run(real time, int thread_num, bool gpu);
 	virtual int run(real time, FireInfo &log);
 	virtual int run(real time, FireInfo &log, int thread_num, bool gpu);
 

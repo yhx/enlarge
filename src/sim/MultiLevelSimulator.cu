@@ -31,9 +31,9 @@ void * run_gpu_ml(void *para) {
 	int thread_id = tmp->_thread_id;
 	// print_mem("Inside Run");
 
+#ifdef LOG_DATA
 	FILE *v_file = log_file_mpi("v", network->_nodeIdx);
 	FILE *sim_file = log_file_mpi("sim", network->_nodeIdx);
-#ifdef LOG_DATA
 	FILE *msg_file = log_file_mpi("msg", network->_nodeIdx);
 	FILE *send_file = log_file_mpi("send", network->_nodeIdx);
 	FILE *recv_file = log_file_mpi("recv", network->_nodeIdx);
@@ -50,7 +50,7 @@ void * run_gpu_ml(void *para) {
 	// print_mem("Copied Network");
 
 	cm->to_gpu();
-	pbuf->to_gpu();
+	pbuf->to_gpu(thread_id);
 	// print_mem("Copied CND");
 
 	int nTypeNum = pNetCPU->nTypeNum;
@@ -132,13 +132,14 @@ void * run_gpu_ml(void *para) {
 		}
 
 #ifdef PROF
+		// cudaDeviceSynchronize();
 		t2 = MPI_Wtime();
 		comp_time += t2-t1;
 #endif
 	    pbuf->fetch_gpu(thread_id, cm, g_buffer->_fire_table, g_buffer->_fired_sizes, g_buffer->_fire_table_cap, max_delay, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
 
 		// checkCudaErrors(cudaMemcpy(gCrossDataGPU->_firedNum + network->_nodeIdx * proc_num, c_g_fired_n_num, sizeof(int)*proc_num, cudaMemcpyDeviceToHost));
-		pbuf->update_gpu(thread_id, time, &g_proc_barrier);
+		pbuf->update_gpu(thread_id, time);
 
 #ifdef PROF
 		int curr_delay = time % pbuf->_min_delay;
@@ -173,18 +174,19 @@ void * run_gpu_ml(void *para) {
 		}
 
 #ifdef PROF
-		cudaDeviceSynchronize();
+		// cudaDeviceSynchronize();
 		t4 = MPI_Wtime();
 		comp_time += t4 - t6;
 #endif
 
 #ifdef LOG_DATA
 		// cs[thread_id]->log_gpu(time, (string("proc_") + std::to_string(network->_nodeIdx)).c_str());
+		pbuf->log_cpu(thread_id, time, "ml");
 #endif
 		pbuf->upload_gpu(thread_id, g_buffer->_fire_table, g_buffer->_fired_sizes, buffer._fired_sizes, g_buffer->_fire_table_cap, max_delay, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
 
 #ifdef PROF
-		cudaDeviceSynchronize();
+		// cudaDeviceSynchronize();
 		t5 = MPI_Wtime();
 		comm_time += t5 - t4;
 #endif
@@ -201,17 +203,21 @@ void * run_gpu_ml(void *para) {
 			fprintf(sim_file, "%d ", buffer._fire_table[i]);
 		}
 		fprintf(sim_file, "\n");
+		fflush(sim_file);
 
 		for (int i=0; i<c_pNetGPU->pNeuronNums[copy_idx+1] - c_pNetGPU->pNeuronNums[copy_idx]; i++) {
 			fprintf(v_file, "%.10lf ", c_vm[i]);
 		}
 		fprintf(v_file, "\n");
+		fflush(v_file);
 #endif
 	}
 	te = MPI_Wtime();
 	printf("Thread %d Simulation finesed in %lfs\n", network->_nodeIdx, te-ts);
 #ifdef PROF
 	printf("Thread %d Simulation perf %lf:%lf:%lf\n", network->_nodeIdx, comp_time, comm_time, sync_time);
+
+	pbuf->prof();
 
 	string send;
 	string recv;
@@ -235,8 +241,10 @@ void * run_gpu_ml(void *para) {
 		cudaLogRateNeuron[pNetCPU->pNTypes[i]](pNetCPU->ppNeurons[i], c_pNetGPU->ppNeurons[i],  name);
 	}
 
+#ifdef LOG_DATA
 	fclose(sim_file);
 	fclose(v_file);
+#endif
 
 	// free_buffers(buffers);
 	freeGNetworkGPU(c_pNetGPU);
