@@ -39,7 +39,7 @@ MultiLevelSimulator::MultiLevelSimulator(Network *network, real dt) : Simulator(
 	_thread_num = 0;
 }
 
-MultiLevelSimulator::MultiLevelSimulator(const string &path, real dt) : Simulator(NULL, dt)
+MultiLevelSimulator::MultiLevelSimulator(const string &path, real dt, int thread_num) : Simulator(NULL, dt)
 {
 	_all_nets = NULL;
 	_all_datas = NULL;
@@ -52,6 +52,7 @@ MultiLevelSimulator::MultiLevelSimulator(const string &path, real dt) : Simulato
 	MPI_Get_processor_name(processor_name, &name_len);
 	printf("Processor %s, rank %d out of %d processors\n", processor_name, _proc_id, _proc_num);
 	printf("Data %s/%d\n", path.c_str(), _proc_id);
+	_thread_num = thread_num;
 	// to_attach();
 	load_net(path);
 }
@@ -70,6 +71,13 @@ int MultiLevelSimulator::run(real time, int thread_num)
 {
 	FireInfo log;
 	run(time, log, thread_num, false);
+	return 0;
+}
+
+int MultiLevelSimulator::run(real time, int thread_num, bool gpu)
+{
+	FireInfo log;
+	run(time, log, thread_num, gpu);
 	return 0;
 }
 
@@ -273,7 +281,7 @@ int MultiLevelSimulator::run(real time, FireInfo &log, int thread_num, bool gpu)
 	pthread_t *thread_ids = malloc_c<pthread_t>(thread_num);
 	assert(thread_ids != NULL);
 
-	ProcBuf pbuf(cs, _proc_id, _proc_num, _thread_num, cs[0]->_min_delay);
+	ProcBuf pbuf(cs, &g_proc_barrier, _proc_id, _proc_num, _thread_num, cs[0]->_min_delay);
 
 	RunPara *paras = malloc_c<RunPara>(thread_num);
 
@@ -396,7 +404,7 @@ void * run_thread_ml(void *para) {
 
 		pbuf->fetch_cpu(thread_id, cm, buffer._fire_table, buffer._fired_sizes, buffer._fire_table_cap, max_delay, time);
 
-		pbuf->update_cpu(thread_id, time, &g_proc_barrier);
+		pbuf->update_cpu(thread_id, time);
 
 #endif
 #ifdef PROF

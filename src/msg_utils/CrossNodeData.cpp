@@ -32,6 +32,14 @@ void allocParaCND(CrossNodeData *data, int node_num, int delay)
 	data->_send_data = NULL;
 
 	resetCND(data);
+
+#ifdef PROF
+	data->_cpu_wait_gpu = 0;
+	data->_gpu_wait = 0;
+	data->_gpu_time = 0;
+	data->_comm_time = 0;
+	data->_cpu_time = 0;
+#endif
 }
 
 void resetCND(CrossNodeData *data)
@@ -214,6 +222,9 @@ int generateCND(integer_t *idx2index, integer_t *crossnode_index2idx, CrossNodeD
 
 int msg_cnd(CrossNodeData *cnd, MPI_Request *request)
 {
+#ifdef PROF
+	double ts = MPI_Wtime();
+#endif
 	int node_num = cnd->_node_num;
 	int delay = cnd->_min_delay;
 	for (int i=0; i<node_num; i++) {
@@ -231,6 +242,10 @@ int msg_cnd(CrossNodeData *cnd, MPI_Request *request)
 	for (int i=0; i<node_num; i++) {
 		cnd->_recv_num[i] = cnd->_recv_start[i*(delay+1)+delay];
 	}
+#ifdef PROF
+	double te = MPI_Wtime();
+	cnd->_cpu_time += te - ts;
+#endif
 
 #ifdef ASYNC
 	int ret = MPI_Ialltoallv(cnd->_send_data, cnd->_send_num, cnd->_send_offset , MPI_UINTEGER_T, cnd->_recv_data, cnd->_recv_num, cnd->_recv_offset, MPI_UINTEGER_T, MPI_COMM_WORLD, request);
