@@ -5,9 +5,14 @@
 
 using namespace std;
 
-const char *FILE_NETWORK = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.network_0.2";         // 存储网络结构的文件
-const char *FILE_WEIGHT = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.weight_0.2";           // 存储网络权重的文件
-const char *FILE_POISSON = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.poisson_weight_0.2";  // 存储poisson分布的文件
+const char *FILE_NETWORK = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.network_0.2_0.117";         // 存储网络结构的文件
+const char *FILE_WEIGHT = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.weight_merge_0.2_0.117";
+const char *FILE_POISSON = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.poisson_weight_0.2_0.117";  // 存储poisson分布的文件
+
+// const char *FILE_NETWORK = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.network_0.01";         // 存储网络结构的文件
+// const char *FILE_WEIGHT = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.weight_merge_0.01";
+// const char *FILE_POISSON = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.poisson_weight_0.01";  // 存储poisson分布的文件
+
 const real dt=1e-4;
 
 void build_population(Network &net, Population **pop, const int pop_num, const int *pop_neuron_num) {
@@ -28,7 +33,8 @@ void connect_network(Network &net, Population **pop) {
     real w, d;
     // real max_delay = 0;
     // int test = 0;
-    while(f_weight >> s_id >> t_id >> s_num >> t_num >> syn_num) {
+    // while(f_weight >> s_id >> t_id >> s_num >> t_num >> syn_num) {
+    while(f_weight >> s_id >> t_id >> syn_num) {
         // cout << "syn_num: " << syn_num << endl;
         if (syn_num == 0) {
             continue;
@@ -75,13 +81,15 @@ void connect_network(Network &net, Population **pop) {
 void connect_poisson_generator(Network &net, Population **pop, const int pop_num, const int *pop_neuron_num) {
     ifstream f_poisson(FILE_POISSON, ios::in);
     real poisson_mean, poisson_weight;
+    string pop_name;
     for (int i = 0; i < pop_num; ++i) {
         // if (i >= 3) {
         //     break;
         // }
-        f_poisson >> poisson_mean >> poisson_weight;
+        f_poisson >> pop_name >> poisson_mean >> poisson_weight;
         // should compute poisson mean in each dt! so, it should time dt.
-        real *poisson_means = getConstArray((real)(poisson_mean / 10), pop_neuron_num[i]);
+        real *poisson_means = getConstArray((real)(poisson_mean * dt), pop_neuron_num[i]);
+        // real *poisson_means = getConstArray((real)(poisson_mean / 30000), pop_neuron_num[i]);
         real *poisson_weights = getConstArray((real)(poisson_weight), pop_neuron_num[i]);
         real *delay = getConstArray(dt, pop_neuron_num[i]); 
         net.connect_poisson_generator(pop[i], poisson_means, poisson_weights, delay, NULL);
@@ -136,7 +144,7 @@ int main(int argc, char **argv) {
     if (node_id == 0) {
         int parts = 16;
         SplitType split = SynapseBalance;
-        const char * name = "multi_area_model";
+        const char * name = "multi_area_model_2_117_30000";
         mn.build_net(parts, split, name);
         mn.save_net(name);
     }

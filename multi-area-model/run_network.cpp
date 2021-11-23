@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &node_id);
 
     const real run_time = .1;
-    const char * name = "multi_area_model";
+    const char * name = "multi_area_model_2_117_30000";
     MNSim mn(name, dt);	//gpu
 	mn.run(run_time, 1);	
     
