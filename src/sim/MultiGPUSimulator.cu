@@ -15,6 +15,7 @@
 //#include "../gpu_utils/GBuffers.h"
 #include "../net/Network.h"
 #include "../neuron/lif/LIFData.h"
+#include "../neuron/iaf/IAFData.h"
 
 #include "MultiGPUSimulator.h"
 
@@ -146,6 +147,10 @@ void * run_thread_gpu(void *para) {
 		c_g_vm = c_g_lif->pV_m;
 		copy_idx = life_idx;
 	} else {
+		int life_idx = getIndex(c_pNetGPU->pNTypes, nTypeNum, IAF);
+		IAFData *c_g_iaf = FROMGPU(static_cast<IAFData *>(c_pNetGPU->ppNeurons[life_idx]), 1);
+		c_g_vm = c_g_iaf->pV_m;
+		copy_idx = life_idx;
 	}
 #endif
 

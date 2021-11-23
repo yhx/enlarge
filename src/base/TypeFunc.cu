@@ -6,35 +6,48 @@
 #include "../base/TypeFunc.h"
 
 #include "../neuron/lif/LIFData.h"
+#include "../neuron/iaf/IAFData.h"
 #include "../synapse/static/StaticData.h"
 #include "../synapse/poisson/PoissonData.h"
 
 void *(*cudaAllocType[])(void *pCPU, size_t num) = {
 	cudaAllocLIF,
+	cudaAllocIAF,
 	cudaAllocStatic,
 	cudaAllocPoisson
 };
 
 int (*cudaFetchType[])(void *pCPU, void *pGPU, size_t num) = {
 	cudaFetchLIF,
+	cudaFetchIAF,
 	cudaFetchStatic,
 	cudaFetchPoisson
 };
 
 int (*cudaFreeType[])(void *) = {
 	cudaFreeLIF,
+	cudaFreeIAF,
 	cudaFreeStatic,
 	cudaFreePoisson
 };
 
 void (*cudaUpdateType[])(Connection *, void *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int, BlockSize *) = {
 	cudaUpdateLIF,
+	cudaUpdateIAF,
 	cudaUpdateStatic,
 	cudaUpdatePoisson
 };
 
 int (*cudaLogRateNeuron[])(void *cpu, void *gpu, const char *name) = {
 	cudaLogRateLIF,
+	cudaLogRateIAF,
+	NULL,
+	NULL
+};
+
+real * (*cudaGetVNeuron[])(void *data) = {
+	cudaGetVLIF,
+	cudaGetVIAF,
 	NULL,
 	NULL
 };

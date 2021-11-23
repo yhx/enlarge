@@ -11,6 +11,7 @@
 #include "../base/TypeFunc.h"
 #include "../net/Network.h"
 #include "../neuron/lif/LIFData.h"
+#include "../neuron/iaf/IAFData.h"
 #include "../../msg_utils/helper/helper_c.h"
 #include "../../msg_utils/helper/helper_gpu.h"
 #include "../../msg_utils/msg_utils/msg_utils.h"
@@ -42,6 +43,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 
 	GNetwork *pNetCPU = network->_network;
 	print_gmem("Before using GPU");
+	std::cout << "BBefore using GPU" << std::endl;
 	GNetwork *c_pNetGPU = copyGNetworkToGPU(pNetCPU);
 	// print_mem("Copied Network");
 
@@ -79,12 +81,21 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 	int life_idx = getIndex(c_pNetGPU->pNTypes, nTypeNum, LIF);
 	int copy_idx = -1;
 	real *c_g_vm = NULL;
-
-	if (life_idx >= 0) {
+	// std::cout << "life_idx: " << life_idx << std::endl;
+	if (life_idx >= 0) {  // 如果有当前类型的神经元
 		LIFData *c_g_lif = FROMGPU(static_cast<LIFData *>(c_pNetGPU->ppNeurons[life_idx]), 1);
 		c_g_vm = c_g_lif->pV_m;
 		copy_idx = life_idx;
-	} else {
+		// for (size_t i = 0; i < nTypeNum; ++i) {
+		// 	c_g_vm = cudaGetVNeuron[pNetCPU->pNTypes[i]](c_pNetGPU->ppNeurons[i]);
+		// 	copy_idx = i;
+		// }
+	} else {  // 如果没有当前类型的神经元，即为IAF类型的神经元 
+		// TODO: 将其改为函数指针的实现方式
+		life_idx = getIndex(c_pNetGPU->pNTypes, nTypeNum, IAF);
+		IAFData *c_g_iaf = FROMGPU(static_cast<IAFData *>(c_pNetGPU->ppNeurons[life_idx]), 1);
+		c_g_vm = c_g_iaf->pV_m;
+		copy_idx = life_idx;
 	}
 #endif
 
@@ -105,12 +116,15 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 	// int * c_g_fired_n_num = gpuMalloc<int>(node_num);
 
 	vector<int> firedInfo;
-	double ts, te;
-	ts = MPI_Wtime();
+	// double ts, te;
+	// ts = MPI_Wtime();
 
 #ifdef PROF
 	double t1, t2, t3, t4, t5, t6;
 	double comp_time = 0, comm_time = 0, sync_time = 0, comm_time2 = 0, gpu_time = 0, gpu_wait = 0;
+	double *t_neuron, *t_synapse;
+	t_neuron = malloc_c<double>(pNetCPU->nTypeNum);
+	t_synapse = malloc_c<double>(pNetCPU->sTypeNum);
 	int *send_count = (int *)malloc(node_num * sizeof(int));
 	int *recv_count = (int *)malloc(node_num * sizeof(int));
 	memset(send_count, 0, node_num * sizeof(int));
@@ -121,16 +135,31 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 
 	to_attach();
 	printf("Start runing for %d cycles\n", network->_simCycle);
+	
+	MPI_Barrier(MPI_COMM_WORLD);
+	double ts, te;
+	ts = MPI_Wtime();
 
 	for (int time=0; time<network->_simCycle; time++) {
 #ifdef PROF
+		if (network->_nodeIdx == 0 && time % 100 == 1) {
+			printf("%d\n", time);
+		}
 		t1 = MPI_Wtime();
 #endif
 		update_time<<<1, 1>>>(g_buffer->_fired_sizes, maxDelay, time);
 
 		for (int i=0; i<nTypeNum; i++) {
 			assert(c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i] > 0);
+#ifdef PROF
+			tss = MPI_Wtime();
+#endif
 			cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->ppConnections[i], c_pNetGPU->ppNeurons[i], g_buffer->_data, g_buffer->_fire_table, g_buffer->_fired_sizes, allNeuronNum, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i], time, &updateSize[c_pNetGPU->pNTypes[i]]);
+#ifdef PROF
+			cudaDeviceSynchronize();
+			tee = MPI_Wtime();
+			t_neuron[i] += tee - tss;
+#endif
 		}
 
 #ifdef PROF
@@ -177,7 +206,15 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 
 		for (int i=0; i<sTypeNum; i++) {
 			assert(c_pNetGPU->pSynapseNums[i+1]-c_pNetGPU->pSynapseNums[i] > 0);
+#ifdef PROF
+			tss = MPI_Wtime();
+#endif
 			cudaUpdateType[c_pNetGPU->pSTypes[i]](c_pNetGPU->ppConnections[i], c_pNetGPU->ppSynapses[i], g_buffer->_data, g_buffer->_fire_table, g_buffer->_fired_sizes, allNeuronNum, c_pNetGPU->pSynapseNums[i+1]-c_pNetGPU->pSynapseNums[i], c_pNetGPU->pSynapseNums[i], time, &updateSize[c_pNetGPU->pSTypes[i]]);
+#ifdef PROF
+			cudaDeviceSynchronize();
+			tee = MPI_Wtime();
+			t_synapse[i] += tee - tss;
+#endif
 		}
 
 #ifdef PROF
@@ -207,9 +244,6 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 			t_te = MPI_Wtime();
 			gpu_wait += t_te - t_ts;
 #endif
-
-			//int delay_idx = time % (maxDelay + 1);
-
 
 #ifdef PROF
 			t_ts = MPI_Wtime();
@@ -284,6 +318,18 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 
 	printf("Thread %d Data Send:%s\n", network->_nodeIdx, send.c_str());
 	printf("Thread %d Data Recv:%s\n", network->_nodeIdx, recv.c_str());
+	if (network->_nodeIdx == 0) {
+		printf("neuron time: \n");
+		for (int i = 0; i < pNetCPU->nTypeNum; ++i) {
+			printf("%d %lf ", pNetCPU->pNTypes[i], t_neuron[i]);
+		}
+		printf("\n");
+		printf("synapse time: \n");
+		for (int i = 0; i < pNetCPU->sTypeNum; ++i) {
+			printf("%d %lf ", pNetCPU->pSTypes[i], t_synapse[i]);
+		}
+		printf("\n");
+	}
 #endif
 
 	char name[512];

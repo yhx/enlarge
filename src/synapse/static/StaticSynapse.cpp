@@ -64,6 +64,21 @@ StaticSynapse::StaticSynapse(const real *weight, const real *delay, const real t
 	assert(_num == _weight.size());
 }
 
+StaticSynapse::StaticSynapse(const real *weight, const real *delay, real dt, size_t num)
+	: Synapse(Static, num)
+{
+	_weight.resize(num);
+	_delay.resize(num);
+
+	for (size_t i = 0; i < num; i++) {
+		int delay_steps = static_cast<int>(round(delay[i]/dt));
+		_weight[i] = weight[i];
+		_delay[i] = delay_steps;
+	}
+
+	assert(_num == _weight.size());
+}
+
 StaticSynapse::StaticSynapse(const StaticSynapse &s, size_t num) : Synapse(Static, 0)
 {
 	append(dynamic_cast<const Synapse *>(&s), num);

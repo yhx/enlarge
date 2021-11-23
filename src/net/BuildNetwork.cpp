@@ -24,6 +24,7 @@ void Network::update_status()
 	_max_delay = 0;
 	_min_delay = INT_MAX;
 	_synapse_num = 0;
+	cout << "_synpase: " << _synapses.size() << endl;
 	for (auto iter=_synapses.begin(); iter!=_synapses.end(); iter++) {
 		_synapses_offset[iter->first] = _synapse_num;
 		_synapse_num += iter->second->size();

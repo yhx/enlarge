@@ -11,7 +11,7 @@ int main(int argc, char **argv)
     int node_id = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &node_id);
 	
-	const int N = 10;
+	const int N = 100;
     const real dt = 0.5e-4;
     const real run_time = 1000e-3;
 	Network c(dt);
@@ -42,17 +42,22 @@ int main(int argc, char **argv)
         real *delay = getConstArray((real)1e-4, N * N);
 
         const real w = 2.4;
-        real *weight = getConstArray((real)(1e-9) * w / N, N * N);
+        real *weight1 = getConstArray((real)(5e-10) * w / N, N * N);
+        real *weight2 = getConstArray((real)(1e-9) * w / N, N * N);
+        for (int i = 0; i < N * N; ++i) {
+            weight2[i] = (real)(1e-9) * w / N * i / (N * N);
+        }
 
         enum SpikeType type = Inh;
         SpikeType *inh_con = getConstArray(type, N * N);
         real poisson_mean = 4;
         real *p_m = getConstArray(poisson_mean, N);
 
-        c.connect_poisson_generator(g[0], p_m, weight, delay, NULL);
-        c.connect(g[0], g[1], weight, delay, NULL, N * N);
+        c.connect_poisson_generator(g[0], p_m, weight1, delay, NULL);
+        c.connect(g[0], g[1], weight2, delay, NULL, N * N);
 
-        delArray(weight);
+        delArray(weight1);
+        delArray(weight2);
 	    delArray(inh_con);
     }
 

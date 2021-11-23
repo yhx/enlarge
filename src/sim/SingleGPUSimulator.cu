@@ -73,11 +73,18 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 #ifdef LOG_DATA
 	real *c_vm = hostMalloc<real>(totalNeuronNum);
 
-	int copy_idx = getIndex(c_pNetGPU->pNTypes, nTypeNum, LIF);
+	// int copy_idx = getIndex(c_pNetGPU->pNTypes, nTypeNum, LIF);
 
-	LIFData *c_g_lif = FROMGPU(static_cast<LIFData *>(c_pNetGPU->ppNeurons[copy_idx]), 1);
+	// LIFData *c_g_lif = FROMGPU(static_cast<LIFData *>(c_pNetGPU->ppNeurons[copy_idx]), 1);
 
-	real *c_g_vm = c_g_lif->pV_m;
+	// real *c_g_vm = c_g_lif->pV_m;
+
+	// for (size_t i = 0; i < nTypeNum; i++) {
+	// 	real *c_g_vm = cudaGetVNeuron[pNetCPU->pNTypes[i]](c_pNetGPU->ppNeurons[i]);
+	// 	COPYFROMGPU(c_vm, c_g_vm, c_pNetGPU->pNeuronNums[i+1] - c_pNetGPU->pNeuronNums[i]);
+	// 	log_array(v_file, c_vm, pNetCPU->pNeuronNums[i+1] - pNetCPU->pNeuronNums[i]);
+	// }
+
 #ifdef DEBUG 
 	// real *c_g_ie = c_g_lif->pI_e;
 	// real *c_g_ii = c_g_lif->pI_i;
@@ -131,9 +138,14 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 		COPYFROMGPU(&copySize, g_buffer->_fired_sizes + currentIdx, 1);
 		assert(copySize <= totalNeuronNum); 
 		COPYFROMGPU(buffer._fire_table, g_buffer->_fire_table + (totalNeuronNum*currentIdx), copySize);
-
-		COPYFROMGPU(c_vm, c_g_vm, c_pNetGPU->pNeuronNums[copy_idx+1]-c_pNetGPU->pNeuronNums[copy_idx]);
-		log_array(v_file, c_vm, pNetCPU->pNeuronNums[copy_idx+1] - pNetCPU->pNeuronNums[copy_idx]);
+		
+		for (size_t i = 0; i < nTypeNum; i++) {
+			real *c_g_vm = cudaGetVNeuron[pNetCPU->pNTypes[i]](c_pNetGPU->ppNeurons[i]);
+			COPYFROMGPU(c_vm, c_g_vm, c_pNetGPU->pNeuronNums[i+1] - c_pNetGPU->pNeuronNums[i]);
+			log_array(v_file, c_vm, pNetCPU->pNeuronNums[i+1] - pNetCPU->pNeuronNums[i]);
+		}
+		// COPYFROMGPU(c_vm, c_g_vm, c_pNetGPU->pNeuronNums[copy_idx+1]-c_pNetGPU->pNeuronNums[copy_idx]);
+		// log_array(v_file, c_vm, pNetCPU->pNeuronNums[copy_idx+1] - pNetCPU->pNeuronNums[copy_idx]);
 
 		log_array(log_file, buffer._fire_table, copySize);
 

@@ -18,8 +18,10 @@ void updateStatic(Connection *connection, void *_data, real *buffer, uinteger_t 
 
 		for (size_t i = 0; i < firedSize; i++) {
 		    size_t nid = firedTable[time_idx*firedTableCap + i];  				// 获取当前发放的神经元的neuron id即nid
-			size_t startLoc = access_(connection->pDelayStart, delta_t, nid);  	// 获取nid神经元连接突触的sid的最小值，它们都是连续存储的，可以通过startLoc+j来访问
-			size_t synapseNum = access_(connection->pDelayNum, delta_t, nid);	// 获取nid神经元的突触数量
+			// size_t startLoc = access_(connection->pDelayStart, delta_t, nid);  	// 获取nid神经元连接突触的sid的最小值，它们都是连续存储的，可以通过startLoc+j来访问
+			// size_t synapseNum = access_(connection->pDelayNum, delta_t, nid);	// 获取nid神经元的突触数量
+			size_t startLoc = access_connection_(connection->pDelayStart, delta_t, connection->nNum, nid);
+			size_t synapseNum = access_connection_(connection->pDelayNum, delta_t, connection->nNum, nid);
 			// size_t startLoc = connection->pDelayStart[delta_t + nid * delayLength];
 			// size_t synapseNum = connection->pDelayNum[delta_t + nid * delayLength];
 			for (size_t j = 0; j < synapseNum; j++) {							

@@ -245,6 +245,50 @@ int Network::connect(Population *p_src, Population *p_dst, real *weight, real *d
 	return count;
 }
 
+int Network::connect(Population *p_src, Population *p_dst, int *idx_src, int *idx_dst, int synapse_num, real *weight, real *delay, SpikeType *sp) {
+	/**
+	 * 用于指定源神经元和目的神经元来连接突触的情况
+	 * idx_src: 源神经元id数组
+	 * idx_dst: 目的神经元id数组
+	 */
+	// std::cout << "CONNECT!" << std::endl;
+	size_t src_size = p_src->size();
+	size_t dst_size = p_dst->size();
+	// std::cout << "size:" << src_size << " " << dst_size << std::endl;
+	size_t size = synapse_num; 			// 突触数量
+
+	Type type = Static;
+	size_t offset = 0;
+	if (_synapses.find(type) == _synapses.end()) {
+		_synapses[type] = new StaticSynapse(weight, delay, _dt, size);
+	} else {
+		offset = _synapses[type]->size();
+		StaticSynapse t(weight, delay, _dt, size);
+		_synapses[type]->append(&t, size);
+	}
+	add_type_conn(type, size);
+	// std::cout <<"synapse number: " << synapse_num << std::endl;
+	int count = 0;
+	for (int i = 0; i < synapse_num; ++i) {
+		// std::cout << i << std::endl;
+		size_t s = idx_src[i];
+		size_t d = idx_dst[i];
+		// std::cout << s << " " << d << std::endl;
+		size_t s_offset = offset + i;
+		// std::cout << s_offset << std::endl;
+		SpikeType sp_t = sp ? sp[i] : Exc;				// 默认参数
+		assert(s >= 0 and s < src_size);
+		assert(d >= 0 and d < dst_size);
+		connect_(ID(p_src->type(), 0, p_src->offset()+s), 
+				ID(p_dst->type(), sp_t, p_dst->offset()+d),
+				ID(type, 0, s_offset),
+				int(delay[i] / _dt));
+		++count;
+	}
+
+	return count;
+}
+
 int Network::connect(Population *p_src, size_t src, Population *p_dst, size_t dst, real weight, real delay, real tau, SpikeType sp) 
 {
 	Type type = Static;
@@ -270,6 +314,7 @@ int Network::connect(Population *p_src, size_t src, Population *p_dst, size_t ds
 int Network::connect_poisson_generator_(ID dst, ID syn, unsigned int delay)
 {
 	_conn_s2n[syn.type()][syn.id()] = dst;
+	_conn_sd2n[syn.type()][delay].push_back(pair<int, ID>(syn.id(), dst));
 	// _poisson_synapse2delay[syn.id()] = delay;
 	// _poisson_synapse2delay.push_back(pair<ID, unsigned int>(syn, delay));
 	return 1;

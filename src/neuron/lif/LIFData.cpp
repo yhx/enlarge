@@ -242,3 +242,8 @@ int logRateLIF(void *data, const char *name)
 	fclose_c(f);
 	return 0;
 }
+
+real * getVLIF(void *data) {
+	LIFData * p = static_cast<LIFData *>(data);
+	return p->pV_m;
+}

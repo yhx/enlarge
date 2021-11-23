@@ -19,56 +19,51 @@ int main(int argc, char **argv)
 	const int depth = atoi(argv[1]);  // 网络深度  
 	const int N = atoi(argv[2]);  // 每层神经元的数量
 
-	// parameter for LIF model
-	const real fthreshold = -54e-3;
-	const real freset = -60e-3;
-	const real c_m = 0.2e-9;	   //*nF
-	const real v_rest = -74e-3;	   //*mV
-	const real tau_syn_e = 2e-3;   //*ms
-	const real tau_syn_i = 0.6e-3; //*ms
-
-	//# 论文没有这些参数
-	const real tau_m = 10e-3;	//*ms
-	const real i_offset = 4.6e-10; //*nA
-    const real i_offset2 = 4.6e-10; //*nA
-	const real frefractory = 0;
-	const real fv = -74e-3;
-
-	const real run_time = 1000e-3;
-	const real dt = 0.5e-4;
+	const real run_time = 1.0;
+	const real dt = 1e-4;
 	Network c(dt);
 
 	Population *g[depth + 1];
 
     const int diff_num = 5000;
 	// input
-	g[1] = c.createPopulation(1, N, LIFNeuron(fv, v_rest, freset, c_m, tau_m, frefractory, tau_syn_e, tau_syn_i, fthreshold, i_offset, dt));
+	// g[1] = c.createPopulation(1, N, LIFNeuron(fv, v_rest, freset, c_m, tau_m, frefractory, tau_syn_e, tau_syn_i, fthreshold, i_offset, dt));
+	g[1] = c.createPopulation(1, N, IAFNeuron(dt, 1, 10.0, 250.0, 2e-3, -70.0, 376.0, 
+            -55.0, -70.0, 2.0, 2.0, 0.01,
+			0.0, -68.56875477, 0.0, 0.0, 0.0, 0.0));
 
 	for (int i = 2; i <= depth; i++) {
         if (i % 4 == 1) {
-            g[i] = c.createPopulation(i, N, LIFNeuron(fv, v_rest, freset, c_m, tau_m, frefractory,
-			    tau_syn_e, tau_syn_i, fthreshold, i_offset2, dt));
+            // g[i] = c.createPopulation(i, N, LIFNeuron(fv, v_rest, freset, c_m, tau_m, frefractory,
+			//     tau_syn_e, tau_syn_i, fthreshold, i_offset2, dt));
+			g[i] = c.createPopulation(i, N, IAFNeuron(dt, 1, 10.0, 250.0, 2e-3, -70.0, 376.0, 
+				-55.0, -70.0, 2.0, 2.0, 0.01,
+				0.0, -68.56875477, 0.0, 0.0, 0.0, 0.0));
             // cout << "i: " << i << endl;
         }
         else
-		    g[i] = c.createPopulation(i, N, LIFNeuron(fv, v_rest, freset, c_m, tau_m, frefractory,
-			    tau_syn_e, tau_syn_i, fthreshold, 0, dt));
+		    // g[i] = c.createPopulation(i, N, LIFNeuron(fv, v_rest, freset, c_m, tau_m, frefractory,
+			//     tau_syn_e, tau_syn_i, fthreshold, 0, dt));
+			g[i] = c.createPopulation(1, N, IAFNeuron(dt, 1, 10.0, 250.0, 2e-3, -70.0, 376.0, 
+				-55.0, -70.0, 2.0, 2.0, 0.01,
+				0.0, -68.56875477, 0.0, 0.0, 0.0, 0.0));
     }	
 
-	real *delay = getConstArray((real)1e-4, N * N);
+	real *delay = getConstArray((real)2*dt, N * N);
 
-	const real w1_2 = 2.4;
-	const real w2_3 = 2.4;
-	const real w3_4 = 1.5;
-	const real w4_5 = -0.1;
-	const real w1_4 = 0.85;  // inh
+	const real scale = 1e3;
+	const real w1_2 = 2.4 * scale;
+	const real w2_3 = 2.4 * scale;
+	const real w3_4 = 1.5 * scale;
+	const real w4_5 = -0.1 * scale;
+	const real w1_4 = 0.85 * scale;  // inh
 
-	real *weight1_2 = getConstArray((real)(1e-9) * w1_2 / N, N * N);
-	real *weight2_3 = getConstArray((real)(1e-9) * w2_3 / N, N * N);
-	real *weight3_4 = getConstArray((real)(1e-9) * w3_4 / N, N * N);
-	real *weight4_5 = getConstArray((real)(1e-9) * w4_5 / N, N * N);
+	real *weight1_2 = getConstArray((real)w1_2 / N, N * N);
+	real *weight2_3 = getConstArray((real)w2_3 / N, N * N);
+	real *weight3_4 = getConstArray((real)w3_4 / N, N * N);
+	real *weight4_5 = getConstArray((real)w4_5 / N, N * N);
 
-	real *weight1_4 = getConstArray((real)(1e-9) * w1_4 / N, N * N);
+	real *weight1_4 = getConstArray((real)w1_4 / N, N * N);
 
 	enum SpikeType type = Inh;
 	SpikeType *inh_con = getConstArray(type, N * N);

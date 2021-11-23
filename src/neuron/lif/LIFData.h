@@ -46,6 +46,8 @@ void *loadLIF(size_t num, const string &path);
 bool isEqualLIF(void *p1, void *p2, size_t num, uinteger_t *shuffle1=NULL, uinteger_t *shuffle2=NULL);
 int copyLIF(void *src, size_t s_off, void *dst, size_t d_off);
 int logRateLIF(void *data, const char *name);
+// Type castLIF(void *data);
+real * getVLIF(void *data);
 
 void *cudaMallocLIF();
 void *cudaAllocLIF(void *pCPU, size_t num);
@@ -57,6 +59,7 @@ int cudaLIFParaToGPU(void *pCPU, void *pGPU, size_t num);
 int cudaLIFParaFromGPU(void *pCPU, void *pGPU, size_t num);
 void cudaUpdateLIF(Connection *conn, void *data, real *buffer, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t start_id, int t, BlockSize *pSize);
 int cudaLogRateLIF(void *cpu, void *gpu, const char *name);
+real * cudaGetVLIF(void *data);
 
 int sendLIF(void *data, int dest, int tag, MPI_Comm comm);
 void * recvLIF(int src, int tag, MPI_Comm comm);
