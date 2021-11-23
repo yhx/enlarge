@@ -122,7 +122,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 	// ts = MPI_Wtime();
 
 #ifdef PROF
-	double t1, t2, t3, t4, t5, t6;
+	double t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, tss = 0, tee = 0;
 	double comp_time = 0, comm_time = 0, sync_time = 0, comm_time2 = 0, gpu_time = 0, gpu_wait = 0;
 	double *t_neuron, *t_synapse;
 	t_neuron = malloc_c<double>(pNetCPU->nTypeNum);
