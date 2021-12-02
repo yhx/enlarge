@@ -19,6 +19,7 @@
 #include "../msg_utils/convert.h"
 #include "../net/Network.h"
 #include "../neuron/lif/LIFData.h"
+#include "../neuron/iaf/IAFData.h"
 #include "MultiLevelSimulator.h"
 
 using std::string;
@@ -51,7 +52,7 @@ MultiLevelSimulator::MultiLevelSimulator(const string &path, real dt, int thread
 	int name_len;
 	MPI_Get_processor_name(processor_name, &name_len);
 	printf("Processor %s, rank %d out of %d processors\n", processor_name, _proc_id, _proc_num);
-	printf("Data %s/%d\n", path.c_str(), _proc_id);
+	// printf("Data %s/%d\n", path.c_str(), _proc_id);
 	_thread_num = thread_num;
 	// to_attach();
 	load_net(path);
@@ -164,6 +165,7 @@ int MultiLevelSimulator::load_net(const string &path)
 
 	for (int i=0; i<_thread_num; i++) {
 		string path_i = path + "/" + std::to_string(_proc_id * _thread_num + i);
+		printf("Data %s/%d\n", path.c_str(), _proc_id * _thread_num + i);
 		_network_data[i] = loadDistriNet(path_i);
 		_data[i] = loadCND(path_i);
 	}
@@ -271,7 +273,7 @@ int MultiLevelSimulator::run(real time, FireInfo &log, int thread_num, bool gpu)
 			_network_data[i]->_simCycle = sim_cycle;
 		}
 		cm[i] = convert2crossmap(_network_data[i]->_crossnodeMap);
-	    cs[i] = convert2crossspike(_data[i], _proc_id, _thread_num);
+	    cs[i] = convert2crossspike(_data[i], _proc_id*_thread_num+i, 0);
 	}
 
 	
@@ -284,6 +286,8 @@ int MultiLevelSimulator::run(real time, FireInfo &log, int thread_num, bool gpu)
 	ProcBuf pbuf(cs, &g_proc_barrier, _proc_id, _proc_num, _thread_num, cs[0]->_min_delay);
 
 	RunPara *paras = malloc_c<RunPara>(thread_num);
+
+	printf("Rank %d, launch thread\n", _proc_id);
 
 	for (int i=0; i<thread_num; i++) {
 		paras[i]._net = _network_data[i];
@@ -363,7 +367,8 @@ void * run_thread_ml(void *para) {
 	Buffer buffer(pNetCPU->bufferOffsets[nTypeNum], allNeuronNum, max_delay);
 
 #ifdef LOG_DATA
-	int copy_idx = getIndex(pNetCPU->pNTypes, nTypeNum, LIF);
+	// TODO：change lif to iaf
+	int copy_idx = getIndex(pNetCPU->pNTypes, nTypeNum, IAF);
 #endif
 
 	printf("Start runing for %d cycles\n", network->_simCycle);
@@ -430,7 +435,8 @@ void * run_thread_ml(void *para) {
 #endif
 
 #ifdef LOG_DATA
-		LIFData *c_lif = (LIFData *)pNetCPU->ppNeurons[copy_idx];
+		// TODO: change lif to iaf
+		IAFData *c_lif = (IAFData *)pNetCPU->ppNeurons[copy_idx];
 		real *c_vm = c_lif->pV_m;
 		int copy_size = buffer._fired_sizes[currentIdx];
 
