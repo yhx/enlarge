@@ -9,9 +9,9 @@ int main(int argc, char **argv)
 {
 	MPI_Init(&argc, &argv);
 	int node_id = 0;
-	int parts = 0;
+	int node_num = 0;
 	MPI_Comm_rank(MPI_COMM_WORLD, &node_id);
-	MPI_Comm_size(MPI_COMM_WORLD, &parts);
+	MPI_Comm_size(MPI_COMM_WORLD, &node_num);
 
 	const real dt=1e-4;
 	const real run_time=1000e-3;
@@ -31,6 +31,8 @@ int main(int argc, char **argv)
 	const int delay_step = atoi(argv[4]);
 
 	SplitType split = SynapseBalance;
+
+	int parts = node_num * 2;
 
 	char name[1024];
 

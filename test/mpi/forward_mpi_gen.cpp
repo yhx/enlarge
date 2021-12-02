@@ -99,7 +99,7 @@ int main(int argc, char **argv)
 
 	if (node_id == 0) {
 
-		Population *g[depth+1];
+		Population **g = new Population *[depth+1];
 
 		g[1]=c.createPopulation(1, N, LIFNeuron(
 						fv,v_rest,freset,
