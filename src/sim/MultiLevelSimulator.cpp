@@ -271,7 +271,7 @@ int MultiLevelSimulator::run(real time, FireInfo &log, int thread_num, bool gpu)
 			_network_data[i]->_simCycle = sim_cycle;
 		}
 		cm[i] = convert2crossmap(_network_data[i]->_crossnodeMap);
-	    cs[i] = convert2crossspike(_data[i], _proc_id, _thread_num);
+	    cs[i] = convert2crossspike(_data[i], _proc_id * _thread_num + i, 0);
 	}
 
 	
