@@ -100,7 +100,7 @@ LIST(REMOVE_ITEM GPU_SRC "${AUTO_GPU_SRC}")
 
 FILE(GLOB CPU_TEST "test/cpu/*.cpp" "test/cpu/*.c")
 FILE(GLOB GPU_TEST "test/gpu/*.cpp" "test/gpu/*.c" "test/gpu/*.cu")
-FILE(GLOB MPI_TEST "test/mpi/*.cpp" "test/mpi/*.c" "test/mpi/*.cu")
+FILE(GLOB MPI_TEST "test/mpi/*.cpp" "test/mpi/*.c" "test/mpi/*.cu" "multi-area-model/*.cpp")
 FILE(GLOB UNIT_TEST_CPU "test/unit/*.cpp" "test/unit/*.c")
 FILE(GLOB UNIT_TEST_GPU "test/unit/*.cu")
 FILE(GLOB C_SCRIPTS "script/*.cpp" "script/*.c")
