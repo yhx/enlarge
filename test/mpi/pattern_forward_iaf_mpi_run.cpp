@@ -12,10 +12,25 @@ int main(int argc, char **argv) {
     int node_id = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &node_id);
 
-    const real run_time = 1.0;
-    const char * name = "pattern_forward_iaf_mpi";
-    MNSim mn(name, dt);	//gpu
-	mn.run(run_time, 1);	
+    if (argc != 4)
+	{
+		printf("Need 3 paras. For example\n FR 1%%: %s depth num_neuron run_time\n", argv[0]);
+		return 0;
+	}
+	
+	const int depth = atoi(argv[1]);  // 网络深度  
+	const int N = atoi(argv[2]);  // 每层神经元的数量
+    const real run_time = atoi(argv[3]);  // 运行时间
+
+    string file_name = "pattern_forward_iaf_mpi_" + to_string(depth) + "_" + to_string(N);
+    const char * name = file_name.c_str();
+
+    const int thread_num = 2;
+    MLSim mn(name, dt, thread_num);	//gpu
+	mn.run(run_time, thread_num, 1);	
     
+    // MNSim mn(name, dt);
+    // mn.run(run_time, 1);
+
     return 0;
 }

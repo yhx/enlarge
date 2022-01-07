@@ -11,9 +11,9 @@ int main(int argc, char **argv)
     int node_id = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &node_id);
 
-	if (argc != 4)
+	if (argc != 5)
 	{
-		printf("Need 3 paras. For example\n FR 1%%: %s depth num_neuron parts_num\n", argv[0]);
+		printf("Need 4 paras. For example\n FR 1%%: %s depth num_neuron parts_num delay_num\n", argv[0]);
 		// printf("Need 7 paras. For example\n FR 1%%: %s depth num_neuron 0.7 0.5 0.6 0.3 6\n FR 5%%: %s depth num_neuron 0.7 0.9 0.6 0.2 6\n FR 20%%: %s depth num_neuron 1.3 1 2 1 50\n FR 50%%: %s depth num_neuron 2.7 3 2 1 20\n FR 65%%: %s depth num_neuron 4 2 5 3 20\n", argv[0], argv[0], argv[0], argv[0], argv[0]);
 		return 0;
 	}
@@ -21,6 +21,7 @@ int main(int argc, char **argv)
 	const int depth = atoi(argv[1]);  // 网络深度  
 	const int N = atoi(argv[2]);  // 每层神经元的数量
     const int parts = atoi(argv[3]);  // 划分为几个节点运行程序
+    const int delay_num = atoi(argv[4]);
 
 	const real run_time = 1.0;
 	const real dt = 1e-4;
@@ -47,7 +48,7 @@ int main(int argc, char **argv)
             }
         }	
 
-        real *delay = getConstArray((real)2*dt, N * N);
+        real *delay = getConstArray((real)delay_num*dt, N * N);
 
         const real scale = 1e3;
         const real w1_2 = 2.4 * scale;

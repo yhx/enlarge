@@ -22,14 +22,14 @@ int main(int argc, char **argv)
 	const size_t N = atoi(argv[1]);  // 每层神经元的数量
 
 	const real run_time = 1.0;
-	const real dt = 1e-4;
+	const real dt = 1e-3;
 	Network c(dt);
 
     if (node_id == 0) {
         Population *g[depth + 1];
 
         const int diff_num = 5000;
-        g[1] = c.createPopulation(1, N, IAFNeuron(dt, 1, 10.0, 250.0, 2e-3, -70.0, 376.0, 
+        g[1] = c.createPopulation(1, N, IAFNeuron(dt, 1, 10.0, 250.0, 2e-3, -70.0, 37600.0, 
                 -55.0, -70.0, 2.0, 2.0, 0.01,
                 0.0, -68.56875477, 0.0, 0.0, 0.0, 0.0));
         
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
                 0.0, -68.56875477, 0.0, 0.0, 0.0, 0.0));
 
         real *delay = getConstArray((real)dt, N * N);  
-		for (int i = 0; i < N * N; ++i) {  // delay是0, dt, 2dt, ..., 9dt
+		for (int i = 0; i < N * N; ++i) {  // delay是dt, 2dt, ..., 10dt
 			delay[i] = dt * (i % 10 + 1);
 		}
 
@@ -57,6 +57,9 @@ int main(int argc, char **argv)
         SpikeType *inh_con = getConstArray(type, N * N);
 
         c.connect(g[1], g[2], weight1_2, delay, NULL, N * N);
+        // for (int i = 0; i < N * N; ++i) {  // delay是0, dt, 2dt, ..., 9dt
+		// 	delay[i] = dt * (i % 10 + 1) + dt;
+		// }
         c.connect(g[2], g[3], weight2_3, delay, NULL, N * N);
 
         delArray(weight1_2);
