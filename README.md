@@ -1,4 +1,4 @@
-# BSim
+# ENLARGE
 
 A faster SNN simulator which supports multiple GPGPUs. 
 
