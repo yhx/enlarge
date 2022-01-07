@@ -2,15 +2,17 @@ import json
 import numpy as np
 import sys
 
+downscale_file = "downscale_20_117"
 
-NEURON_FILE = '/archive/share/linhui2/downscale/neuron.log'
-WEIGHT_FILE = '/archive/share/linhui2/downscale/weight_'
-NEURON_RANGE_FILE = '/archive/share/linhui2/downscale/neuron_range_'
+NEURON_FILE = '/archive/share/linhui2/' + downscale_file + '/neuron.log'
+WEIGHT_FILE = '/archive/share/linhui2/' + downscale_file + '/weight_'
+NEURON_RANGE_FILE = '/archive/share/linhui2/' + downscale_file + '/neuron_range_'
 DATA_FILE = '/archive/share/linhui2/multi-area-model/multi-area-model/data/{label}/custom_Data_Model_{network_label}.json'
+POISSON_FILE = '/archive/share/linhui2/' + downscale_file + '/poisson_input_10.log'
 
-NEST_NETWORK_FILE = '/archive/share/linhui/new_bsim/bsim/nest_network/nest.network_0.2'
-NEST_WEIGHT_FILE = '/archive/share/linhui/new_bsim/bsim/nest_network/nest.weight_0.2'
-NEST_POISSON_FILE = '/archive/share/linhui/new_bsim/bsim/nest_network/nest.poisson_weight_0.2'
+NEST_NETWORK_FILE = '/archive/share/linhui/new_bsim/bsim/nest_network/nest.network_0.20_0.117'
+NEST_WEIGHT_FILE = '/archive/share/linhui/new_bsim/bsim/nest_network/nest.weight_0.20_0.117'
+NEST_POISSON_FILE = '/archive/share/linhui/new_bsim/bsim/nest_network/nest.poisson_weight_0.20_0.117'
 
 def read_data(label, network_label):
     '''
@@ -80,10 +82,13 @@ def read_data(label, network_label):
 
     return group_num, neuron_num, w, w_sd, synapse_num, label_list, v_ext, w_ext
 
-def read_poisson_weight(group_num, v_ext, w_ext):
+# def read_poisson_weight(group_num, v_ext, w_ext):
+def read_poisson_weight():
+    with open(POISSON_FILE, 'r') as f:
+        lines = f.readlines()
+        # print(lines)
     with open(NEST_POISSON_FILE, 'w') as f:
-        for i in range(group_num):
-            f.write(str(v_ext[i]) + ' ' + str(w_ext[i]) + '\n')
+        f.writelines(lines)
 
 def read_weight(n, group_num, neuron_num, w, w_sd, synapse_num, label_list, v_ext, w_ext):
     '''
@@ -196,7 +201,8 @@ if __name__ == '__main__':
         print(sys.argv[0] + 'need 3 params: label, network_label, process_number')
     else:
         group_num, neuron_num, w, w_sd, synapse_num, label_list, v_ext, w_ext = read_data(sys.argv[1], sys.argv[2])
-        read_poisson_weight(group_num, v_ext, w_ext)
+        # read_poisson_weight(group_num, v_ext, w_ext)
+        read_poisson_weight()
         # print(group_num, neuron_num, synapse_num)
         # print(v_ext.size, w_ext.size)
         read_weight(int(sys.argv[3]), group_num, neuron_num, w, w_sd, synapse_num, label_list, v_ext, w_ext)
