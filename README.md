@@ -62,3 +62,42 @@ Currently, different branches provide different optimization methods:
 - *fast\_multi\_device*: It provides most of the stable optimization methods.
 - *test\_no\_synapse\_sparsity*: It drops the sparsity exploration of synapses.
 - *test\_no\_neuron\_sparsity*: It further drops the sparsity exploration of neurons.
+
+**Benchmark**
+
+There are four benchmarks: Forward, Circle, FC, and MVC. 
+The command for automatically executing all scripts is as follows:
+```
+$ ./pattern_run_all.sh
+```
+
+
+For details, the four benchmarks execution is implemented seperately in the following four scripts.
+
+### 1. Forward
+
+```
+$ ./pattern_forward.sh
+```
+
+### 2. Circle
+```
+$ ./pattern_circle.sh
+```
+
+### 3. Fully-connected (FC)
+```
+$ ./pattern_fc.sh
+```
+
+### 4. Macaque visual cortical areas model (MVC)
+
+(1) Run without multi-level:
+```
+$ ./run_multi_area_model.sh
+```
+(2) Run with multi-level:
+```
+$ ./run_multi_area_model_multi_level.sh
+``` 
+
