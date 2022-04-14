@@ -1,0 +1,22 @@
+version: "3.2"
+services:
+    # manager:
+    #     image: yhx09/enlarge:v0.1
+    #     networks:
+    #         - enlarge_overlay
+    #     volumes:
+    #         - /archive/share/docker:/share
+    #     ports: 
+    #         - "60008:22"
+
+    worker: 
+        image: yhx09/enlarge:v0.1
+        deploy:
+            replicas: 2
+        volumes:
+            - /archive/share/docker:/share
+        networks:
+            - enlarge_overlay
+networks:
+    enlarge_overlay:
+        external: true
