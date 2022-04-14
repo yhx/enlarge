@@ -57,9 +57,11 @@ do
     echo $node_num
     echo "current neuron_num: " $cur_neuron_num
     ../../../build/bin/pattern_circle_iaf_mpi $cur_neuron_num  $(($node_num * 2)) > ./tmp.log 
+    
+    # with multi-level
     mpirun -n $node_num --hostfile ../../../openmpi1.config -mca btl_tcp_if_include eno1 ../../../spack_run.sh ../../../build/bin/pattern_circle_iaf_mpi_run $cur_neuron_num $run_time #>> $file_name
 
-    # MultiNode version
+    # without multi-level
     # mpirun -n $(($node_num * 2)) --hostfile ../../../openmpi.config -mca btl_tcp_if_include eno1 ../../../spack_run.sh ../../../build/bin/pattern_circle_iaf_mpi_run $cur_neuron_num $run_time #>> $file_name
 
     cd ..
