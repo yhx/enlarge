@@ -11,5 +11,6 @@ RUN sed -i '/UsePAM yes/cUsePAM no' /etc/ssh/sshd_config && sed -i '/#PermitRoot
 RUN . /opt/spack/share/spack/setup-env.sh && spack install gcc@9.3.0 
 RUN . /opt/spack/share/spack/setup-env.sh && spack load gcc@9.3.0 && spack compiler find && spack install nccl@2.7.8-1%gcc@9.3.0
 RUN cd /nest-simulator && git checkout v3.2 && cmake -Dwith-mpi=ON -DCMAKE_INSTALL_PREFIX:PATH=/nest-v3.2 /nest-simulator && make -j && make install
+RUN cd /enlarge && git pull
 # CMD /bin/bash; sleep infinity
 CMD /usr/sbin/sshd -D > ~/sshd.log 2> ~/sshd.err
