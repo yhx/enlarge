@@ -12,7 +12,7 @@ services:
     worker: 
         image: yhx09/enlarge:v0.1
         deploy:
-            replicas: 2
+            replicas: 8
         volumes:
             - /archive/share/docker:/share
         networks:
