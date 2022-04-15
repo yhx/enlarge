@@ -109,7 +109,7 @@ mpirun -n 8 --hostfile ./openmpi1.config -mca btl_tcp_if_include eno1 ./spack_ru
  /enlarge/run_scaling_all.sh
 ```
 
-  The experiment results are saved in the run_all directory under the working directory. The filenames are forward_1.log~forword_10.log, circle_1.log~circle_10.log, fc_1.log~fc_10.log (The experiments are performed ten times and the results are the average of them).
+  The experiment results are saved in the run_all directory under the working directory. The filenames are forward_1.log\~forword_10.log, circle_1.log\~circle_10.log, fc_1.log\~fc_10.log (The experiments are performed ten times and the results are the average of them).
 
 ## 3. Optimization analysis
 
@@ -121,11 +121,11 @@ mpirun -n 8 --hostfile ./openmpi1.config -mca btl_tcp_if_include eno1 ./spack_ru
 /enlarge/run_multi_level.sh
 ```
 
-  The experiment results are saved in the run_all directory under the working directory. The files forward_1.log~forward_10.log, circle_1.log~circle_10.log, and fc_1.log~fc_10.log record the experiment results with multi-level architecture. The files multi_area_1.log~multi_area_10.log record the experiment results of the MVC benchmark with multi-level architecture. The files multi_area2_1.log~multi_area2_10.log record the experiment results of the MVC benchmark without multi-level architecture.
+  The experiment results are saved in the run_all directory under the working directory. The files forward_1.log\~forward_10.log, circle_1.log\~circle_10.log, and fc_1.log\~fc_10.log record the experiment results with multi-level architecture. The files multi_area_1.log\~multi_area_10.log record the experiment results of the MVC benchmark with multi-level architecture. The files multi_area2_1.log\~multi_area2_10.log record the experiment results of the MVC benchmark without multi-level architecture.
 
   To get other results:
 
-(1)  Change the following codes in /enlarge/test/mpi/pattern_{benchmark}_iaf_mpi_run.cpp:
+(1)  Change the following codes in /enlarge/test/mpi/pattern\_{benchmark}\_iaf_mpi_run.cpp:
 
     MLSim mn(name, dt, thread_num);
     
@@ -137,7 +137,7 @@ mpirun -n 8 --hostfile ./openmpi1.config -mca btl_tcp_if_include eno1 ./spack_ru
     
     mn.run(run_time, 1);
 
-(2) Modify the files named /enlarge/pattern_{benchmark}.sh. Comment the lines marked as with multi-level and uncomment the lines marked as without multi-level
+(2) Modify the files named /enlarge/pattern\_{benchmark}.sh. Comment the lines marked as with multi-level and uncomment the lines marked as without multi-level
 
 (3) Execute the command: 
 
@@ -145,7 +145,7 @@ mpirun -n 8 --hostfile ./openmpi1.config -mca btl_tcp_if_include eno1 ./spack_ru
 /enlarge/run_multi_level.sh
 ```
 
-  The results are recorded in the same files. i.e., forward_1.log~forward_10.log, circle_1.log~circle_10.log, and fc_1.log~fc_10.log. 
+  The results are recorded in the same files. i.e., forward_1.log\~forward_10.log, circle_1.log\~circle_10.log, and fc_1.log\~fc_10.log. 
 
 ### 3.2 Delay-ware spike delivery
 
@@ -153,7 +153,7 @@ mpirun -n 8 --hostfile ./openmpi1.config -mca btl_tcp_if_include eno1 ./spack_ru
 
   The result without this optimization method:
 
-  (1) Uncomment line 302 and comment 304~331 in the file /enlarge/src/synapse/static/StaticData.kernel.cu
+  (1) Uncomment line 302 and comment 304\~331 in the file /enlarge/src/synapse/static/StaticData.kernel.cu
 
   (2) Run the command: 
 
@@ -165,7 +165,7 @@ mpirun -n 8 --hostfile ./openmpi1.config -mca btl_tcp_if_include eno1 ./spack_ru
 
   Run the command: /enlarge/run_delay_aware.sh
 
-  The experiment results are saved in the run_all directory under the working directory. The filenames are multi_delay_1.log~ multi_delay_10.log.
+  The experiment results are saved in the run_all directory under the working directory. The filenames are multi_delay_1.log\~multi_delay_10.log.
 
 ### 3.4 The network partition algorithm
 
