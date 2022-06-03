@@ -13,5 +13,5 @@ cd $dir_name
 # rm -rf ./*.log
 # rm -rf ./sum.res
 
-# ../../build/bin/pattern_forward_iaf_mpi_delay $depth $neuron_num $(($node_num * 2)) $delay_num > ./tmp.log 
+../../build/bin/pattern_forward_iaf_mpi_delay $depth $neuron_num $(($node_num * 2)) $delay_num > ./tmp.log 
 mpirun -n $node_num --hostfile ../../openmpi1.config -mca btl_tcp_if_include eno1 ../../spack_run.sh ../../build/bin/pattern_forward_iaf_mpi_run $depth $neuron_num $run_time
