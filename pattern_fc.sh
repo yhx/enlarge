@@ -46,11 +46,13 @@ do
     echo "Current population num: " $(($node_num + 10)) "!"
     
     cur_neuron_num=${neuron_nums[ $(($node_num - 1)) ]}
-    ../../build/bin/pattern_fc_iaf_mpi $cur_neuron_num $(($node_num + 10)) $(($node_num * 2)) > ./tmp.log 
-    mpirun -n $node_num --hostfile ../../openmpi1.config -mca btl_tcp_if_include eno1 ../../spack_run.sh ../../build/bin/pattern_fc_iaf_mpi_run $cur_neuron_num $(($node_num + 10)) $run_time
+    ../../../build/bin/pattern_fc_iaf_mpi $cur_neuron_num $(($node_num + 10)) $(($node_num * 2)) > ./tmp.log 
+    
+    # with multi-level
+    mpirun -n $node_num --hostfile ../../../openmpi1.config -mca btl_tcp_if_include eno1 ../../../spack_run.sh ../../../build/bin/pattern_fc_iaf_mpi_run $cur_neuron_num $(($node_num + 10)) $run_time
 
-    # MultiNodeVersion
-    mpirun -n $(($node_num * 2)) --hostfile ../../openmpi.config -mca btl_tcp_if_include eno1 ../../spack_run.sh ../../build/bin/pattern_fc_iaf_mpi_run $cur_neuron_num $(($node_num + 5)) $run_time
+    # without multi-level
+    # mpirun -n $(($node_num * 2)) --hostfile ../../../openmpi.config -mca btl_tcp_if_include eno1 ../../../spack_run.sh ../../../build/bin/pattern_fc_iaf_mpi_run $cur_neuron_num $(($node_num + 5)) $run_time
     
     echo "FINISH: " $node_num "!"
     cd ..

@@ -51,10 +51,13 @@ do
 
     echo "START: " $node_num "!"
     
-    ../../build/bin/pattern_forward_iaf_mpi $(($depth * $node_num)) $neuron_num  $(($node_num * 2)) > ./tmp.log 
-    mpirun -n $node_num --hostfile ../../openmpi1.config -mca btl_tcp_if_include eno1 ../../spack_run.sh ../../build/bin/pattern_forward_iaf_mpi_run $(($depth * $node_num)) $neuron_num $run_time
-    # multi node version
-    mpirun -n $(($node_num * 2)) --hostfile ../../openmpi.config -mca btl_tcp_if_include eno1 ../../spack_run.sh ../../build/bin/pattern_forward_iaf_mpi_run $(($depth * $node_num)) $neuron_num $run_time
+    ../../../build/bin/pattern_forward_iaf_mpi $(($depth * $node_num)) $neuron_num  $(($node_num * 2)) > ./tmp.log 
+    
+    # with multi-level
+    mpirun -n $node_num --hostfile ../../../openmpi1.config -mca btl_tcp_if_include eno1 ../../../spack_run.sh ../../../build/bin/pattern_forward_iaf_mpi_run $(($depth * $node_num)) $neuron_num $run_time
+    
+    # without multi-level
+    # mpirun -n $(($node_num * 2)) --hostfile ../../../openmpi.config -mca btl_tcp_if_include eno1 ../../../spack_run.sh ../../../build/bin/pattern_forward_iaf_mpi_run $(($depth * $node_num)) $neuron_num $run_time
     
     echo "FINISH: " $node_num "!"
     cd ..
