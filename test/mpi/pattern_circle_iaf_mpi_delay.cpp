@@ -21,7 +21,7 @@ int main(int argc, char **argv)
 	const int depth = 3;  // 网络深度  
 	const size_t N = atoi(argv[1]);  // 每层神经元的数量
     const int parts = atoi(argv[2]);  // 划分为几个节点运行程序
-    const int delay_num = atoi(argv[3]);
+    const int delay_num = atoi(argv[3]);  // 最大的delay的值
 
 	const real run_time = 1.0;
 	const real dt = 1e-4;
@@ -44,6 +44,10 @@ int main(int argc, char **argv)
                 0.0, -68.56875477, 0.0, 0.0, 0.0, 0.0));
 
         real *delay = getConstArray((real)delay_num*dt, N * N);
+
+        for (int i = 0; i < N * N; ++i) {
+            delay[i] = ((i % delay_num) + 1) * dt;
+        }
 
         const real scale = 1e3;
         const real w1_2 = 2.4 * scale;

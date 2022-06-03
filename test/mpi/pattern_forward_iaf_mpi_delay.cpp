@@ -50,6 +50,10 @@ int main(int argc, char **argv)
 
         real *delay = getConstArray((real)delay_num*dt, N * N);
 
+        for (int i = 0; i < N * N; ++i) {
+            delay[i] = ((i % delay_num) + 1) * dt;
+        }
+
         const real scale = 1e3;
         const real w1_2 = 2.4 * scale;
         const real w2_3 = 2.4 * scale;
