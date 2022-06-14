@@ -336,6 +336,7 @@ struct HybridCPUPthreadPara {
     HybridProcBuf *pbuf;
     size_t _cpu_control_thread_id;
     size_t _subnet_id;
+    HybridCrossMap *_cm;
 };
 
 void HybridSimulator::run_cpu_hybrid(DistriNetwork *network, HybridCrossMap *cm, HybridProcBuf *pbuf, int run_thread_num, pthread_t *thread_ids, int subnet_id) {
@@ -355,6 +356,7 @@ void HybridSimulator::run_cpu_hybrid(DistriNetwork *network, HybridCrossMap *cm,
         paras[i].pbuf = pbuf;
         paras[i]._cpu_control_thread_id = thread_ids[_proc_gpu_num[_process_id]];
         paras[i]._subnet_id = subnet_id;
+        paras[i]._cm = cm;
         int ret = pthread_create(&(thread_ids[i + _proc_gpu_num[_process_id]]), NULL, hybrid_sim_multi_thread_cpu, (void*)&(paras[i]));
     }
 
@@ -368,6 +370,7 @@ void HybridSimulator::run_cpu_hybrid(DistriNetwork *network, HybridCrossMap *cm,
 void *hybrid_sim_multi_thread_cpu(void *paras) {
 	HybridCPUPthreadPara *tmp = static_cast<HybridCPUPthreadPara*>(paras);
     DistriNetwork *network = tmp->_network;
+    HybridCrossMap *cm = tmp->_cm;
     GNetwork *pNetCPU = pNetCPU = network->_network;
     Buffer *buffer = tmp->_buffer;
     size_t thread_id = tmp->_thread_id;
@@ -405,7 +408,7 @@ void *hybrid_sim_multi_thread_cpu(void *paras) {
 				pNetCPU->pNeuronNums[i], time, thread_num, thread_id - cpu_control_thread_id, hybrid_thread_barrier);
 		}
         // 同步1，一次通信
-        pbuf->fetch_cpu();
+        pbuf->fetch_cpu(subnet_id, cm, buffer->_fire_table, buffer->_fired_sizes, buffer->_fire_table_cap, max_delay, time, thread_num, thread_id - cpu_control_thread_id, hybrid_thread_barrier);
 
         if (thread_id == cpu_control_thread_id) {
             pbuf->update_cpu(thread_id, subnet_id, time);
@@ -419,7 +422,7 @@ void *hybrid_sim_multi_thread_cpu(void *paras) {
 		}
         
         if (thread_id == cpu_control_thread_id) {
-            pbuf->upload_cpu(thread_id, subnet_id, buffer->_fire_table, buffer->_fired_sizes, buffer->_fired_sizes, buffer->_fire_table_cap, max_delay, time); 
+            pbuf->upload_cpu(thread_id, subnet_id, buffer->_fire_table, buffer->_fired_sizes, buffer->_fire_table_cap, max_delay, time); 
         }
 	}
 
