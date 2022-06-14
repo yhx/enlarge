@@ -42,7 +42,7 @@ protected:
     DistriNetwork *_all_nets;           // 划分的网络信息
 	CrossNodeData *_all_datas;          // 每个线程发给其它线程的数据
 
-    void run_cpu_hybrid(DistriNetwork *network, HybridCrossMap *cm, HybridProcBuf *pbuf, int run_thread_num, pthread_t *thread_ids);
+    void run_cpu_hybrid(DistriNetwork *network, HybridCrossMap *cm, HybridProcBuf *pbuf, int run_thread_num, pthread_t *thread_ids, int subnet_id);
 };
 
 /**

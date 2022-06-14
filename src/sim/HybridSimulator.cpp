@@ -299,7 +299,7 @@ int HybridSimulator::run(real time, FireInfo &log, int thread_num, int gpu_num, 
             assert(ret == 0);
         } else {  // 否则调用管理cpu线程的函数
             // paras[i]._run_thread_num = thread_num - _proc_gpu_num[_process_id];
-            run_cpu_hybrid(_network_data[i], cm[i], &pbuf, thread_num - _proc_gpu_num[_process_id], thread_ids);
+            run_cpu_hybrid(_network_data[i], cm[i], &pbuf, thread_num - _proc_gpu_num[_process_id], thread_ids, i);
         }
     }
 
@@ -330,13 +330,15 @@ int HybridSimulator::run(real time, FireInfo &log, int thread_num, int gpu_num, 
  */
 struct HybridCPUPthreadPara {
     DistriNetwork *_network;
-	Buffer &_buffer;
+	Buffer *_buffer;
 	size_t _thread_num;
 	size_t _thread_id;
     HybridProcBuf *pbuf;
+    size_t _cpu_control_thread_id;
+    size_t _subnet_id;
 };
 
-void HybridSimulator::run_cpu_hybrid(DistriNetwork *network, HybridCrossMap *cm, HybridProcBuf *pbuf, int run_thread_num, pthread_t *thread_ids) {
+void HybridSimulator::run_cpu_hybrid(DistriNetwork *network, HybridCrossMap *cm, HybridProcBuf *pbuf, int run_thread_num, pthread_t *thread_ids, int subnet_id) {
     HybridCPUPthreadPara *paras = malloc_c<HybridCPUPthreadPara>(run_thread_num);
     
     GNetwork *pNetCPU = network->_network;
@@ -347,10 +349,12 @@ void HybridSimulator::run_cpu_hybrid(DistriNetwork *network, HybridCrossMap *cm,
 
     for (size_t i = 0; i < _thread_num - _proc_gpu_num[_process_id]; ++i) {
         paras[i]._network = network;
-	    paras[i]._buffer = buffer;
+	    paras[i]._buffer = &buffer;
 	    paras[i]._thread_num = run_thread_num;
 	    paras[i]._thread_id = i;
         paras[i].pbuf = pbuf;
+        paras[i]._cpu_control_thread_id = thread_ids[_proc_gpu_num[_process_id]];
+        paras[i]._subnet_id = subnet_id;
         int ret = pthread_create(&(thread_ids[i + _proc_gpu_num[_process_id]]), NULL, hybrid_sim_multi_thread_cpu, (void*)&(paras[i]));
     }
 
@@ -365,10 +369,12 @@ void *hybrid_sim_multi_thread_cpu(void *paras) {
 	HybridCPUPthreadPara *tmp = static_cast<HybridCPUPthreadPara*>(paras);
     DistriNetwork *network = tmp->_network;
     GNetwork *pNetCPU = pNetCPU = network->_network;
-    Buffer &buffer = tmp->_buffer;
+    Buffer *buffer = tmp->_buffer;
     size_t thread_id = tmp->_thread_id;
     size_t thread_num = tmp->_thread_num;
     HybridProcBuf *pbuf = tmp->pbuf;
+    size_t cpu_control_thread_id = tmp->_cpu_control_thread_id;
+    size_t subnet_id = tmp->_subnet_id;
 
     int nTypeNum = pNetCPU->nTypeNum;
 	int sTypeNum = pNetCPU->sTypeNum;
@@ -376,39 +382,45 @@ void *hybrid_sim_multi_thread_cpu(void *paras) {
     int max_delay = pNetCPU->ppConnections[0]->maxDelay;
 	int min_delay = pNetCPU->ppConnections[0]->minDelay;
 
+#ifdef PROF
     FILE *v_file = NULL, *sim_file = NULL;
 	if (thread_id == 0) {
         v_file = log_file_mpi("v", network->_nodeIdx);
 	    sim_file = log_file_mpi("sim", network->_nodeIdx);
 		printf("Start runing for %d cycles\n", network->_simCycle);
 	}
+#endif
 
 	struct timeval ts, te;
 	gettimeofday(&ts, NULL);
 
 	for (int time = 0; time < network->_simCycle; time++) {
 		int currentIdx = time % (max_delay + 1);
-		buffer._fired_sizes[currentIdx] = 0;
+		buffer->_fired_sizes[currentIdx] = 0;
 
 		for (int i = 0; i < nTypeNum; i++) {
 			updatePthreadType[pNetCPU->pNTypes[i]](pNetCPU->ppConnections[i], pNetCPU->ppNeurons[i],
-			 	buffer._data + pNetCPU->bufferOffsets[i], buffer._fire_table, buffer._fired_sizes, 
-				buffer._fire_table_cap, pNetCPU->pNeuronNums[i+1]-pNetCPU->pNeuronNums[i],
-				pNetCPU->pNeuronNums[i], time, thread_num, thread_id, hybrid_thread_barrier);
+			 	buffer->_data + pNetCPU->bufferOffsets[i], buffer->_fire_table, buffer->_fired_sizes, 
+				buffer->_fire_table_cap, pNetCPU->pNeuronNums[i+1]-pNetCPU->pNeuronNums[i],
+				pNetCPU->pNeuronNums[i], time, thread_num, thread_id - cpu_control_thread_id, hybrid_thread_barrier);
 		}
         // 同步1，一次通信
         pbuf->fetch_cpu();
 
-        pbuf->update_cpu();
+        if (thread_id == cpu_control_thread_id) {
+            pbuf->update_cpu(thread_id, subnet_id, time);
+        }
 
 		for (int i = 0; i < sTypeNum; i++) {
 			updatePthreadType[pNetCPU->pSTypes[i]](pNetCPU->ppConnections[i], pNetCPU->ppSynapses[i], 
-				buffer._data, buffer._fire_table, buffer._fired_sizes, buffer._fire_table_cap,
-				pNetCPU->pSynapseNums[i+1]-pNetCPU->pSynapseNums[i], pNetCPU->pSynapseNums[i], time, thread_num,
-				thread_id, hybrid_thread_barrier);
+				buffer->_data, buffer->_fire_table, buffer->_fired_sizes, buffer->_fire_table_cap,
+				pNetCPU->pSynapseNums[i+1] - pNetCPU->pSynapseNums[i], pNetCPU->pSynapseNums[i], time, thread_num,
+				thread_id - cpu_control_thread_id, hybrid_thread_barrier);
 		}
         
-        pbuf->upload_cpu(); 
+        if (thread_id == cpu_control_thread_id) {
+            pbuf->upload_cpu(thread_id, subnet_id, buffer->_fire_table, buffer->_fired_sizes, buffer->_fired_sizes, buffer->_fire_table_cap, max_delay, time); 
+        }
 	}
 
 	gettimeofday(&te, NULL);
@@ -416,6 +428,7 @@ void *hybrid_sim_multi_thread_cpu(void *paras) {
 	double seconds =  te.tv_sec - ts.tv_sec + (te.tv_usec - ts.tv_usec)/1000000.0;
 	printf("Thread %d Simulation finesed in %lfs\n", network->_nodeIdx, seconds);
 
+#ifdef PROF
 	if (thread_id == 0) {
         char name[512];
 	    sprintf(name, "mpi_%d", network->_nodeIdx); 
@@ -426,6 +439,7 @@ void *hybrid_sim_multi_thread_cpu(void *paras) {
 		fclose(v_file);
 		fclose(sim_file);
 	}
+#endif
 
 	return 0;
 }
