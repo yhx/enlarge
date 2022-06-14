@@ -326,20 +326,6 @@ int HybridSimulator::run(real time, FireInfo &log, int thread_num, int gpu_num, 
     return 0;
 }
 
-/**
- * @brief data structure for pthread parameters used in multi-thread CPU simulation
- */
-struct HybridCPUPthreadPara {
-    DistriNetwork *_network;
-	Buffer *_buffer;
-	size_t _thread_num;
-	size_t _thread_id;
-    HybridProcBuf *pbuf;
-    size_t _cpu_control_thread_id;
-    size_t _subnet_id;
-    HybridCrossMap *_cm;
-};
-
 void HybridSimulator::run_cpu_hybrid(DistriNetwork *network, HybridCrossMap *cm, HybridProcBuf *pbuf, int run_thread_num, pthread_t *thread_ids, int subnet_id) {
     HybridCPUPthreadPara *paras = malloc_c<HybridCPUPthreadPara>(run_thread_num);
     

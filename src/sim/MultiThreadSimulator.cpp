@@ -61,7 +61,7 @@ int MultiThreadSimulator::run(real time, FireInfo &log, int thread_num)
 	printf("maxDelay: %d minDelay: %d\n", pNetCPU->ppConnections[0]->maxDelay, pNetCPU->ppConnections[0]->minDelay);
 	Buffer buffer(pNetCPU->bufferOffsets[nTypeNum], totalNeuronNum, maxDelay);
 
-	printf("thread_num: %ld\n", thread_num);
+	printf("thread_num: %d\n", thread_num);
 
 	assert(thread_num > 0);
 	pthread_barrier_init(&multi_thread_proc_barrier, NULL, thread_num);

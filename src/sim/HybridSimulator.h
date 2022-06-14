@@ -61,7 +61,22 @@ struct HybridRunPara {
     int _thread_id;
 };
 
+/**
+ * @brief data structure for pthread parameters used in multi-thread CPU simulation
+ */
+struct HybridCPUPthreadPara {
+    DistriNetwork *_network;
+	Buffer *_buffer;
+	size_t _thread_num;
+	size_t _thread_id;
+    HybridProcBuf *pbuf;
+    size_t _cpu_control_thread_id;
+    size_t _subnet_id;
+    HybridCrossMap *_cm;
+};
+
 void *run_gpu_hybrid(void *para);
 void *run_cpu_hybrid(void *para);
+void *hybrid_sim_multi_thread_cpu(void *paras);
 
 #endif
