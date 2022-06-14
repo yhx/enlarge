@@ -3,6 +3,7 @@
 #define IAFDATA_H
 
 #include <stdio.h>
+#include <atomic>
 #include "mpi.h"
 
 #include "../../net/Connection.h"
@@ -69,6 +70,9 @@ int allocIAFPara(void *pCPU, size_t num);
 int freeIAF(void *pCPU);
 int freeIAFPara(void *pCPU);
 void updateIAF(Connection *, void *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int);
+void updateOpenmpIAF(Connection *, void *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int);
+void updatePthreadIAF(Connection *, void *, real *, uinteger_t *, uinteger_t *, size_t, size_t, size_t, int, int, int, pthread_barrier_t &);
+
 int saveIAF(void *pCPU, size_t num, const string &path);
 void *loadIAF(size_t num, const string &path);
 bool isEqualIAF(void *p1, void *p2, size_t num, uinteger_t *shuffle1=NULL, uinteger_t *shuffle2=NULL);

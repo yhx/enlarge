@@ -6,6 +6,15 @@
 #include "../../msg_utils/helper/helper_c.h"
 #include "CrossNodeMap.h"
 
+/**
+ * @brief 
+ * llocCNM(n_offset + _crossnodeNeuronsRecv[i].size(), _crossnodeNeuronsSend[i].size(), _node_num);
+ * 
+ * @param num n_offset + _crossnodeNeuronsRecv[i].size() n_offset为本身就被划分在这个subnet中的神经元的个数，_crossnodeNeuronsRecv[i].size()代表的是需要从其它节点中接收的神经元的数目（本质为shadow neuron的数量）
+ * @param cross_num _crossnodeNeuronsSend[i].size() 从这个子网络要发送给其它自网络数据的神经元数量
+ * @param node_num _node_num 子网络数量
+ * @return CrossNodeMap* 
+ */
 CrossNodeMap * allocCNM(size_t num, size_t cross_num, unsigned node_num)
 {
 	return allocCNM(num, cross_num * node_num);

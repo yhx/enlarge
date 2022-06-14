@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
-PROJECT (BSim)
+PROJECT (ENLARGE)
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/test/catch2")
 MESSAGE(STATUS "CMAKE_MODULE_PATH:" ${CMAKE_MODULE_PATH})
@@ -25,6 +25,7 @@ INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
 FIND_PACKAGE(CUDA REQUIRED)
 FIND_PACKAGE(MPI REQUIRED)
 FIND_PACKAGE(BLAS REQUIRED)
+# FIND_PACKAGE(OpenMP REQUIRED)
 
 
 MESSAGE(STATUS "C Compiler: " ${CMAKE_C_COMPILER_ID} " " ${CMAKE_C_COMPILER_VERSION})
@@ -56,6 +57,24 @@ elseif (CMAKE_BUILD_TYPE_UPPER STREQUAL "DEBUG")
 	#SET(CUDA_NVCC_FLAGS_DEBUG "-std=c++11;-g;-G;-lineinfo;-Xcompiler;-arch=sm_60")
 	SET(CUDA_NVCC_FLAGS_DEBUG "-std=c++11;-O0;-g;-G;-D DEBUG;-lcufft;-gencode=arch=compute_60,code=sm_60;-gencode=arch=compute_61,code=sm_61;-gencode=arch=compute_70,code=sm_70;-gencode=arch=compute_75,code=sm_75;-gencode=arch=compute_80,code=sm_80")
 endif (CMAKE_BUILD_TYPE_UPPER STREQUAL "RELEASE")
+
+# if (CMAKE_BUILD_TYPE_UPPER STREQUAL "RELEASE")
+# 	IF ( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
+# 		SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -std=c++11 -stdlib=libc++ -O3 -fPIC -pthread -fopenmp")
+# 	ELSE( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
+# 		SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -std=c++11 -O3 -fPIC -pthread -fopenmp")
+# 	ENDIF ( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
+# 	SET(CUDA_NVCC_FLAGS_RELEASE "-std=c++11;-O3;-Xcompiler;-fopenmp;-gencode=arch=compute_60,code=sm_60;-gencode=arch=compute_61,code=sm_61;-gencode=arch=compute_70,code=sm_70;-gencode=arch=compute_75,code=sm_75;-gencode=arch=compute_80,code=sm_80")
+# 	# SET(CUDA_NVCC_FLAGS_RELEASE "-std=c++11;-O3;-arch=compute_60;-code=sm_60;-lcufft")
+# elseif (CMAKE_BUILD_TYPE_UPPER STREQUAL "DEBUG")
+# 	IF ( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
+# 		SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -std=c++11 -stdlib=libc++ -O0 -Wall -g -ggdb -fPIC -D DEBUG -pthread -fopenmp")
+# 	ELSE( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
+# 		SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -std=c++11 -O0 -Wall -g -ggdb -fPIC -D DEBUG -pthread -fopenmp")
+# 	ENDIF ( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
+# 	#SET(CUDA_NVCC_FLAGS_DEBUG "-std=c++11;-g;-G;-lineinfo;-Xcompiler;-arch=sm_60")
+# 	SET(CUDA_NVCC_FLAGS_DEBUG "-std=c++11;-O0;-g;-G;-D DEBUG;-Xcompiler;-fopenmp;-lcufft;-gencode=arch=compute_60,code=sm_60;-gencode=arch=compute_61,code=sm_61;-gencode=arch=compute_70,code=sm_70;-gencode=arch=compute_75,code=sm_75;-gencode=arch=compute_80,code=sm_80")
+# endif (CMAKE_BUILD_TYPE_UPPER STREQUAL "RELEASE")
 
 OPTION(USE_DOUBLE "Use double" OFF) # Disabled by default
 IF(USE_DOUBLE)

@@ -20,7 +20,7 @@ Buffer::Buffer(size_t data_size, size_t n_num, int max_delay, int gpu): Buffer(d
 	// _gpu_array->_neurons = gpuMalloc<uinteger_t>(n_num);
 	// _gpu_array->_fire_count = gpuMalloc<size_t>(n_num);
 
-	_gpu_array->_data= gpuMalloc<real>(data_size);
+	_gpu_array->_data = gpuMalloc<real>(data_size);
 }
 
 void Buffer::free_gpu() {

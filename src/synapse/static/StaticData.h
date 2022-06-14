@@ -3,6 +3,7 @@
 #define STATICDATA_H
 
 #include <stdio.h>
+#include <atomic>
 #include "mpi.h"
 
 #include "../../net/Connection.h"
@@ -26,6 +27,11 @@ int allocStaticPara(void *pCPU, size_t num);
 int freeStatic(void *pCPU);
 int freeStaticPara(void *pCPU);
 void updateStatic(Connection *, void *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int);
+void updateOpenmpStatic(Connection *, void *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int);
+void *update_pthread_static(void *para);
+// void updatePthreadStatic(Connection *, void *, std::atomic<real> *, uinteger_t *, uinteger_t *, size_t, size_t, size_t, int, int);
+void updatePthreadStatic(Connection *, void *, real *, uinteger_t *, uinteger_t *, size_t, size_t, size_t, int, int, int, pthread_barrier_t &);
+
 int saveStatic(void *pCPU, size_t num, const string &path);
 void *loadStatic(size_t num, const string &path);
 bool isEqualStatic(void *p1, void *p2, size_t num, uinteger_t *shuffle1=NULL, uinteger_t *shuffle2=NULL);

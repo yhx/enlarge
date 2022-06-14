@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <string>
+#include <atomic>
 #include "mpi.h"
 
 #include "type.h"
@@ -33,6 +34,10 @@ extern bool (*isEqualType[TYPESIZE])(void *p1, void *p2, size_t num, uinteger_t 
 extern int (*logRateNeuron[TYPESIZE])(void *p1, const char *name);
 
 extern int (*shuffleSynapse[TYPESIZE])(void *p1, uinteger_t *shuffle1, size_t num);
+
+extern void (*updateOpenmpType[TYPESIZE])(Connection *, void *, real *, uinteger_t *, uinteger_t*,  size_t, size_t, size_t, int);
+// extern void (*updatePthreadType[TYPESIZE])(Connection *, void *, std::atomic<real> *, uinteger_t *, uinteger_t*,  size_t, size_t, size_t, int, int);
+extern void (*updatePthreadType[TYPESIZE])(Connection *, void *, real *, uinteger_t *, uinteger_t*,  size_t, size_t, size_t, int, int, int, pthread_barrier_t &);
 
 extern void *(*cudaAllocType[TYPESIZE])(void *pCPU, size_t num);
 // extern int (*cudaTypeToGPU[TYPESIZE])(void *pCPU, void *pGPU, int num);

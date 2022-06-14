@@ -3,6 +3,7 @@
 #define LIFDATA_H
 
 #include <stdio.h>
+#include <atomic>
 #include "mpi.h"
 
 #include "../../net/Connection.h"
@@ -41,6 +42,8 @@ int allocLIFPara(void *pCPU, size_t num);
 int freeLIF(void *pCPU);
 int freeLIFPara(void *pCPU);
 void updateLIF(Connection *, void *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int);
+void updateOpenmpLIF(Connection *, void *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int);
+void updatePthreadLIF(Connection *, void *, real *, uinteger_t *, uinteger_t *, size_t, size_t, size_t, int, int, int, pthread_barrier_t &);
 int saveLIF(void *pCPU, size_t num, const string &path);
 void *loadLIF(size_t num, const string &path);
 bool isEqualLIF(void *p1, void *p2, size_t num, uinteger_t *shuffle1=NULL, uinteger_t *shuffle2=NULL);

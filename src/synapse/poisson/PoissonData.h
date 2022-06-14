@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <curand_kernel.h>
 #include <curand.h>
+#include <atomic>
 #include "mpi.h"
 
 #include "../../net/Connection.h"
@@ -38,6 +39,8 @@ int allocPoissonPara(void *pCPU, size_t num);
 int freePoisson(void *pCPU);
 int freePoissonPara(void *pCPU);
 void updatePoisson(Connection *, void *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int);
+void updateOpenmpPoisson(Connection *, void *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int);
+void updatePthreadPoisson(Connection *, void *, real *, uinteger_t *, uinteger_t *, size_t, size_t, size_t, int, int, int, pthread_barrier_t &);
 int savePoisson(void *pCPU, size_t num, const string &path);
 void *loadPoisson(size_t num, const string &path);
 bool isEqualPoisson(void *p1, void *p2, size_t num, uinteger_t *shuffle1=NULL, uinteger_t *shuffle2=NULL);

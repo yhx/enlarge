@@ -208,18 +208,18 @@ Population * Network::createPopulation(int id, size_t num, N templ)
 }
 
 template<class N>
-Population * Network::createPopulation(size_t num, N templ)
+Population * Network::createPopulation(size_t num, N templ)  // num: 神经元数量，templ：神经元类型
 {
 	//ID id = totalNeuronNum;
 	Population *pp1 = NULL;
 
 	Type type = templ.type();
 
-	if (_neurons.find(type) == _neurons.end()) {
+	if (_neurons.find(type) == _neurons.end()) {  // 没有这种神经元类型
 		N *neuron = new N(templ, num);
 		_neurons[type] = neuron;
 		pp1 = new Population(neuron, 0, num);
-	} else {
+	} else {  // 以及有了这种神经元类型
 		size_t num_t = _neurons[type]->size();
 		N *neuron = dynamic_cast<N*>(_neurons[type]);
 		neuron->append(&templ, num);

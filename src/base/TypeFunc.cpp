@@ -94,6 +94,20 @@ int (*shuffleSynapse[])(void *p1, uinteger_t *shuffle1, size_t num) = {
 	shufflePoisson
 };
 
+void (*updateOpenmpType[])(Connection *, void *, real *, uinteger_t *, uinteger_t*,  size_t, size_t, size_t, int) = {
+	updateOpenmpLIF,
+	updateOpenmpIAF,
+	updateOpenmpStatic,
+	updateOpenmpPoisson
+};
+
+void (*updatePthreadType[])(Connection *, void *, real *, uinteger_t *, uinteger_t*,  size_t, size_t, size_t, int, int, int, pthread_barrier_t &) = {
+	updatePthreadLIF,
+	updatePthreadIAF,
+	updatePthreadStatic,
+	updatePthreadPoisson
+};
+
 int (*sendType[])(void *data, int dest, int tag, MPI_Comm comm) = {
 	sendLIF,
 	sendIAF,

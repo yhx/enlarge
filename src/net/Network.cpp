@@ -84,7 +84,7 @@ int Network::set_node_num(int node_num)
 }
 
 /**
- * 根据对应类型（type）的突触数量（size）修改_conn_n2s和_conn_s2n的大小
+ * 根据对应类型（type）的突触数量（size）修改_conn_n2s和_conn_s2n的大小，用于后续存放值
  **/
 size_t Network::add_type_conn(Type type, size_t size)
 {
@@ -584,6 +584,11 @@ CrossNodeData* Network::arrangeCrossNodeData(const SimInfo &info)
 		allocParaCND(&(cross_data[i]), _node_num, delay_t);
 	}
 
+	/**
+	 * @brief 
+	 * 计算每个子网络它的send_offset
+	 * 每个区间的大小为min_delay * (从子网络i到子网络j之间的突触连接的数量)
+	 */
 	for (int i=0; i<_node_num; i++) {
 		cross_data[i]._send_offset[0] = 0;
 		for (int j=0; j<_node_num; j++) {
@@ -600,6 +605,10 @@ CrossNodeData* Network::arrangeCrossNodeData(const SimInfo &info)
 	}
 
 
+	/**
+	 * @brief 
+	 * 依据send_offset计算recv_offset
+	 */
 	for (int i=0; i<_node_num; i++) {
 		cross_data[i]._recv_offset[0] = 0;
 		assert(0 ==  cross_data[i]._send_offset[i+1] - cross_data[i]._send_offset[i]); 
@@ -611,6 +620,7 @@ CrossNodeData* Network::arrangeCrossNodeData(const SimInfo &info)
 		// assert(cross_data[i]._recv_data != NULL || cross_data[i]._recv_offset[node_num] == 0);
 	}
 
+	// 依据cross_data分配CrossNodeData的空间
 	for (int i=0; i<_node_num; i++) {
 		allocDataCND(&(cross_data[i]));
 	}

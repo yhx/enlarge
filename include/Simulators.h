@@ -10,6 +10,7 @@
 
 //CPU SIM
 #include "../src/sim/SingleThreadSimulator.h"
+#include "../src/sim/MultiThreadSimulator.h"
 
 //GPU SIM
 #include "../src/sim/SingleGPUSimulator.h"
@@ -24,6 +25,7 @@ typedef SingleGPUSimulator SGSim;
 typedef MultiGPUSimulator MGSim;
 typedef MultiNodeSimulator MNSim;
 typedef MultiLevelSimulator MLSim;
+typedef MultiThreadSimulator MTSim;
 
 #endif /* SIMULATORS_H */
 

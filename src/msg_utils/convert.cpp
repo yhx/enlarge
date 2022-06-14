@@ -63,3 +63,60 @@ CrossSpike * convert2crossspike(CrossNodeData *cnd, int proc_rank, int gpu_num)
 
 	return cs;
 }
+
+HybridCrossMap * convert2hybridcrossmap(CrossNodeMap * cnm)
+{
+	size_t num = cnm->_num;         // 子网络数
+	size_t size = cnm->_crossSize;  // 需要跨节点发送的神经元数量 * 子网络数
+	HybridCrossMap *cm = new HybridCrossMap(num, size);
+
+	for (size_t i = 0; i < num; i++) {
+		cm->_idx2index[i] = cnm->_idx2index[i];
+	}
+
+	for (size_t i = 0; i < size; i++) {  
+		cm->_index2ridx[i] = cnm->_crossnodeIndex2idx[i];
+	}
+
+	return cm;
+}
+
+HybridCrossSpike * convert2hybridcrossspike(CrossNodeData *cnd, int subnet_id, int gpu_num)
+{
+	int subnet_num = cnd->_node_num;        // 子网络数
+	int delay = cnd->_min_delay;            // 最小delay
+	HybridCrossSpike *cs = NULL;
+	
+	if (gpu_num > 0) {
+		cs = new HybridCrossSpike(subnet_id, subnet_num, delay, gpu_num);
+	} else {
+		cs = new HybridCrossSpike(subnet_id, subnet_num, delay);  // 分配CrossSpike中的_X_offset, _X_start, _X_num的空间，未分配_X_data
+	}
+
+	for (int i = 0; i < subnet_num + 1; i++) {
+		cs->_recv_offset[i] = cnd->_recv_offset[i];
+		cs->_send_offset[i] = cnd->_send_offset[i];
+	}
+
+	for (int i = 0; i < subnet_num * (delay + 1); i++) {
+		cs->_recv_start[i] = cnd->_recv_start[i];
+		cs->_send_start[i] = cnd->_send_start[i];
+	}
+
+	for (int i = 0; i < subnet_num; i++) {
+		cs->_recv_num[i] = cnd->_recv_num[i];
+		cs->_send_num[i] = cnd->_send_num[i];
+	}
+
+	cs->alloc();  // 分配_send_data和_recv_data的空间
+
+	for (int i = 0; i < cs->_recv_offset[subnet_num]; i++) {
+		cs->_recv_data[i] = cnd->_recv_data[i];
+	}
+
+	for (int i = 0; i < cs->_send_offset[subnet_num]; i++) {
+		cs->_send_data[i] = cnd->_send_data[i];
+	}
+
+	return cs;
+}

@@ -12,8 +12,8 @@
 using std::string;
 
 struct DistriNetwork {
-	int _simCycle;
-	int _nodeIdx;
+	int _simCycle;                  // 仿真时间步
+	int _nodeIdx;                   // 
 	int _nodeNum;
 	real _dt;
 	GNetwork * _network;

@@ -20,6 +20,15 @@ Buffer::Buffer()
 	_gpu_array = NULL;
 }
 
+
+/**
+ * @brief Construct a new Buffer:: Buffer object
+ * 调用示例：buffer(pNetCPU->bufferOffsets[nTypeNum], allNeuronNum, max_delay, thread_id)
+ * 
+ * @param data_size 子网络中所有类型的神经元的buffer总长度
+ * @param n_num 子网络中所有神经元的数量（包括shadow neuron）
+ * @param max_delay 
+ */
 Buffer::Buffer(size_t data_size, size_t n_num, int max_delay)
 {
 	_gpu = -1;
@@ -32,7 +41,7 @@ Buffer::Buffer(size_t data_size, size_t n_num, int max_delay)
 	// _neurons = new uinteger_t[n_num]();
 	// _fire_count = new size_t[n_num]();
 
-	_data= new real[data_size]();
+	_data = new real[data_size]();
 	
 	// c_gFiredCount = _fire_count;
 

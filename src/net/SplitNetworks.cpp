@@ -47,7 +47,7 @@ void Network::splitNetwork(SplitType split, const char *name, const AlgoPara *pa
 
 	for (auto ti = _conn_s2n.begin(); ti != _conn_s2n.end(); ti++) {
 		for (size_t idx = 0; idx < ti->second.size(); idx++) {
-			ID &t = ti->second[idx];
+			ID &t = ti->second[idx];  // 突触连接的目标神经元ID
 			n2s_rev[t.type()][t.id()].push_back(ID(ti->first, idx));
 		}
 	}
@@ -66,6 +66,7 @@ void Network::splitNetwork(SplitType split, const char *name, const AlgoPara *pa
 						ID id(t, 0, i);
 						_idx2node[t][i] = node_idx;
 						neuron_count += 1;
+                        // 把以i为目的神经元的所有突触加入到node_idx编号的节点中
 						for (auto siter = n2s_rev[t][i].begin(); siter != n2s_rev[t][i].end(); siter++) {
 							_idx2node[siter->type()][siter->id()] = node_idx;
 						}
