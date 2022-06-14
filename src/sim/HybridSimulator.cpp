@@ -270,7 +270,8 @@ int HybridSimulator::run(real time, FireInfo &log, int thread_num, int gpu_num, 
      * 否则为1;
      **/
     assert(_thread_num > 0);  
-    pthread_barrier_init(&hybrid_thread_barrier, NULL, _thread_num);
+    pthread_barrier_init(&hybrid_thread_barrier, NULL, _subnet_num[_process_id]);
+    pthread_barrier_init(&hybrid_cpu_thread_barrier, NULL, _thread_num - _proc_gpu_num[_process_id]);
     pthread_t *thread_ids = malloc_c<pthread_t>(_thread_num);
     assert(thread_ids != NULL);
 
@@ -405,10 +406,10 @@ void *hybrid_sim_multi_thread_cpu(void *paras) {
 			updatePthreadType[pNetCPU->pNTypes[i]](pNetCPU->ppConnections[i], pNetCPU->ppNeurons[i],
 			 	buffer->_data + pNetCPU->bufferOffsets[i], buffer->_fire_table, buffer->_fired_sizes, 
 				buffer->_fire_table_cap, pNetCPU->pNeuronNums[i+1]-pNetCPU->pNeuronNums[i],
-				pNetCPU->pNeuronNums[i], time, thread_num, thread_id - cpu_control_thread_id, hybrid_thread_barrier);
+				pNetCPU->pNeuronNums[i], time, thread_num, thread_id - cpu_control_thread_id, hybrid_cpu_thread_barrier);
 		}
         // 同步1，一次通信
-        pbuf->fetch_cpu(subnet_id, cm, buffer->_fire_table, buffer->_fired_sizes, buffer->_fire_table_cap, max_delay, time, thread_num, thread_id - cpu_control_thread_id, hybrid_thread_barrier);
+        pbuf->fetch_cpu(subnet_id, cm, buffer->_fire_table, buffer->_fired_sizes, buffer->_fire_table_cap, max_delay, time, thread_num, thread_id - cpu_control_thread_id, hybrid_cpu_thread_barrier);
 
         if (thread_id == cpu_control_thread_id) {
             pbuf->update_cpu(thread_id, subnet_id, time);
@@ -418,7 +419,7 @@ void *hybrid_sim_multi_thread_cpu(void *paras) {
 			updatePthreadType[pNetCPU->pSTypes[i]](pNetCPU->ppConnections[i], pNetCPU->ppSynapses[i], 
 				buffer->_data, buffer->_fire_table, buffer->_fired_sizes, buffer->_fire_table_cap,
 				pNetCPU->pSynapseNums[i+1] - pNetCPU->pSynapseNums[i], pNetCPU->pSynapseNums[i], time, thread_num,
-				thread_id - cpu_control_thread_id, hybrid_thread_barrier);
+				thread_id - cpu_control_thread_id, hybrid_cpu_thread_barrier);
 		}
         
         if (thread_id == cpu_control_thread_id) {

@@ -9,7 +9,8 @@
 
 
 // MPI_Comm local_comm;
-pthread_barrier_t hybrid_thread_barrier;  // TODO: check whether it is right
+pthread_barrier_t hybrid_thread_barrier;  // 仅控制所有GPU线程和CPU的控制线程，即同步_subnet_num[_process_id]个线程
+pthread_barrier_t hybrid_cpu_thread_barrier;  // 仅控制所有CPU的线程，即同步_thread_num - _proc_gpu_num[_process_id]个线程
 
 
 class HybridSimulator : public Simulator {
