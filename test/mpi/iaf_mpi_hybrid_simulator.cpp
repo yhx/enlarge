@@ -42,8 +42,8 @@ int main(int argc, char **argv)
         delArray(inh_con);
     }
 
-	MNSim mn(&c, dt);	// cpu
-	mn.run(run_time);
+	HSim hm(&c, dt);	// cpu
+	hm.run(run_time, 28, 2, 1);
 
 	return 0;
 }

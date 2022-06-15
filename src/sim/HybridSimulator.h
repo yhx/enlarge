@@ -9,8 +9,8 @@
 
 
 // MPI_Comm local_comm;
-pthread_barrier_t hybrid_thread_barrier;  // 仅控制所有GPU线程和CPU的控制线程，即同步_subnet_num[_process_id]个线程
-pthread_barrier_t hybrid_cpu_thread_barrier;  // 仅控制所有CPU的线程，即同步_thread_num - _proc_gpu_num[_process_id]个线程
+extern pthread_barrier_t hybrid_thread_barrier;  // 仅控制所有GPU线程和CPU的控制线程，即同步_subnet_num[_process_id]个线程
+extern pthread_barrier_t hybrid_cpu_thread_barrier;  // 仅控制所有CPU的线程，即同步_thread_num - _proc_gpu_num[_process_id]个线程
 
 
 class HybridSimulator : public Simulator {
@@ -20,6 +20,8 @@ public:
 
     using Simulator::run;
     virtual int run(real time, FireInfo &log, int thread_num, int gpu_num, int k);
+    virtual int run(real time, int thread_num, int gpu_num, int k);
+    virtual int run(real time, FireInfo &log);
 
     int build_net(int num, SplitType split=SynapseBalance, const char *name="", const AlgoPara *para = NULL);
     int distribute(SimInfo &, int);

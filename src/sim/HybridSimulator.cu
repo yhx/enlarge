@@ -9,6 +9,7 @@
 #include "../base/TypeFunc.h"
 #include "../net/Network.h"
 #include "../neuron/lif/LIFData.h"
+#include "../neuron/iaf/IAFData.h"
 #include "../../msg_utils/helper/helper_c.h"
 #include "../../msg_utils/helper/helper_gpu.h"
 #include "../../msg_utils/msg_utils/msg_utils.h"
@@ -32,7 +33,6 @@ void *run_gpu_hybrid(void *para) {
 	// print_mem("Inside Run");
 
 #ifdef LOG_DATA
-	// TODO: 改写输出函数
 	FILE *v_file = log_file_mpi("v", network->_nodeIdx);
 	FILE *sim_file = log_file_mpi("sim", network->_nodeIdx);
 	FILE *msg_file = log_file_mpi("msg", network->_nodeIdx);
@@ -77,17 +77,16 @@ void *run_gpu_hybrid(void *para) {
 	// print_mem("Alloced Buffers");
 
 #ifdef LOG_DATA
-// TODO: 重写输出
 	int nodeNeuronNum = c_pNetGPU->pNeuronNums[nTypeNum];
 	real *c_vm = hostMalloc<real>(nodeNeuronNum);
-	int life_idx = getIndex(c_pNetGPU->pNTypes, nTypeNum, LIF);
+	int iafe_idx = getIndex(c_pNetGPU->pNTypes, nTypeNum, IAF);
 	int copy_idx = -1;
 	real *c_g_vm = NULL;
 
-	if (life_idx >= 0) {
-		LIFData *c_g_lif = FROMGPU(static_cast<LIFData *>(c_pNetGPU->ppNeurons[life_idx]), 1);
-		c_g_vm = c_g_lif->pV_m;
-		copy_idx = life_idx;
+	if (iafe_idx >= 0) {
+		IAFData *c_g_iaf = FROMGPU(static_cast<IAFData *>(c_pNetGPU->ppNeurons[iafe_idx]), 1);
+		c_g_vm = c_g_iaf->pV_m;
+		copy_idx = iafe_idx;
 	} else {
 	}
 #endif
@@ -108,10 +107,10 @@ void *run_gpu_hybrid(void *para) {
 #ifdef PROF
 	double t1, t2, t3, t4, t5, t6;
 	double comp_time = 0, comm_time = 0, sync_time = 0;
-	int *send_count = (int *)malloc(proc_num * sizeof(int));
-	int *recv_count = (int *)malloc(proc_num * sizeof(int));
-	memset(send_count, 0, proc_num * sizeof(int));
-	memset(recv_count, 0, proc_num * sizeof(int));
+	int *send_count = (int *)malloc(total_subnet_num * sizeof(int));
+	int *recv_count = (int *)malloc(total_subnet_num * sizeof(int));
+	memset(send_count, 0, total_subnet_num * sizeof(int));
+	memset(recv_count, 0, total_subnet_num * sizeof(int));
 #endif
 
 	print_gmem("After build");
@@ -155,12 +154,12 @@ void *run_gpu_hybrid(void *para) {
 		t3 = MPI_Wtime();
 		comm_time += t3-t2;
 
-		pthread_barrier_wait(&g_proc_barrier);
+		pthread_barrier_wait(&hybrid_thread_barrier);
 	    if (thread_id == 0) {	
 			MPI_Barrier(MPI_COMM_WORLD);
 		}
 		if (curr_delay >= min_delay-1) {
-			for (int i=0; i<proc_num; i++) {
+			for (int i = 0; i < total_subnet_num; i++) {
 				send_count[i] += pbuf->_send_num[i];
 				recv_count[i] += pbuf->_recv_num[i];
 			}
@@ -170,10 +169,10 @@ void *run_gpu_hybrid(void *para) {
 #endif
 
 #ifdef LOG_DATA
-		int currentIdx = time%(max_delay+1);
+		int currentIdx = time % (max_delay + 1);
 
-		if (copy_idx >= 0 && (c_pNetGPU->pNeuronNums[copy_idx+1]-c_pNetGPU->pNeuronNums[copy_idx]) > 0) {
-			COPYFROMGPU(c_vm, c_g_vm, c_pNetGPU->pNeuronNums[copy_idx+1]-c_pNetGPU->pNeuronNums[copy_idx]);
+		if (copy_idx >= 0 && (c_pNetGPU->pNeuronNums[copy_idx + 1] - c_pNetGPU->pNeuronNums[copy_idx]) > 0) {
+			COPYFROMGPU(c_vm, c_g_vm, c_pNetGPU->pNeuronNums[copy_idx + 1] - c_pNetGPU->pNeuronNums[copy_idx]);
 		}
 #endif
 
@@ -190,7 +189,7 @@ void *run_gpu_hybrid(void *para) {
 
 #ifdef LOG_DATA
 		// cs[thread_id]->log_gpu(time, (string("proc_") + std::to_string(network->_nodeIdx)).c_str());
-		pbuf->log_cpu(thread_id, time, "ml");
+		pbuf->log_cpu(subnet_id, time, "ml");
 #endif
 		pbuf->upload_gpu(thread_id, subnet_id, g_buffer->_fire_table, g_buffer->_fired_sizes, buffer._fired_sizes, g_buffer->_fire_table_cap, max_delay, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
 
@@ -205,16 +204,16 @@ void *run_gpu_hybrid(void *para) {
 		COPYFROMGPU(&copySize, g_buffer->_fired_sizes + currentIdx, 1);
 		assert(copySize <= allNeuronNum);
 		if (copySize > 0) {
-			COPYFROMGPU(buffer._fire_table, g_buffer->_fire_table + (allNeuronNum*currentIdx), copySize);
+			COPYFROMGPU(buffer._fire_table, g_buffer->_fire_table + (allNeuronNum * currentIdx), copySize);
 		}
 
-		for (int i=0; i<copySize; i++) {
+		for (int i = 0; i < copySize; i++) {
 			fprintf(sim_file, "%d ", buffer._fire_table[i]);
 		}
 		fprintf(sim_file, "\n");
 		fflush(sim_file);
 
-		for (int i=0; i<c_pNetGPU->pNeuronNums[copy_idx+1] - c_pNetGPU->pNeuronNums[copy_idx]; i++) {
+		for (int i = 0; i < c_pNetGPU->pNeuronNums[copy_idx + 1] - c_pNetGPU->pNeuronNums[copy_idx]; i++) {
 			fprintf(v_file, "%.10lf ", c_vm[i]);
 		}
 		fprintf(v_file, "\n");
@@ -230,7 +229,7 @@ void *run_gpu_hybrid(void *para) {
 
 	string send;
 	string recv;
-	for (int i=0; i<proc_num; i++) {
+	for (int i = 0; i < total_subnet_num; i++) {
 		send += std::to_string(send_count[i]);
 		send += ' ';
 		recv += std::to_string(recv_count[i]);

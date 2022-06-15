@@ -20,6 +20,9 @@
 using std::string;
 using std::to_string;
 
+pthread_barrier_t hybrid_thread_barrier;  // 仅控制所有GPU线程和CPU的控制线程，即同步_subnet_num[_process_id]个线程
+pthread_barrier_t hybrid_cpu_thread_barrier;  // 仅控制所有CPU的线程，即同步_thread_num - _proc_gpu_num[_process_id]个线程
+
 
 /**
  * @brief Construct a new Hybrid Simulator:: Hybrid Simulator object
@@ -190,6 +193,19 @@ int HybridSimulator::distribute(SimInfo &info, int sim_cycle)
 	return 0;
 }
 
+int HybridSimulator::run(real time, int thread_num, int gpu_num, int k)
+{
+	FireInfo log;
+	run(time, log, thread_num, gpu_num, k);
+	return 0;
+}
+
+int HybridSimulator::run(real time, FireInfo &log)
+{
+    printf("This api should not be called!\n");
+	return -1;
+}
+
 
 /**
  * @brief 每个process的整体控制
@@ -224,7 +240,13 @@ int HybridSimulator::run(real time, FireInfo &log, int thread_num, int gpu_num, 
         _total_gpu_num += _proc_gpu_num[i];  // control gpu
     }
 
+#ifdef PROF
     printf("TOTAL GPU NUM: %d\n", _total_gpu_num);
+    for (int i = 0; i < _process_num; ++i) {
+        printf("%d ", _subnet_num[i]);
+    }
+    printf("\n");
+#endif
     MPI_Barrier(MPI_COMM_WORLD);
     
     _thread_num = thread_num;   // 每个进程可分配的线程数
@@ -270,7 +292,7 @@ int HybridSimulator::run(real time, FireInfo &log, int thread_num, int gpu_num, 
      * 否则为1;
      **/
     assert(_thread_num > 0);  
-    pthread_barrier_init(&hybrid_thread_barrier, NULL, _subnet_num[_process_id]);
+    pthread_barrier_init(&hybrid_thread_barrier, NULL, _proc_gpu_num[_process_id] + 1);
     pthread_barrier_init(&hybrid_cpu_thread_barrier, NULL, _thread_num - _proc_gpu_num[_process_id]);
     pthread_t *thread_ids = malloc_c<pthread_t>(_thread_num);
     assert(thread_ids != NULL);
@@ -292,10 +314,10 @@ int HybridSimulator::run(real time, FireInfo &log, int thread_num, int gpu_num, 
         paras[i]._subnet_id = i;
         paras[i]._gpu_num = _gpu_num;
         paras[i]._subnet_num = _subnet_num;
-        paras[i]._total_subnet_num = _total_subnet_num;
-        paras[i]._thread_id = i % _proc_gpu_num[_process_id];  // TODO：在double buffer情况下需要改正这一个值
+        paras[i]._total_subnet_num = _total_subnet_num;     
 
         if (i < _proc_gpu_num[_process_id]) {  // 如果当前的线程是GPU进程（_proc_gpu_num[_process_id]>0），前gpu_num个线程每个对应一个gpu
+            paras[i]._thread_id = i % _proc_gpu_num[_process_id];  // TODO：在double buffer情况下需要改正这一个值
             int ret = pthread_create(&(thread_ids[i]), NULL, &run_gpu_hybrid, (void*)&(paras[i]));
             assert(ret == 0);
         } else {  // 否则调用管理cpu线程的函数
@@ -339,7 +361,7 @@ void HybridSimulator::run_cpu_hybrid(DistriNetwork *network, HybridCrossMap *cm,
         paras[i]._network = network;
 	    paras[i]._buffer = &buffer;
 	    paras[i]._thread_num = run_thread_num;
-	    paras[i]._thread_id = i;
+	    paras[i]._thread_id = i + _proc_gpu_num[_process_id];
         paras[i].pbuf = pbuf;
         paras[i]._cpu_control_thread_id = thread_ids[_proc_gpu_num[_process_id]];
         paras[i]._subnet_id = subnet_id;
@@ -433,4 +455,6 @@ void *hybrid_sim_multi_thread_cpu(void *paras) {
 
 	return 0;
 }
+
+HybridSimulator::~HybridSimulator() {}
 

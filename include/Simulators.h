@@ -20,12 +20,16 @@
 #include "../src/sim/MultiNodeSimulator.h"
 #include "../src/sim/MultiLevelSimulator.h"
 
+// CPU + GPU + MPI
+#include "../src/sim/HybridSimulator.h"
+
 typedef SingleThreadSimulator STSim;
 typedef SingleGPUSimulator SGSim;
 typedef MultiGPUSimulator MGSim;
 typedef MultiNodeSimulator MNSim;
 typedef MultiLevelSimulator MLSim;
 typedef MultiThreadSimulator MTSim;
+typedef HybridSimulator HSim;
 
 #endif /* SIMULATORS_H */
 

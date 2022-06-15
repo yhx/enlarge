@@ -4,8 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
+                "/usr/lib/x86_64-linux-gnu/openmpi/include/**",
                 "/usr/local/cuda/include/**",
-                "/usr/lib/x86_64-linux-gnu/openmpi/include/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
