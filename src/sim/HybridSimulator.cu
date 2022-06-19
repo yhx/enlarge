@@ -61,8 +61,7 @@ void *run_gpu_hybrid(void *para) {
 	int nodeSynapseNum = pNetCPU->pSynapseNums[sTypeNum];  // 当前子网络的所有突触数量总和
 
 	int max_delay = pNetCPU->ppConnections[0]->maxDelay;
-	int min_delay = pNetCPU->ppConnections[0]->minDelay;
-
+ 
 	pInfoGNetwork(pNetCPU, string("Proc ") + std::to_string(network->_nodeIdx));
 
 
