@@ -145,9 +145,6 @@ void *run_gpu_hybrid(void *para) {
 #endif
 	    pbuf->fetch_gpu(subnet_id, cm, g_buffer->_fire_table, g_buffer->_fired_sizes, g_buffer->_fire_table_cap, max_delay, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
 
-		// checkCudaErrors(cudaMemcpy(gCrossDataGPU->_firedNum + network->_nodeIdx * proc_num, c_g_fired_n_num, sizeof(int)*proc_num, cudaMemcpyDeviceToHost));
-		pbuf->update_gpu(thread_id, subnet_id, time);
-
 #ifdef PROF
 		int curr_delay = time % pbuf->_min_delay;
 		t3 = MPI_Wtime();
@@ -190,7 +187,7 @@ void *run_gpu_hybrid(void *para) {
 		// cs[thread_id]->log_gpu(time, (string("proc_") + std::to_string(network->_nodeIdx)).c_str());
 		pbuf->log_cpu(subnet_id, time, "ml");
 #endif
-		pbuf->upload_gpu(thread_id, subnet_id, g_buffer->_fire_table, g_buffer->_fired_sizes, buffer._fired_sizes, g_buffer->_fire_table_cap, max_delay, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
+		pbuf->upload_gpu(thread_id, subnet_id, g_buffer->_fire_table, g_buffer->_fired_sizes, buffer._fired_sizes, g_buffer->_fire_table_cap, max_delay, time, (allNeuronNum + MAX_BLOCK_SIZE - 1) / MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
 
 #ifdef PROF
 		// cudaDeviceSynchronize();

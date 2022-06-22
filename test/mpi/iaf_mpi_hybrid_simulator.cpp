@@ -11,7 +11,7 @@ int main(int argc, char **argv)
     int node_id = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &node_id);
 
-	const int N = 10;
+	const int N = 20;
 	const real run_time = 1000e-3;
 	const real dt = 1e-4;
 	Network c(dt);

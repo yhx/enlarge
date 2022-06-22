@@ -247,6 +247,7 @@ int HybridSimulator::run(real time, FireInfo &log, int thread_num, int gpu_num, 
     }
     printf("\n");
 #endif
+
     MPI_Barrier(MPI_COMM_WORLD);
     
     _thread_num = thread_num;   // 每个进程可分配的线程数
@@ -268,7 +269,6 @@ int HybridSimulator::run(real time, FireInfo &log, int thread_num, int gpu_num, 
         distribute(info, sim_cycle);
     }
 
-    // TODO: 检查cm和cs是否正确
     // 当前节点需要分配的网络个数为1 + k * _proc_gpu_num[_process_id]个
     HybridCrossMap **cm = malloc_c<HybridCrossMap*>(_subnet_num[_process_id]);       // 和实例的数目相同，主要用来映射，本地id变到对面的id是什么样的
     HybridCrossSpike **cs = malloc_c<HybridCrossSpike*>(_subnet_num[_process_id]);   // procbuf的结构需要重新写
@@ -283,7 +283,7 @@ int HybridSimulator::run(real time, FireInfo &log, int thread_num, int gpu_num, 
             _network_data[i]->_simCycle = sim_cycle;
         }
         cm[i] = convert2hybridcrossmap(_network_data[i]->_crossnodeMap);
-        cs[i] = convert2hybridcrossspike(_data[i], start_subnet_id + i, 0);
+        cs[i] = convert2hybridcrossspike(_data[i], start_subnet_id + i);
     }
 
     /** 
@@ -297,10 +297,9 @@ int HybridSimulator::run(real time, FireInfo &log, int thread_num, int gpu_num, 
     pthread_t *thread_ids = malloc_c<pthread_t>(_thread_num);
     assert(thread_ids != NULL);
 
-    // TODO: 修改pbuf的大小，以备后续调用
     HybridProcBuf pbuf(cs, &hybrid_thread_barrier, _process_id, _process_num, cs[0]->_min_delay, _subnet_num, _k, _total_subnet_num, _thread_num);
 
-    HybridRunPara *paras = malloc_c<HybridRunPara>(_subnet_num[_process_id]);  // 为每一个线程分配一个RunPara
+    HybridRunPara *paras = malloc_c<HybridRunPara>(_subnet_num[_process_id]);  // 为每一个子网络分配一个RunPara
 
     /**
      * 分配线程。如果当前进程不控制gpu，则不需要分配线程，在调用的子程序中分配线程即可
@@ -438,7 +437,7 @@ void *hybrid_sim_multi_thread_cpu(void *paras) {
 	gettimeofday(&te, NULL);
 
 	double seconds =  te.tv_sec - ts.tv_sec + (te.tv_usec - ts.tv_usec)/1000000.0;
-	printf("Thread %d Simulation finesed in %lfs\n", network->_nodeIdx, seconds);
+	printf("Thread %d Simulation finesed in %lfs\n", thread_id, seconds);
 
 #ifdef PROF
 	if (thread_id == 0) {

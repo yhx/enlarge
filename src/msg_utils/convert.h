@@ -14,6 +14,6 @@ CrossSpike * convert2crossspike(CrossNodeData *cnd, int proc_rank, int gpu_num);
 
 // for hybrid simulator
 HybridCrossMap * convert2hybridcrossmap(CrossNodeMap * cnm);
-HybridCrossSpike * convert2hybridcrossspike(CrossNodeData *cnd, int proc_rank, int gpu_num);
+HybridCrossSpike * convert2hybridcrossspike(CrossNodeData *cnd, int proc_rank);
 
 #endif //CONVERT_H
