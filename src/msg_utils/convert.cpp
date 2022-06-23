@@ -81,14 +81,18 @@ HybridCrossMap * convert2hybridcrossmap(CrossNodeMap * cnm)
 	return cm;
 }
 
-HybridCrossSpike * convert2hybridcrossspike(CrossNodeData *cnd, int subnet_id)
+HybridCrossSpike * convert2hybridcrossspike(CrossNodeData *cnd, int subnet_id, int gpu_num)
 {
 	int subnet_num = cnd->_node_num;        // 子网络数
 	int delay = cnd->_min_delay;            // 最小delay
 	HybridCrossSpike *cs = NULL;
 	
+	if (gpu_num > 0) {
+		cs = new HybridCrossSpike(subnet_id, subnet_num, delay, gpu_num);
+	} else {
+		cs = new HybridCrossSpike(subnet_id, subnet_num, delay);  // 分配CrossSpike中的_X_offset, _X_start, _X_num的空间，未分配_X_data
+	}
 
-	cs = new HybridCrossSpike(subnet_id, subnet_num, delay);  // 分配CrossSpike中的_X_offset, _X_start, _X_num的空间，未分配_X_data
 	for (int i = 0; i < subnet_num + 1; i++) {
 		cs->_recv_offset[i] = cnd->_recv_offset[i];
 		cs->_send_offset[i] = cnd->_send_offset[i];

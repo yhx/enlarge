@@ -32,7 +32,7 @@ void *run_gpu_hybrid(void *para) {
 
 	// print_mem("Inside Run");
 
-#ifdef LOG_DATA
+#ifdef TEST //LOG_DATA
 	FILE *v_file = log_file_mpi("v", network->_nodeIdx);
 	FILE *sim_file = log_file_mpi("sim", network->_nodeIdx);
 	FILE *msg_file = log_file_mpi("msg", network->_nodeIdx);
@@ -75,7 +75,7 @@ void *run_gpu_hybrid(void *para) {
 
 	// print_mem("Alloced Buffers");
 
-#ifdef LOG_DATA
+#ifdef TEST //LOG_DATA
 	int nodeNeuronNum = c_pNetGPU->pNeuronNums[nTypeNum];
 	real *c_vm = hostMalloc<real>(nodeNeuronNum);
 	int iafe_idx = getIndex(c_pNetGPU->pNTypes, nTypeNum, IAF);
@@ -103,7 +103,7 @@ void *run_gpu_hybrid(void *para) {
 	double ts, te;
 	ts = MPI_Wtime();
 
-#ifdef PROF
+#ifdef TEST //PROF
 	double t1, t2, t3, t4, t5, t6;
 	double comp_time = 0, comm_time = 0, sync_time = 0;
 	int *send_count = (int *)malloc(total_subnet_num * sizeof(int));
@@ -114,7 +114,7 @@ void *run_gpu_hybrid(void *para) {
 
 	print_gmem("After build");
 
-#ifdef LOG_DATA
+#ifdef TEST // LOG_DATA
 	cm->log((string("proc_") + std::to_string(network->_nodeIdx)).c_str());
 #endif
 
@@ -122,7 +122,8 @@ void *run_gpu_hybrid(void *para) {
 	printf("Start runing for %d cycles\n", network->_simCycle);
 
 	for (int time = 0; time < network->_simCycle; time++) {
-#ifdef PROF
+        printf("time gpu: %d\n", time);
+#ifdef TEST //PROF
 		t1 = MPI_Wtime();
 #endif
 		/**
@@ -138,15 +139,18 @@ void *run_gpu_hybrid(void *para) {
 			cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->ppConnections[i], c_pNetGPU->ppNeurons[i], g_buffer->_data, g_buffer->_fire_table, g_buffer->_fired_sizes, allNeuronNum, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i], time, &updateSize[c_pNetGPU->pNTypes[i]]);
 		}
 
-#ifdef PROF
+#ifdef TEST //PROF
 		// cudaDeviceSynchronize();
 		t2 = MPI_Wtime();
 		comp_time += t2-t1;
 #endif
 	    pbuf->fetch_gpu(subnet_id, cm, g_buffer->_fire_table, g_buffer->_fired_sizes, g_buffer->_fire_table_cap, max_delay, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
 
-#ifdef PROF
+        pbuf->update_gpu(thread_id, subnet_id, time);
+
+#ifdef TEST //PROF
 		int curr_delay = time % pbuf->_min_delay;
+        int min_delay = pbuf->_min_delay;
 		t3 = MPI_Wtime();
 		comm_time += t3-t2;
 
@@ -154,7 +158,7 @@ void *run_gpu_hybrid(void *para) {
 	    if (thread_id == 0) {	
 			MPI_Barrier(MPI_COMM_WORLD);
 		}
-		if (curr_delay >= min_delay-1) {
+		if (curr_delay >= min_delay - 1) {
 			for (int i = 0; i < total_subnet_num; i++) {
 				send_count[i] += pbuf->_send_num[i];
 				recv_count[i] += pbuf->_recv_num[i];
@@ -164,7 +168,7 @@ void *run_gpu_hybrid(void *para) {
 		sync_time += t6- t3;
 #endif
 
-#ifdef LOG_DATA
+#ifdef TEST //LOG_DATA
 		int currentIdx = time % (max_delay + 1);
 
 		if (copy_idx >= 0 && (c_pNetGPU->pNeuronNums[copy_idx + 1] - c_pNetGPU->pNeuronNums[copy_idx]) > 0) {
@@ -177,25 +181,25 @@ void *run_gpu_hybrid(void *para) {
 			cudaUpdateType[c_pNetGPU->pSTypes[i]](c_pNetGPU->ppConnections[i], c_pNetGPU->ppSynapses[i], g_buffer->_data, g_buffer->_fire_table, g_buffer->_fired_sizes, allNeuronNum, c_pNetGPU->pSynapseNums[i+1]-c_pNetGPU->pSynapseNums[i], c_pNetGPU->pSynapseNums[i], time, &updateSize[c_pNetGPU->pSTypes[i]]);
 		}
 
-#ifdef PROF
+#ifdef TEST //PROF
 		// cudaDeviceSynchronize();
 		t4 = MPI_Wtime();
 		comp_time += t4 - t6;
 #endif
 
-#ifdef LOG_DATA
+#ifdef TEST //LOG_DATA
 		// cs[thread_id]->log_gpu(time, (string("proc_") + std::to_string(network->_nodeIdx)).c_str());
 		pbuf->log_cpu(subnet_id, time, "ml");
 #endif
 		pbuf->upload_gpu(thread_id, subnet_id, g_buffer->_fire_table, g_buffer->_fired_sizes, buffer._fired_sizes, g_buffer->_fire_table_cap, max_delay, time, (allNeuronNum + MAX_BLOCK_SIZE - 1) / MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
 
-#ifdef PROF
+#ifdef TEST //PROF
 		// cudaDeviceSynchronize();
 		t5 = MPI_Wtime();
 		comm_time += t5 - t4;
 #endif
 
-#ifdef LOG_DATA
+#ifdef TEST // LOG_DATA
 		uinteger_t copySize = 0;
 		COPYFROMGPU(&copySize, g_buffer->_fired_sizes + currentIdx, 1);
 		assert(copySize <= allNeuronNum);
@@ -217,8 +221,8 @@ void *run_gpu_hybrid(void *para) {
 #endif
 	}
 	te = MPI_Wtime();
-	printf("Thread %d Simulation finesed in %lfs\n", network->_nodeIdx, te-ts);
-#ifdef PROF
+	printf("Subnet %d Simulation finesed in %lfs\n", thread_id, te - ts);
+#ifdef TEST //PROF
 	printf("Thread %d Simulation perf %lf:%lf:%lf\n", network->_nodeIdx, comp_time, comm_time, sync_time);
 
 	pbuf->prof();
@@ -242,14 +246,13 @@ void *run_gpu_hybrid(void *para) {
 	sprintf(name, "gpu_mpi_%d", network->_nodeIdx); 
 
 	for (int i = 0; i < nTypeNum; i++) {
-		cudaLogRateNeuron[pNetCPU->pNTypes[i]](pNetCPU->ppNeurons[i], c_pNetGPU->ppNeurons[i],  name);
+		cudaLogRateNeuron[pNetCPU->pNTypes[i]](pNetCPU->ppNeurons[i], c_pNetGPU->ppNeurons[i], name);
 	}
 
-#ifdef LOG_DATA
+#ifdef TEST //LOG_DATA
 	fclose(sim_file);
 	fclose(v_file);
 #endif
-
 	// free_buffers(buffers);
 	freeGNetworkGPU(c_pNetGPU);
 

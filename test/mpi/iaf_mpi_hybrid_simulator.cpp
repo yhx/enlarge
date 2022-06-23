@@ -11,8 +11,11 @@ int main(int argc, char **argv)
     int node_id = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &node_id);
 
-	const int N = 20;
-	const real run_time = 1000e-3;
+    const size_t thread_num = atoi(argv[1]);  // 每层神经元的数量
+    const int gpu_num = atoi(argv[2]);  // 划分为几个节点运行程序
+
+	const int N = 200;
+	const real run_time = 100e-3;
 	const real dt = 1e-4;
 	Network c(dt);
 
@@ -22,19 +25,19 @@ int main(int argc, char **argv)
         g[0] = c.createPopulation(1, N, IAFNeuron(dt));
         g[1] = c.createPopulation(2, N, IAFNeuron(dt));
 
-        real *delay = getConstArray((real)1e-4, N * N);
+        real *delay = getConstArray((real)3e-4, N * N);
         
-        const real w = 2.4;
+        const real w = 2.4 * 1e3;
         const real w_p = 10;
         real *weight = getConstArray((real) w / N, N * N);
-        real *weight_p = getConstArray((real) w_p / N, N);
+        real *weight_p = getConstArray((real) w_p, N);
 
         enum SpikeType type = Inh;
         SpikeType *inh_con = getConstArray(type, N * N);
-        real poisson_mean = 40;
+        real poisson_mean = 4000;
         real *p_m = getConstArray(poisson_mean, N);
 
-        // c.connect_poisson_generator(g[0], p_m, weight_p, delay, NULL);
+        c.connect_poisson_generator(g[0], p_m, weight_p, delay, NULL);
         c.connect(g[0], g[1], weight, delay, NULL, N * N);
 
         delArray(weight);
@@ -43,7 +46,9 @@ int main(int argc, char **argv)
     }
 
 	HSim hm(&c, dt);	// cpu
-	hm.run(run_time, 28, 2, 1);
+	hm.run(run_time, thread_num, gpu_num, 1);
+    // MNSim mn(&c, dt);
+    // mn.run(run_time, 1);
 
 	return 0;
 }

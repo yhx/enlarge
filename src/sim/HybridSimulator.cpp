@@ -240,7 +240,7 @@ int HybridSimulator::run(real time, FireInfo &log, int thread_num, int gpu_num, 
         _total_gpu_num += _proc_gpu_num[i];  // control gpu
     }
 
-#ifdef PROF
+#ifdef TEST  // PROF
     printf("TOTAL GPU NUM: %d\n", _total_gpu_num);
     for (int i = 0; i < _process_num; ++i) {
         printf("%d ", _subnet_num[i]);
@@ -283,7 +283,7 @@ int HybridSimulator::run(real time, FireInfo &log, int thread_num, int gpu_num, 
             _network_data[i]->_simCycle = sim_cycle;
         }
         cm[i] = convert2hybridcrossmap(_network_data[i]->_crossnodeMap);
-        cs[i] = convert2hybridcrossspike(_data[i], start_subnet_id + i);
+        cs[i] = convert2hybridcrossspike(_data[i], start_subnet_id + i, 0);
     }
 
     /** 
@@ -292,7 +292,7 @@ int HybridSimulator::run(real time, FireInfo &log, int thread_num, int gpu_num, 
      * 否则为1;
      **/
     assert(_thread_num > 0);  
-    pthread_barrier_init(&hybrid_thread_barrier, NULL, _proc_gpu_num[_process_id] + 1);
+    pthread_barrier_init(&hybrid_thread_barrier, NULL, _thread_num);
     pthread_barrier_init(&hybrid_cpu_thread_barrier, NULL, _thread_num - _proc_gpu_num[_process_id]);
     pthread_t *thread_ids = malloc_c<pthread_t>(_thread_num);
     assert(thread_ids != NULL);
@@ -313,7 +313,7 @@ int HybridSimulator::run(real time, FireInfo &log, int thread_num, int gpu_num, 
         paras[i]._subnet_id = i;
         paras[i]._gpu_num = _gpu_num;
         paras[i]._subnet_num = _subnet_num;
-        paras[i]._total_subnet_num = _total_subnet_num;     
+        paras[i]._total_subnet_num = _total_subnet_num;   
 
         if (i < _proc_gpu_num[_process_id]) {  // 如果当前的线程是GPU进程（_proc_gpu_num[_process_id]>0），前gpu_num个线程每个对应一个gpu
             paras[i]._thread_id = i % _proc_gpu_num[_process_id];  // TODO：在double buffer情况下需要改正这一个值
@@ -321,19 +321,20 @@ int HybridSimulator::run(real time, FireInfo &log, int thread_num, int gpu_num, 
             assert(ret == 0);
         } else {  // 否则调用管理cpu线程的函数
             // paras[i]._run_thread_num = thread_num - _proc_gpu_num[_process_id];
-            run_cpu_hybrid(_network_data[i], cm[i], &pbuf, thread_num - _proc_gpu_num[_process_id], thread_ids, i);
+            run_cpu_hybrid(_network_data[i], cm[i], &pbuf, thread_ids, i);
         }
     }
 
-    for (int i = 0; i < _proc_gpu_num[_process_id] + 1; ++i) {
+    for (int i = 0; i < _proc_gpu_num[_process_id]; ++i) {
         pthread_join(thread_ids[i], NULL);
     }
 
     pthread_barrier_destroy(&hybrid_thread_barrier);
+    pthread_barrier_destroy(&hybrid_cpu_thread_barrier);
 
     free_c(paras);
  
-    for (int i = 0 ; i < _thread_num; ++i) {
+    for (int i = 0 ; i < _subnet_num[_process_id]; ++i) {
         delete cm[i];
         delete cs[i];
     }
@@ -347,8 +348,11 @@ int HybridSimulator::run(real time, FireInfo &log, int thread_num, int gpu_num, 
     return 0;
 }
 
-void HybridSimulator::run_cpu_hybrid(DistriNetwork *network, HybridCrossMap *cm, HybridProcBuf *pbuf, int run_thread_num, pthread_t *thread_ids, int subnet_id) {
-    HybridCPUPthreadPara *paras = malloc_c<HybridCPUPthreadPara>(run_thread_num);
+void HybridSimulator::run_cpu_hybrid(DistriNetwork *network, HybridCrossMap *cm, HybridProcBuf *pbuf, pthread_t *thread_ids, int subnet_id) {
+    int gpu_thread_num = _proc_gpu_num[_process_id];
+    int cpu_thread_num = _thread_num - gpu_thread_num;  // CPU仿真实际使用的线程数
+    assert(gpu_thread_num >= 0);
+    HybridCPUPthreadPara *paras = malloc_c<HybridCPUPthreadPara>(cpu_thread_num);
     
     GNetwork *pNetCPU = network->_network;
     int nTypeNum = pNetCPU->nTypeNum;
@@ -356,22 +360,21 @@ void HybridSimulator::run_cpu_hybrid(DistriNetwork *network, HybridCrossMap *cm,
     int max_delay = pNetCPU->ppConnections[0]->maxDelay;
     Buffer buffer(pNetCPU->bufferOffsets[nTypeNum], allNeuronNum, max_delay);
 
-    for (size_t i = 0; i < _thread_num - _proc_gpu_num[_process_id]; ++i) {
+    for (size_t i = 0; i < cpu_thread_num; ++i) {  // 除了控制GPU的线程外，其余线程都被用来控制CPU中的子网络
         paras[i]._network = network;
 	    paras[i]._buffer = &buffer;
-	    paras[i]._thread_num = run_thread_num;
-	    paras[i]._thread_id = i + _proc_gpu_num[_process_id];
-        paras[i].pbuf = pbuf;
-        paras[i]._cpu_control_thread_id = thread_ids[_proc_gpu_num[_process_id]];
+	    paras[i]._thread_num = cpu_thread_num;
+	    paras[i]._thread_id = i + gpu_thread_num;  // 当前CPU线程在该进程的线程池中的全局id
+        paras[i]._pbuf = pbuf;
+        paras[i]._cpu_control_thread_id = gpu_thread_num;  // 控制CPU的线程的全局id为_proc_gpu_num[_process_id]
         paras[i]._subnet_id = subnet_id;
         paras[i]._cm = cm;
-        int ret = pthread_create(&(thread_ids[i + _proc_gpu_num[_process_id]]), NULL, hybrid_sim_multi_thread_cpu, (void*)&(paras[i]));
+        int ret = pthread_create(&(thread_ids[i + gpu_thread_num]), NULL, hybrid_sim_multi_thread_cpu, (void*)&(paras[i]));
     }
 
-    for (int i = 0; i < run_thread_num; ++i) {
+    for (int i = gpu_thread_num; i < _thread_num; ++i) {
         pthread_join(thread_ids[i], NULL);
     }
-
     free_c(paras);
 }
 
@@ -383,7 +386,7 @@ void *hybrid_sim_multi_thread_cpu(void *paras) {
     Buffer *buffer = tmp->_buffer;
     size_t thread_id = tmp->_thread_id;
     size_t thread_num = tmp->_thread_num;
-    HybridProcBuf *pbuf = tmp->pbuf;
+    HybridProcBuf *pbuf = tmp->_pbuf;
     size_t cpu_control_thread_id = tmp->_cpu_control_thread_id;
     size_t subnet_id = tmp->_subnet_id;
 
@@ -393,7 +396,7 @@ void *hybrid_sim_multi_thread_cpu(void *paras) {
     int max_delay = pNetCPU->ppConnections[0]->maxDelay;
 	int min_delay = pNetCPU->ppConnections[0]->minDelay;
 
-#ifdef PROF
+#ifdef TEST  // PROF
     FILE *v_file = NULL, *sim_file = NULL;
 	if (thread_id == 0) {
         v_file = log_file_mpi("v", network->_nodeIdx);
@@ -406,8 +409,12 @@ void *hybrid_sim_multi_thread_cpu(void *paras) {
 	gettimeofday(&ts, NULL);
 
 	for (int time = 0; time < network->_simCycle; time++) {
-		int currentIdx = time % (max_delay + 1);
-		buffer->_fired_sizes[currentIdx] = 0;
+        if (thread_id == cpu_control_thread_id) {
+            printf("time cpu: %d\n", time);
+            int currentIdx = time % (max_delay + 1);
+            buffer->_fired_sizes[currentIdx] = 0;
+        }
+        pthread_barrier_wait(&hybrid_cpu_thread_barrier);
 
 		for (int i = 0; i < nTypeNum; i++) {
 			updatePthreadType[pNetCPU->pNTypes[i]](pNetCPU->ppConnections[i], pNetCPU->ppNeurons[i],
@@ -416,11 +423,9 @@ void *hybrid_sim_multi_thread_cpu(void *paras) {
 				pNetCPU->pNeuronNums[i], time, thread_num, thread_id - cpu_control_thread_id, hybrid_cpu_thread_barrier);
 		}
         // 同步1，一次通信
-        pbuf->fetch_cpu(subnet_id, cm, buffer->_fire_table, buffer->_fired_sizes, buffer->_fire_table_cap, max_delay, time, thread_num, thread_id - cpu_control_thread_id, hybrid_cpu_thread_barrier);
+        pbuf->fetch_cpu(subnet_id, cm, buffer->_fire_table, buffer->_fired_sizes, buffer->_fire_table_cap, max_delay, time, thread_num, thread_id, hybrid_cpu_thread_barrier);
 
-        if (thread_id == cpu_control_thread_id) {
-            pbuf->update_cpu(thread_id, subnet_id, time);
-        }
+        pbuf->update_cpu(thread_id, subnet_id, time);  // cpu和gpu同时进行数据同步
 
 		for (int i = 0; i < sTypeNum; i++) {
 			updatePthreadType[pNetCPU->pSTypes[i]](pNetCPU->ppConnections[i], pNetCPU->ppSynapses[i], 
@@ -428,29 +433,26 @@ void *hybrid_sim_multi_thread_cpu(void *paras) {
 				pNetCPU->pSynapseNums[i+1] - pNetCPU->pSynapseNums[i], pNetCPU->pSynapseNums[i], time, thread_num,
 				thread_id - cpu_control_thread_id, hybrid_cpu_thread_barrier);
 		}
-        
-        if (thread_id == cpu_control_thread_id) {
-            pbuf->upload_cpu(thread_id, subnet_id, buffer->_fire_table, buffer->_fired_sizes, buffer->_fire_table_cap, max_delay, time); 
-        }
+
+        pbuf->upload_cpu(thread_id, subnet_id, buffer->_fire_table, buffer->_fired_sizes, buffer->_fire_table_cap, max_delay, time, cpu_control_thread_id, hybrid_cpu_thread_barrier); 
 	}
 
 	gettimeofday(&te, NULL);
 
-	double seconds =  te.tv_sec - ts.tv_sec + (te.tv_usec - ts.tv_usec)/1000000.0;
-	printf("Thread %d Simulation finesed in %lfs\n", thread_id, seconds);
+	double seconds =  te.tv_sec - ts.tv_sec + (te.tv_usec - ts.tv_usec) / 1000000.0;
+	printf("Subnet %d Simulation finesed in %lfs\n", thread_id, seconds);
 
-#ifdef PROF
-	if (thread_id == 0) {
+	if (thread_id == cpu_control_thread_id) {
         char name[512];
-	    sprintf(name, "mpi_%d", network->_nodeIdx); 
+	    sprintf(name, "cpu_mpi_%d", network->_nodeIdx); 
+
 		for (int i = 0; i < nTypeNum; i++) {
-			logRateNeuron[pNetCPU->pNTypes[i]](pNetCPU->ppNeurons[i], "cpu");
+			logRateNeuron[pNetCPU->pNTypes[i]](pNetCPU->ppNeurons[i], name);
 		}
 
-		fclose(v_file);
-		fclose(sim_file);
+		// fclose(v_file);
+		// fclose(sim_file);
 	}
-#endif
 
 	return 0;
 }
