@@ -1,5 +1,8 @@
 #!/bin/bash
 
+rm -rf ./hybrid
+rm -rf ./multinode
+
 if [ ! -d "./hybrid" ];then
     mkdir ./hybrid
 fi
@@ -13,7 +16,7 @@ neuron_num=100
 part=16
 delay=100
 
-thread_num=3
+thread_num=20
 gpu_num=2
 
 cd multinode
@@ -25,7 +28,6 @@ mpirun -n 16 --hostfile ../../openmpi.config -mca btl_tcp_if_include eno1 ../../
 ../../script/line_sum.py -f rate_gpu_mpi_merge.IAF.log
 
 cd ..
-
 
 cd hybrid
 
@@ -40,3 +42,9 @@ mpirun -n 16 --hostfile ../../openmpi.config -mca btl_tcp_if_include eno1 ../../
 ../../script/line_sum.py -f rate_cpu_mpi_merge.IAF.log
 
 cd ..
+
+echo "multinode:"
+cat ./multinode/sum.res
+
+echo "hybrid:"
+cat ./hybrid/sum.res

@@ -26,7 +26,7 @@ int main(int argc, char **argv)
     const size_t thread_num = atoi(argv[5]); 
     const int gpu_num = atoi(argv[6]); 
 
-	const real run_time = 1.0;
+	const real run_time = 10.0;
 	const real dt = 1e-4;
 	Network c(dt);
 
@@ -52,6 +52,9 @@ int main(int argc, char **argv)
         }	
 
         real *delay = getConstArray((real)delay_num*dt, N * N);
+        for (int i = 0; i < N * N; ++i) {
+            delay[i] = (1 + i % delay_num) * dt;
+        }
 
         const real scale = 1e3;
         const real w1_2 = 2.4 * scale;

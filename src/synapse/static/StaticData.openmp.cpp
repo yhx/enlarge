@@ -29,7 +29,7 @@ void updateOpenmpStatic(Connection *connection, void *_data, real *buffer, uinte
 			// #pragma parallel for
 			for (size_t j = 0; j < synapseNum; j++) {							
 				//int sid = connection->pSynapsesIdx[j+startLoc];
-				size_t sid = j+startLoc;
+				size_t sid = j + startLoc;
 				assert(sid < num);  											// 突触连接的数量 
 				real weight = data->pWeight[connection->pSidMap[sid]];			// 获得当前连接的权重
 				// std::cout << "connection->dst[sid]: " << connection->dst[sid] << std::endl;

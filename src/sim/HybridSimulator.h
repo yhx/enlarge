@@ -24,6 +24,7 @@ public:
     virtual int run(real time, FireInfo &log);
 
     int build_net(int num, SplitType split=SynapseBalance, const char *name="", const AlgoPara *para = NULL);
+    int save_net(const string &path);
     int distribute(SimInfo &, int);
 
     DistriNetwork **_network_data;      // local network structure

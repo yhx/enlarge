@@ -11,7 +11,7 @@ int main(int argc, char **argv)
     int node_id = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &node_id);
 
-	if (argc != 5)
+	if (argc != 6)
 	{
 		printf("Need 4 paras. For example\n FR 1%%: %s depth num_neuron parts_num delay_num\n", argv[0]);
 		// printf("Need 7 paras. For example\n FR 1%%: %s depth num_neuron 0.7 0.5 0.6 0.3 6\n FR 5%%: %s depth num_neuron 0.7 0.9 0.6 0.2 6\n FR 20%%: %s depth num_neuron 1.3 1 2 1 50\n FR 50%%: %s depth num_neuron 2.7 3 2 1 20\n FR 65%%: %s depth num_neuron 4 2 5 3 20\n", argv[0], argv[0], argv[0], argv[0], argv[0]);
@@ -23,7 +23,9 @@ int main(int argc, char **argv)
     const int parts = atoi(argv[3]);  // 划分为几个节点运行程序
     const int delay_num = atoi(argv[4]);
 
-	const real run_time = 10.0;
+    const size_t thread_num = atoi(argv[5]); 
+
+	const real run_time = 1.0;
 	const real dt = 1e-4;
 	Network c(dt);
 
@@ -49,9 +51,6 @@ int main(int argc, char **argv)
         }	
 
         real *delay = getConstArray((real)delay_num*dt, N * N);
-        for (int i = 0; i < N * N; ++i) {
-            delay[i] = (1 + i % delay_num) * dt;
-        }
 
         const real scale = 1e3;
         const real w1_2 = 2.4 * scale;
@@ -95,8 +94,8 @@ int main(int argc, char **argv)
         delArray(inh_con);
     }
 
-    MNSim mn(&c, dt);
-    mn.run(run_time, 1);
+    MTSim mt(&c, dt);	// cpu
+	mt.run(run_time, thread_num);
 
     // if (node_id == 0) {
     //     // int parts = 16;

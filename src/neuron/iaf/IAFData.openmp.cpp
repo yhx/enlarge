@@ -118,7 +118,7 @@ void updatePthreadIAF(Connection *connection, void *_data, real *buffer, uintege
 			data->_fire_count[gnid] += fired;
 
 			if (fired) {  // update fire table if fired
-				int testLoc = __atomic_fetch_add(&(firedTableSizes[currentIdx]), 1, __ATOMIC_SEQ_CST);
+				int testLoc = __atomic_fetch_add(&(firedTableSizes[currentIdx]), 1, std::memory_order_relaxed);
 				firedTable[testLoc + firedTableCap * currentIdx] = gnid;
 				// firedTableSizes[currentIdx]++;
 

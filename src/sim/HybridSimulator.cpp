@@ -105,6 +105,66 @@ int HybridSimulator::build_net(int num, SplitType split, const char *name, const
 }
 
 
+int HybridSimulator::save_net(const string &path)
+{
+	mkdir(path.c_str());
+	string name = path + "/meta.data";
+	FILE *f = fopen_c(name.c_str(), "w");
+
+	int num = _total_subnet_num;
+	fwrite_c(&(num), 1, f);
+	fclose_c(f);
+
+	if (_network && _data) {
+		for (int i = 0; i < _subnet_num[_process_id]; i++) {
+			int idx = _proc_id * _thread_num + i;
+			string path_i = path + "/" + std::to_string(idx);
+			mkdir(path_i.c_str());
+			saveDistriNet(_network_data[i], path_i);
+			saveCND(_data[i], path_i);
+		}
+	} else if (_all_nets && _all_datas) {
+		for (int i=0; i<_proc_num * _thread_num; i++) {
+			string path_i = path + "/" + std::to_string(i);
+			mkdir(path_i.c_str());
+			saveDistriNet(&(_all_nets[i]), path_i);
+			saveCND(&(_all_datas[i]), path_i);
+		}
+	} else {
+		printf("Before save, build the net first\n");
+		return 1;
+	}
+
+	return 0;
+}
+
+int HybridSimulator::load_net(const string &path)
+{
+	string name = path + "/meta.data";
+	int num;
+	FILE *f = fopen_c(name.c_str(), "r");
+	fread_c(&(num), 1, f);
+	fclose_c(f);
+
+	if (num != _proc_num * _thread_num) {
+		printf("Error: instance num mismatch network data\n");
+		exit(-1);
+	}
+
+	_network_data = malloc_c<DistriNetwork *>(_thread_num);
+	_data = malloc_c<CrossNodeData *>(_thread_num);
+
+	for (int i=0; i<_thread_num; i++) {
+		string path_i = path + "/" + std::to_string(_proc_id * _thread_num + i);
+		printf("Data %s/%d\n", path.c_str(), _proc_id * _thread_num + i);
+		_network_data[i] = loadDistriNet(path_i);
+		_data[i] = loadCND(path_i);
+	}
+	
+	return 0;
+}
+
+
 /**
  * @brief 在进程0中构建网络、划分并将其它进程的DistriNetwork和CrossNodeData数据发送出去，
  * 而其余进程接受进程0发送的DistriNetwork和CrossNodeData数据。
@@ -382,10 +442,10 @@ void *hybrid_sim_multi_thread_cpu(void *paras) {
 	HybridCPUPthreadPara *tmp = static_cast<HybridCPUPthreadPara*>(paras);
     DistriNetwork *network = tmp->_network;
     HybridCrossMap *cm = tmp->_cm;
-    GNetwork *pNetCPU = pNetCPU = network->_network;
+    GNetwork *pNetCPU = network->_network;
     Buffer *buffer = tmp->_buffer;
     size_t thread_id = tmp->_thread_id;
-    size_t thread_num = tmp->_thread_num;
+    size_t thread_num = tmp->_thread_num;  // CPU的线程数
     HybridProcBuf *pbuf = tmp->_pbuf;
     size_t cpu_control_thread_id = tmp->_cpu_control_thread_id;
     size_t subnet_id = tmp->_subnet_id;
@@ -419,19 +479,18 @@ void *hybrid_sim_multi_thread_cpu(void *paras) {
 		for (int i = 0; i < nTypeNum; i++) {
 			updatePthreadType[pNetCPU->pNTypes[i]](pNetCPU->ppConnections[i], pNetCPU->ppNeurons[i],
 			 	buffer->_data + pNetCPU->bufferOffsets[i], buffer->_fire_table, buffer->_fired_sizes, 
-				buffer->_fire_table_cap, pNetCPU->pNeuronNums[i+1]-pNetCPU->pNeuronNums[i],
+				buffer->_fire_table_cap, pNetCPU->pNeuronNums[i + 1] - pNetCPU->pNeuronNums[i],
 				pNetCPU->pNeuronNums[i], time, thread_num, thread_id - cpu_control_thread_id, hybrid_cpu_thread_barrier);
 		}
         // 同步1，一次通信
         pbuf->fetch_cpu(subnet_id, cm, buffer->_fire_table, buffer->_fired_sizes, buffer->_fire_table_cap, max_delay, time, thread_num, thread_id, hybrid_cpu_thread_barrier);
 
-        pbuf->update_cpu(thread_id, subnet_id, time);  // cpu和gpu同时进行数据同步
+        pbuf->update_cpu(thread_id, subnet_id, time, cpu_control_thread_id);  // cpu和gpu同时进行数据同步
 
 		for (int i = 0; i < sTypeNum; i++) {
 			updatePthreadType[pNetCPU->pSTypes[i]](pNetCPU->ppConnections[i], pNetCPU->ppSynapses[i], 
 				buffer->_data, buffer->_fire_table, buffer->_fired_sizes, buffer->_fire_table_cap,
-				pNetCPU->pSynapseNums[i+1] - pNetCPU->pSynapseNums[i], pNetCPU->pSynapseNums[i], time, thread_num,
-				thread_id - cpu_control_thread_id, hybrid_cpu_thread_barrier);
+				pNetCPU->pSynapseNums[i+1] - pNetCPU->pSynapseNums[i], pNetCPU->pSynapseNums[i], time, thread_num, thread_id - cpu_control_thread_id, hybrid_cpu_thread_barrier);
 		}
 
         pbuf->upload_cpu(thread_id, subnet_id, buffer->_fire_table, buffer->_fired_sizes, buffer->_fire_table_cap, max_delay, time, cpu_control_thread_id, hybrid_cpu_thread_barrier); 
