@@ -7,10 +7,15 @@
 
 using namespace std;
 
+// // 存储网络权重的文件
+// const char *FILE_WEIGHT = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.weight_0.20_0.117";
+// // 存储经过merge后的程序
+// const char *FILE_WEIGHT_MERGE = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.weight_merge_0.20_0.117";
+
 // 存储网络权重的文件
-const char *FILE_WEIGHT = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.weight_0.2_0.117";
+const char *FILE_WEIGHT = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.weight_0.30_0.16";
 // 存储经过merge后的程序
-const char *FILE_WEIGHT_MERGE = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.weight_merge_0.2_0.117";
+const char *FILE_WEIGHT_MERGE = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.weight_merge_0.30_0.16";
 
 struct SynInfo {
     int s_pop_id, t_pop_id, receptor;
@@ -64,5 +69,6 @@ void merge_network() {
 }
 
 int main(int argc, char **argv) {
+    cout << FILE_WEIGHT_MERGE << endl;
     merge_network();
 }

@@ -38,6 +38,20 @@ void (*cudaUpdateType[])(Connection *, void *, real *, uinteger_t *, uinteger_t*
 	cudaUpdatePoisson
 };
 
+void (*cudaUpdateNeuron[])(Connection *, void *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int, BlockSize *) = {
+	cudaUpdateLIF,
+	cudaUpdateIAF,
+	NULL,
+	NULL
+};
+
+void (*cudaUpdateSynapse[])(Connection *, void *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int, BlockSize *, cudaStream_t) = {
+	NULL,
+	NULL,
+	cudaUpdateStatic,
+	cudaUpdatePoisson
+};
+
 int (*cudaLogRateNeuron[])(void *cpu, void *gpu, const char *name) = {
 	cudaLogRateLIF,
 	cudaLogRateIAF,

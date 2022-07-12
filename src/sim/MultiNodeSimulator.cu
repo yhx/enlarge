@@ -38,6 +38,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 
 	// print_mem("Before SetDevice");
 	gm.set(network->_nodeIdx % gpu);
+    // printf("Choose GPU: %d\n", network->_nodeIdx % gpu);
 	gm.lock();
 	// print_mem("Before Network");
 
@@ -124,6 +125,7 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 	double t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, tss = 0, tee = 0;
 	double comp_time = 0, comm_time = 0, sync_time = 0, comm_time2 = 0, gpu_time = 0, gpu_wait = 0;
 	double *t_neuron, *t_synapse;
+    double _upload_time = 0, _update_time = 0;
 	t_neuron = malloc_c<double>(pNetCPU->nTypeNum);
 	t_synapse = malloc_c<double>(pNetCPU->sTypeNum);
 	int *send_count = (int *)malloc(node_num * sizeof(int));
@@ -143,9 +145,9 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 
 	for (int time=0; time<network->_simCycle; time++) {
 #ifdef PROF
-		if (network->_nodeIdx == 0 && time % 100 == 1) {
-			printf("%d\n", time);
-		}
+		// if (network->_nodeIdx == 0 && time % 100 == 1) {
+		// 	printf("%d\n", time);
+		// }
 		t1 = MPI_Wtime();
 #endif
 		update_time<<<1, 1>>>(g_buffer->_fired_sizes, maxDelay, time);
@@ -176,8 +178,15 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 		cudaGenerateCND(cnm_gpu->_idx2index, cnm_gpu->_crossnodeIndex2idx, cnd_gpu, g_buffer->_fire_table, g_buffer->_fired_sizes, allNeuronNum, maxDelay, cnd_gpu->_min_delay, node_num, time, (allNeuronNum+MAX_BLOCK_SIZE-1)/MAX_BLOCK_SIZE, MAX_BLOCK_SIZE);
 
 		// checkCudaErrors(cudaMemcpy(gCrossDataGPU->_firedNum + network->_nodeIdx * node_num, c_g_fired_n_num, sizeof(int)*node_num, cudaMemcpyDeviceToHost));
+#ifdef PROF
+		double update_t1 = MPI_Wtime();
+#endif
 		MPI_Request request_t;
 		update_cnd_gpu(cnd_gpu, cnd, curr_delay, &request_t);
+#ifdef PROF
+		double update_t2 = MPI_Wtime();
+        _update_time += update_t2 - update_t1;
+#endif
 
 #ifdef PROF
 		// cudaDeviceSynchronize();
@@ -227,7 +236,12 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 		t4 = MPI_Wtime();
 		comp_time += t4 - t6;
 #endif
-		if (curr_delay >= minDelay -1) {
+
+
+#ifdef PROF
+		double upload_t1 = MPI_Wtime();
+#endif
+        if (curr_delay >= minDelay -1) {
 #ifdef PROF
 			double t_ts = 0, t_te = 0;
 #endif
@@ -275,7 +289,10 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 #endif
 			reset_cnd_gpu(cnd_gpu, cnd);
 		}
-
+#ifdef PROF
+		double upload_t2 = MPI_Wtime();
+        _upload_time += upload_t2 - upload_t1;
+#endif
 
 #ifdef PROF
 		// cudaDeviceSynchronize();
@@ -303,16 +320,24 @@ int run_node_gpu(DistriNetwork *network, CrossNodeData *cnd, int gpu)
 		}
 		fprintf(v_file, "\n");
 
-		log_array(input_e_file, buffer._data, buffer._data_size);
+		// log_array(input_e_file, buffer._data, buffer._data_size);
+		
+		for (int i=0; i<buffer._data_size; i++) {
+			fprintf(input_e_file, "%d ", static_cast<int>(buffer._data[i]));
+		}
+		fprintf(input_e_file, "\n");
+
 #endif
 	}
+    MPI_Barrier(MPI_COMM_WORLD);
 	te = MPI_Wtime();
 	printf("Thread %d Simulation finesed in %lfs\n", network->_nodeIdx, te-ts);
 #ifdef PROF
 	printf("Thread %d Simulation perf %lf:%lf:%lf\n", network->_nodeIdx, comp_time, comm_time, sync_time);
 
 	printf("Prof: %lf:%lf:%lf:%lf:%lf\n", cnd_gpu->_cpu_wait_gpu, cnd->_cpu_time, comm_time2, gpu_time, gpu_wait);
-
+    
+    printf("Prof %d: update %lf; upload %lf\n", network->_nodeIdx, _update_time, _upload_time);
 	
 	string send;
 	string recv;

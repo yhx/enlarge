@@ -255,7 +255,11 @@ int Network::connect(Population *p_src, Population *p_dst, int *idx_src, int *id
 	size_t src_size = p_src->size();
 	size_t dst_size = p_dst->size();
 	// std::cout << "size:" << src_size << " " << dst_size << std::endl;
+	// TODO: add dt? 
 	size_t size = synapse_num; 			// 突触数量
+	// for (int i = 0; i < synapse_num; ++i) {  // add 1 to be same as NEST
+	// 	delay[i] -= _dt;
+	// }
 
 	Type type = Static;
 	size_t offset = 0;
@@ -282,7 +286,7 @@ int Network::connect(Population *p_src, Population *p_dst, int *idx_src, int *id
 		connect_(ID(p_src->type(), 0, p_src->offset()+s), 
 				ID(p_dst->type(), sp_t, p_dst->offset()+d),
 				ID(type, 0, s_offset),
-				int(delay[i] / _dt));
+				int(delay[i] / _dt));  // add 1 to be same as NEST
 		++count;
 	}
 
@@ -333,6 +337,9 @@ int Network::connect_poisson_generator(Population *p_dst, real *mean, real *weig
 	size_t size = dst_size;			  	// 由于是一对一连接，所以突触数量等于目的神经元数量
 
 	// _poisson_synapse2delay.resize(_poisson_synapse2delay.size() + dst_size);
+	// for (int i = 0; i < size; ++i) {  // add 1 to be same as NEST
+	// 	delay[i] += _dt;
+	// }
 
 	// 将突触添加到_synapses中
 	Type type = Poisson;			 	// 突触连接类型为poisson

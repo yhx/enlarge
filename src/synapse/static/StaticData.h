@@ -9,6 +9,7 @@
 
 #include "../../base/type.h"
 #include "../../utils/BlockSize.h"
+#include "nccl.h"
 
 struct StaticData {
 	bool is_view;
@@ -40,6 +41,7 @@ int cudaFreeStaticPara(void *pGPU);
 int cudaFetchStatic(void *pCPU, void *pGPU, size_t num);
 int cudaStaticParaToGPU(void *pCPU, void *pGPU, size_t num);
 int cudaStaticParaFromGPU(void *pCPU, void *pGPU, size_t num);
+void cudaUpdateStatic(Connection *conn, void *data, real *buffer, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t start_id, int t, BlockSize *pSize, cudaStream_t cuda_stream);
 void cudaUpdateStatic(Connection *conn, void *data, real *buffer, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t start_id, int t, BlockSize *pSize);
 
 int sendStatic(void *data, int dest, int tag, MPI_Comm comm);

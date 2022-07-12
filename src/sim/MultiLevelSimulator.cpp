@@ -21,6 +21,7 @@
 #include "../neuron/lif/LIFData.h"
 #include "../neuron/iaf/IAFData.h"
 #include "MultiLevelSimulator.h"
+#include "../third_party/util/mem.h"
 
 using std::string;
 using std::to_string;
@@ -274,6 +275,7 @@ int MultiLevelSimulator::run(real time, FireInfo &log, int thread_num, bool gpu)
 		}
 		cm[i] = convert2crossmap(_network_data[i]->_crossnodeMap);
 		cs[i] = convert2crossspike(_data[i], _proc_id * _thread_num + i, 0);
+        // cs[i] = convert2crossspike2(_data[i], _proc_id * _thread_num + i, 0, thread_num);
 	}
 
 	
@@ -283,7 +285,13 @@ int MultiLevelSimulator::run(real time, FireInfo &log, int thread_num, bool gpu)
 	pthread_t *thread_ids = malloc_c<pthread_t>(thread_num);
 	assert(thread_ids != NULL);
 
+	// TODO: 统计一下pbuf的占用空间 /archive/share/linhui/new_bsim/bsim/src/third_party/util/mem.h
+	size_t mem_used_bef_pbuf = getCurrentRSS();
 	ProcBuf pbuf(cs, &g_proc_barrier, _proc_id, _proc_num, _thread_num, cs[0]->_min_delay);
+	// TODO: 统计一下pbuf的占用空间
+	size_t mem_used_aft_pbuf = getCurrentRSS();
+	printf("MEM used: %lf MB\n", static_cast<double>(mem_used_aft_pbuf - mem_used_bef_pbuf) / 1024.0 / 1024.0);
+	// printf("MEM used: %lf MB\n", static_cast<double>(mem_used_aft_pbuf - mem_used_bef_pbuf));
 
 	RunPara *paras = malloc_c<RunPara>(thread_num);
 

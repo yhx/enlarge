@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
     const real run_time = 10.0;
     const char * name = "multi_area_model_20_117";
     MNSim mn(name, dt);	//gpu
-	mn.run(run_time, 1);	
+	mn.run(run_time, 2);	
     
     return 0;
 }

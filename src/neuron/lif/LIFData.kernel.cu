@@ -205,6 +205,7 @@ __global__ void update_all_lif_neuron(Connection *connection, LIFData *data, rea
 					data->pRefracStep[nid] = data->pRefracTime[nid] - 1;
 					data->pV_m[nid] = data->pV_reset[nid];
 				} else {
+					// TODO: fix gnid + num to offset*2 + nid + num
 					data->pI_e[nid] += buffer[gnid];
 					data->pI_i[nid] += buffer[gnid+num];
 				}

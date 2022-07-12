@@ -1,0 +1,262 @@
+#!/usr/bin/python3
+"""
+Usage: tmux-mpi <nproc> <command>
+System requirements: dtach, tmux
+Pip requirements: libtmux
+"""
+
+import libtmux
+import sys
+import subprocess
+import tempfile
+import os
+import glob
+import time
+import shutil
+import pty
+import atexit
+import psutil
+import shlex
+import itertools
+
+PROGRAM_PATH = os.path.abspath(__file__)
+MPI_EXEC = shlex.split(os.environ.get("TMUX_MPI_MPIRUN", "mpiexec"))
+MODE = os.environ.get("TMUX_MPI_MODE", "pane")
+
+
+def check_dtach():
+    dtach = shutil.which("dtach")
+    if dtach == None:
+        raise RuntimeError("This tool requires dtach. We could not find dtach using which.")
+
+
+def print_help():
+    print(
+            """mpi-tmux is a tool for running MPI processes in tmux windows. Run with:
+
+    mpi-tmux <nproc> <executable>
+
+If the program crashes there are likely to be dtach instances that will need
+manually cleaning up. See README.rst for configuration.
+"""
+)
+
+    exit(-1)
+
+
+def check_args():
+    if len(sys.argv) < 3:
+        print_help()
+
+
+class TMUXSession:
+    def __init__(self):
+        if not MODE in ("window", "pane"):
+            raise RuntimeError('TMUX_MPI_MODE should be either "window" or "pane".')
+        self.mode = MODE
+        self.tmux_server = libtmux.Server()
+        self.name = self._get_name()
+        sessions = self.tmux_server.attached_sessions
+        if len(sessions) > 0:
+            self.new_session = False
+            self.tmux_session = sessions[0]
+        else:
+            self.new_session = True
+            self.tmux_session = self.tmux_server.new_session(self.name)
+        # self.tmux_session = self.tmux_server.new_session(self.name)
+        self.tmux_session.set_option("remain-on-exit", "off")
+        self.window_names = []
+        self.panes = []
+        self.screens = None
+
+    def add(self, n):
+        if self.mode == "window":
+            for px in range(n):
+                if self.new_session:
+                    if px == 0:
+                        # get first window
+                        w = self.tmux_session.windows[0]
+                        w.rename_window(str(px))
+                        self.window_names.append(str(px))
+                        self.panes.append(w.attached_pane)
+                    else:
+                        w = self.tmux_session.new_window(attach=False, window_name=str(px))
+                        self.window_names.append(str(px))
+                        self.panes.append(w.attached_pane)
+                else:
+                    if px == 0:
+                        w = self.tmux_session.new_window(attach=True, window_name=str(px))
+                        self.window_names.append(str(px))
+                        self.panes.append(w.attached_pane)
+                    else:
+                        w = self.tmux_session.new_window(attach=False, window_name=str(px))
+                        self.window_names.append(str(px))
+                        self.panes.append(w.attached_pane)
+        else:
+            w = self.tmux_session.attached_window
+            w.select_layout("main-vertical")
+            for px in range(n):
+                self.panes.append(w.split_window())
+                w.select_layout("main-vertical")
+
+    def _get_name(self):
+        nb = "tmux-mpi{}"
+        n = nb.format("")
+        c = 0
+        while self.tmux_server.has_session(n):
+            c += 1
+            n = nb.format("-" + str(c))
+        return n
+
+    def send_keys(self, ix, keys):
+        self.panes[ix].send_keys(keys)
+
+    def send_enter(self):
+        for wx in self.panes:
+                wx.enter()
+
+    def kill_session(self):
+        if self.new_session:
+            self.tmux_session.kill_session()
+        else:
+            if self.mode == 'window':
+                for w in self.window_names:
+                    self.tmux_session.kill_window(w)
+
+    def set_sync_panes(self):
+        self.tmux_session.set_option("synchronize-panes", "on")
+
+
+_cleanup = []
+
+
+def cleanup():
+    for cx in _cleanup:
+        cx()
+
+
+def main():
+    # register the atexit function that tries to cleanup if needed
+    atexit.register(cleanup)
+
+    # start a tmux session with name "tmux-mpi"
+    tmux_session = TMUXSession()
+
+    def cleanup_tmux():
+        try:
+            tmux_session.kill_session()
+        except Exception as e:
+            print(e)
+
+    _cleanup.append(cleanup_tmux)
+
+    nproc = int(sys.argv[1])
+    cmd = sys.argv[2:]
+
+    # directory for dtach sockets
+    temp_dir = tempfile.TemporaryDirectory(dir="/archive/share/tmp", prefix="tmux-mpi")
+    print("tmp dir: " + temp_dir.name)
+
+    # do the mpi launch
+    launch_cmd = MPI_EXEC + ["-n", str(nproc), sys.executable, PROGRAM_PATH, "DTACH_CHILD", temp_dir.name] + cmd
+    mpiproc = subprocess.Popen(launch_cmd)
+
+    # Wait for all the dtach processes to create sockets before trying to connect to them
+    def get_socket_files():
+        return glob.glob(os.path.join(temp_dir.name, "*", "dtach.socket"))
+
+    time.sleep(0.2)
+    socket_files = get_socket_files()
+    while len(socket_files) != nproc:
+        print("Waiting for dtach sockets to appear. Found {} out of {}.".format(len(socket_files), nproc))
+        time.sleep(0.2)
+        socket_files = get_socket_files()
+    print("Waiting for dtach sockets to appear. Found {} out of {}.".format(len(socket_files), nproc))
+    mpiproc_children = psutil.Process(mpiproc.pid).children(recursive=True)
+
+    def cleanup_mpi():
+        try:
+            temp_dir.cleanup()
+        except Exception as e:
+            print(e)
+
+        try:
+            mpiproc.kill()
+        except Exception as e:
+            pass
+
+        for pidx in mpiproc_children:
+            try:
+                pidx.kill()
+            except Exception as e:
+                pass
+
+    _cleanup.append(cleanup_mpi)
+
+    # create n windows or panes
+    tmux_session.add(nproc)
+    # run the launch command in each window or pane
+    for px in range(nproc):
+        win_cmd = "dtach -a " + socket_files[px]
+        tmux_session.send_keys(px, win_cmd)
+
+    # loop over the tmux windows and send a newline to allow the execution to continue
+    # exists to prevent the program execution completing before the tmux pane is attached
+    tmux_session.send_enter()
+    if "TMUX_MPI_SYNC_PANES" in os.environ:
+        tmux_session.set_sync_panes()
+
+    if tmux_session.new_session:
+        print('To connect use "tmux attach -t {}"'.format(tmux_session.name))
+    # run the post launch command if exists
+
+    if "TMUX_MPI_POST_LAUNCH" in os.environ:
+        post_launch = shlex.split(
+                os.environ.get("TMUX_MPI_POST_LAUNCH", "").replace("TMUX_MPI_SESSION_NAME", tmux_session.name)
+                )
+        subprocess.check_call(post_launch)
+
+    # Try to terminate cleanly
+    mpiproc.communicate()
+    if (tmux_session.mode != "pane"):
+        a = input("\nPress Enter to kill tmux session and quit")
+    # else:
+    #     for px in range(nproc):
+    #         tmux_session.send_keys(px, "exit")
+
+
+def dtach_child():
+    """
+    Creates a new dtach instance with a socket in the temp dir that runs this script again to invoke exec_child.
+    """
+    dtach_socket = os.path.join(tempfile.mkdtemp(dir=sys.argv[2]), "dtach.socket")
+    cmd = sys.argv[3:]
+    dtach_cmd = ["dtach", "-N", dtach_socket, sys.executable, PROGRAM_PATH, "EXEC_CHILD", sys.argv[2]] + cmd
+
+    # Using execv worked for mpich/openmpi but not intel MPI, using pty.spawn seems to keep intel MPI happy
+    pty.spawn(dtach_cmd)
+
+
+def exec_child():
+    """
+    Waits for the newline from libtmux then runs the user command.
+    """
+
+    # Wait for the newline to be send that indicates all the tmux windows are connected.
+    a = input("Waiting for tmux windows to all be connected...\n")
+
+    # launch the actual user command
+    cmd = sys.argv[3:]
+    os.execv(shutil.which(cmd[0]), cmd)
+
+
+if __name__ == "__main__":
+    check_dtach()
+    check_args()
+
+    if sys.argv[1] == "DTACH_CHILD":
+        dtach_child()
+    elif sys.argv[1] == "EXEC_CHILD":
+        exec_child()
+    else:
+        main()

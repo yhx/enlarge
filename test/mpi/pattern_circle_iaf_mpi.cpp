@@ -42,7 +42,7 @@ int main(int argc, char **argv)
                 -55.0, -70.0, 2.0, 2.0, 0.01,
                 0.0, -68.56875477, 0.0, 0.0, 0.0, 0.0));
 
-        real *delay = getConstArray((real)2*dt, N * N);
+        real *delay = getConstArray((real)2 * dt, N * N);
 
         const real scale = 1e3;
         const real w1_2 = 2.4 * scale;

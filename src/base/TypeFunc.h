@@ -12,6 +12,7 @@
 #include "type.h"
 #include "../net/Connection.h"
 #include "../utils/BlockSize.h"
+#include "nccl.h"
 
 using std::string;
 
@@ -42,6 +43,8 @@ extern int (*cudaFreeType[TYPESIZE])(void *);
 // extern void (*cudaUpdateNeuron[TYPESIZE])(void *, real *, real *, int *, int*, int, int, int, BlockSize *);
 // extern void (*cudaUpdateSynapse[TYPESIZE])(void *, void *, real *, real *, int *, int*, int, int, int, BlockSize *);
 extern void (*cudaUpdateType[TYPESIZE])(Connection *, void *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int, BlockSize *);
+extern void (*cudaUpdateNeuron[TYPESIZE])(Connection *, void *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int, BlockSize *);
+extern void (*cudaUpdateSynapse[TYPESIZE])(Connection *, void *, real *, uinteger_t *, uinteger_t*, size_t, size_t, size_t, int, BlockSize *, cudaStream_t);
 
 extern int (*cudaLogRateNeuron[TYPESIZE])(void *cpu, void *gpu, const char *name);
 

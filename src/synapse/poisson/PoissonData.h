@@ -5,12 +5,14 @@
 #include <stdio.h>
 #include <curand_kernel.h>
 #include <curand.h>
+#include <random>
 #include "mpi.h"
 
 #include "../../net/Connection.h"
 
 #include "../../base/type.h"
 #include "../../utils/BlockSize.h"
+#include "nccl.h"
 
 /**
  * PoissonData is used to manage data of poisson synapses.
@@ -25,6 +27,8 @@ struct PoissonData {
 	real *pWeight;
 	real *pMean; 	// 均值
 	curandState *pState;	// poisson state for CUDA
+	std::poisson_distribution<int> *pPoissonGenerator;
+	std::mt19937 *pGenerator;
 };
 
 /**
@@ -57,6 +61,7 @@ int cudaFreePoissonPara(void *pGPU);
 int cudaFetchPoisson(void *pCPU, void *pGPU, size_t num);
 int cudaPoissonParaToGPU(void *pCPU, void *pGPU, size_t num);
 int cudaPoissonParaFromGPU(void *pCPU, void *pGPU, size_t num);
+void cudaUpdatePoisson(Connection *conn, void *data, real *buffer, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t start_id, int t, BlockSize *pSize, cudaStream_t cuda_stream);
 void cudaUpdatePoisson(Connection *conn, void *data, real *buffer, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t start_id, int t, BlockSize *pSize);
 
 /**

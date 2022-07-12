@@ -2,17 +2,25 @@ import json
 import numpy as np
 import sys
 
-downscale_file = "downscale_20_117"
+# python3 ./script/gain_multi_area_network.py 2c8fd994afe1305612a79dbac3c8c3da 21fc30b4ed95c13d88195ffef09a4489 16
 
-NEURON_FILE = '/archive/share/linhui2/' + downscale_file + '/neuron.log'
+# downscale_file = "downscale_20_117"
+downscale_file = "downscale_30_16"
+
+# NEURON_FILE = '/archive/share/linhui2/' + downscale_file + '/neuron.log'
+EXACT_NEURON_FILE = '/archive/share/linhui2/' + downscale_file + '/exact_neuron_numbers_15.log'
 WEIGHT_FILE = '/archive/share/linhui2/' + downscale_file + '/weight_'
 NEURON_RANGE_FILE = '/archive/share/linhui2/' + downscale_file + '/neuron_range_'
 DATA_FILE = '/archive/share/linhui2/multi-area-model/multi-area-model/data/{label}/custom_Data_Model_{network_label}.json'
 POISSON_FILE = '/archive/share/linhui2/' + downscale_file + '/poisson_input_10.log'
 
-NEST_NETWORK_FILE = '/archive/share/linhui/new_bsim/bsim/nest_network/nest.network_0.20_0.117'
-NEST_WEIGHT_FILE = '/archive/share/linhui/new_bsim/bsim/nest_network/nest.weight_0.20_0.117'
-NEST_POISSON_FILE = '/archive/share/linhui/new_bsim/bsim/nest_network/nest.poisson_weight_0.20_0.117'
+# NEST_NETWORK_FILE = '/archive/share/linhui/new_bsim/bsim/nest_network/nest.network_0.20_0.117'
+# NEST_WEIGHT_FILE = '/archive/share/linhui/new_bsim/bsim/nest_network/nest.weight_0.20_0.117'
+# NEST_POISSON_FILE = '/archive/share/linhui/new_bsim/bsim/nest_network/nest.poisson_weight_0.20_0.117'
+
+NEST_NETWORK_FILE = '/archive/share/linhui/new_bsim/bsim/nest_network/nest.network_0.30_0.16'
+NEST_WEIGHT_FILE = '/archive/share/linhui/new_bsim/bsim/nest_network/nest.weight_0.30_0.16'
+NEST_POISSON_FILE = '/archive/share/linhui/new_bsim/bsim/nest_network/nest.poisson_weight_0.30_0.16'
 
 def read_data(label, network_label):
     '''
@@ -34,9 +42,9 @@ def read_data(label, network_label):
     area_list_data = data['area_list']
     population_list_data = data['population_list']
     structure_data = data['structure']
-    with open(NEURON_FILE) as f:
-        neuron_data = json.load(f)
-    neuron_numbers_data = neuron_data #['neuron_numbers']
+    # with open(NEURON_FILE) as f:
+    #     neuron_data = json.load(f)
+    # neuron_numbers_data = neuron_data #['neuron_numbers']
     synapses_data = data['synapses']
     synapse_weights_mean_data = data['synapse_weights_mean']
     synapse_weights_sd_data = data['synapse_weights_sd']
@@ -55,8 +63,8 @@ def read_data(label, network_label):
             group_num += 1
 
     neuron_num = np.zeros(group_num)
-    for i in range(group_num):
-        neuron_num[i] = neuron_numbers_data[area_list[i]][layer_list[i]]
+    # for i in range(group_num):
+    #     neuron_num[i] = neuron_numbers_data[area_list[i]][layer_list[i]]
 
     w = np.zeros([group_num, group_num])
     w_sd = np.zeros_like(w)
@@ -74,9 +82,27 @@ def read_data(label, network_label):
         v_ext[i] = v_bg * synapses_data[area_list[i]][layer_list[i]]['external']['external'] / neuron_num[i]
         w_ext[i] = synapse_weights_mean_data[area_list[i]][layer_list[i]]['external']['external']
 
-    neuron_num = np.rint(neuron_num).astype(int)
-    synapse_num = np.rint(synapse_num).astype(int)
-
+    # neuron_num = np.rint(neuron_num).astype(int)
+    # synapse_num = np.rint(synapse_num).astype(int)
+    past = 0
+    with open(EXACT_NEURON_FILE, "r") as f:
+        lines = f.readlines()
+        i = 0
+        for line in lines:
+            bri = line.split(' ')
+            print(bri)
+            neuron_num[i] = int(bri[1].replace('\n', ''))
+            # print(neuron_num[i])
+            if i >= 1:
+                if int(bri[0].replace('\n', '')) != neuron_num[i - 1] + past:
+                    print("wrong!  ", i)
+            i += 1
+            past = int(bri[0].replace('\n', ''))
+    
+    neuron_num = neuron_num.astype(int)
+    synapse_num = synapse_num.astype(int)     
+    print(len(lines))
+    # print(tot)
     print('TotalNeuron:{:,}'.format(np.sum(neuron_num)))
     print('TotalSynapse:{:,}'.format(np.sum(synapse_num)))
 
@@ -137,7 +163,7 @@ def read_weight(n, group_num, neuron_num, w, w_sd, synapse_num, label_list, v_ex
         f.write(str(group_num) + '\n')  # population数量
         # 接下来一行是每个population中神经元的个数
         for i in range(group_num):
-            f.write(str(neuron_num[i]) + ' ')
+            f.write(str(int(neuron_num[i])) + ' ')
             total_neuron_num += neuron_num[i]
         f.write('\n')
     print('TOTAL NEURON NUMBER: ', total_neuron_num)

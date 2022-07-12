@@ -36,7 +36,7 @@ int main(int argc, char **argv)
 
         for (int i = 2; i <= depth; i++) {
             if (i % 4 == 1) {
-                g[i] = c.createPopulation(i, N, IAFNeuron(dt, 1, 10.0, 250.0, 2e-3, -70.0, 376.0, 
+                g[i] = c.createPopulation(1, N, IAFNeuron(dt, 1, 10.0, 250.0, 2e-3, -70.0, 376.0, 
 				-55.0, -70.0, 2.0, 2.0, 0.01,
 				0.0, -68.56875477, 0.0, 0.0, 0.0, 0.0));
             }

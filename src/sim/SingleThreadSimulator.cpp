@@ -13,7 +13,7 @@
 #include "../utils/Buffer.h"
 #include "../base/TypeFunc.h"
 #include "../neuron/lif/LIFData.h"
-
+#include "../neuron/iaf/IAFData.h"
 #include "SingleThreadSimulator.h"
 
 SingleThreadSimulator::SingleThreadSimulator(Network *network, real dt)
@@ -40,6 +40,7 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 	// FILE *fire_file = fopen_c("fire.cpu.log", "w+");
 #ifdef LOG_DATA
 	FILE *input_file = fopen_c("input.cpu.log", "w+");
+	FILE *I_syn_ex = fopen_c("i_syn_ex.cpu.log", "w+");
 	// FILE *ie_file = fopen_c("ie.cpu.log", "w+");
 	// FILE *ii_file = fopen_c("ii.cpu.log", "w+");
 #endif
@@ -67,6 +68,10 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 #ifdef LOG_DATA
 		log_array(input_file, buffer._data, pNetCPU->bufferOffsets[nTypeNum]);
 
+		// log I_syn_ex
+		IAFData* iaf_data = (IAFData *)pNetCPU->ppNeurons[0];
+		log_array(I_syn_ex, iaf_data->pi_syn_ex, pNetCPU->pNeuronNums[1] - pNetCPU->pNeuronNums[0]);
+		
 		// for (int i=pNetCPU->pNeuronNums[copy_idx]; i<pNetCPU->pNeuronNums[copy_idx+1]; i++) {
 		// 	fprintf(input_e_file, "%.10lf \t", c_gNeuronInput[i]);
 		// }
@@ -95,6 +100,13 @@ int SingleThreadSimulator::run(real time, FireInfo &log)
 #ifdef LOG_DATA
 		// int copy_idx = getIndex(pNetCPU->pNTypes, nTypeNum, LIF);
 		// LIFData *c_lif = (LIFData *)pNetCPU->ppNeurons[copy_idx];
+		// if (time % 10 == 9) {
+		// 	for (size_t i = 0; i < nTypeNum; i++) {
+		// 		real *c_vm = getVNeuron[pNetCPU->pNTypes[i]](pNetCPU->ppNeurons[i]);
+		// 		log_array(v_file, c_vm, pNetCPU->pNeuronNums[i+1] - pNetCPU->pNeuronNums[i]);
+		// 	}
+		// }
+
 		for (size_t i = 0; i < nTypeNum; i++) {
 			real *c_vm = getVNeuron[pNetCPU->pNTypes[i]](pNetCPU->ppNeurons[i]);
 			log_array(v_file, c_vm, pNetCPU->pNeuronNums[i+1] - pNetCPU->pNeuronNums[i]);

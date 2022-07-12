@@ -17,6 +17,7 @@
 #include "../../msg_utils/msg_utils/msg_utils.h"
 #include "../net/Network.h"
 #include "../neuron/lif/LIFData.h"
+#include "../neuron/iaf/IAFData.h"
 #include "MultiNodeSimulator.h"
 
 MultiNodeSimulator::MultiNodeSimulator(Network *network, real dt) : Simulator(network, dt)
@@ -287,7 +288,9 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 	Buffer buffer(pNetCPU->bufferOffsets[nTypeNum], allNeuronNum, maxDelay);
 
 #ifdef LOG_DATA
-	int copy_idx = getIndex(pNetCPU->pNTypes, nTypeNum, LIF);
+	// TODO: fix multiple neuron type!
+	// int copy_idx = getIndex(pNetCPU->pNTypes, nTypeNum, LIF);
+	int copy_idx = getIndex(pNetCPU->pNTypes, nTypeNum, IAF);
 #endif
 
 	MPI_Barrier(MPI_COMM_WORLD);
@@ -370,8 +373,11 @@ int run_node_cpu(DistriNetwork *network, CrossNodeData *cnd) {
 #endif
 
 #ifdef LOG_DATA
-		LIFData *c_lif = (LIFData *)pNetCPU->ppNeurons[copy_idx];
-		real *c_vm = c_lif->pV_m;
+		// LIFData *c_lif = (LIFData *)pNetCPU->ppNeurons[copy_idx];
+		// real *c_vm = c_lif->pV_m;
+		// TODO: FIX multiple neuron types
+		IAFData *c_iaf = (IAFData *)pNetCPU->ppNeurons[copy_idx];
+		real *c_vm = c_iaf->pV_m;
 		int copy_size = buffer._fired_sizes[currentIdx];
 
 		log_array(v_file, c_vm, pNetCPU->pNeuronNums[copy_idx+1] - pNetCPU->pNeuronNums[copy_idx]);

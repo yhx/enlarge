@@ -6,6 +6,7 @@
 #include "../base/constant.h"
 #include "../utils/utils.h"
 #include "../../msg_utils/helper/helper_c.h"
+#include "../../msg_utils/helper/helper_gpu.h"
 #include "../../msg_utils/msg_utils/msg_utils.h"
 #include "CrossNodeData.h"
 
@@ -27,7 +28,8 @@ void allocParaCND(CrossNodeData *data, int node_num, int delay)
 	data->_recv_data = NULL;
 	
 	data->_send_offset = malloc_c<integer_t>(num_p_1);
-	data->_send_start = malloc_c<integer_t>((size+node_num));
+	// data->_send_start = malloc_c<integer_t>((size+node_num));
+	data->_send_start = hostMalloc<integer_t>((size+node_num));
 	data->_send_num = malloc_c<integer_t>(node_num);
 	data->_send_data = NULL;
 
@@ -60,7 +62,8 @@ void allocDataCND(CrossNodeData *data)
 	// printf("Data Size1: %d\n", data_size);
 	if (data_size > 0) {
 		// printf("Size_t: %lu\n", sizeof(int)*data_size);
-		data->_recv_data = malloc_c<uinteger_t>(data_size);
+		// data->_recv_data = malloc_c<uinteger_t>(data_size);
+		data->_recv_data = hostMalloc<uinteger_t>(data_size);
 	}
 
 	data_size = data->_send_offset[num];
@@ -76,10 +79,12 @@ void freeCND(CrossNodeData *data)
 	free(data->_recv_offset);
 	free(data->_recv_start);
 	free(data->_recv_num);
-	free(data->_recv_data);
+	// free(data->_recv_data);
+	hostFree(data->_recv_data);
 
 	free(data->_send_offset);
-	free(data->_send_start);
+	// free(data->_send_start);
+	hostFree(data->_send_start);
 	free(data->_send_num);
 	free(data->_send_data);
 

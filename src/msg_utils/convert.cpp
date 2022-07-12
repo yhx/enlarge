@@ -63,3 +63,44 @@ CrossSpike * convert2crossspike(CrossNodeData *cnd, int proc_rank, int gpu_num)
 
 	return cs;
 }
+
+CrossSpike * convert2crossspike2(CrossNodeData *cnd, int proc_rank, int gpu_num, int thread_num)
+{
+	int proc_num = cnd->_node_num;
+	int delay = cnd->_min_delay;
+	CrossSpike *cs = NULL;
+	
+	if (gpu_num > 0) {
+		cs = new CrossSpike(proc_rank, proc_num, delay, gpu_num);
+	} else {
+		cs = new CrossSpike(proc_rank, proc_num, delay, thread_num);
+	}
+
+	for (int i=0;  i<proc_num + 1; i++) {
+		cs->_recv_offset[i] = cnd->_recv_offset[i];
+		cs->_send_offset[i] = cnd->_send_offset[i];
+	}
+
+	for (int i=0;  i<proc_num * (delay + 1); i++) {
+		cs->_recv_start[i] = cnd->_recv_start[i];
+		cs->_send_start[i] = cnd->_send_start[i];
+	}
+
+	for (int i=0;  i<proc_num; i++) {
+		cs->_recv_num[i] = cnd->_recv_num[i];
+		cs->_send_num[i] = cnd->_send_num[i];
+	}
+
+	cs->alloc();
+
+	for (int i=0;  i<cs->_recv_offset[proc_num]; i++) {
+		cs->_recv_data[i] = cnd->_recv_data[i];
+	}
+
+	for (int i=0;  i<cs->_send_offset[proc_num]; i++) {
+		cs->_send_data[i] = cnd->_send_data[i];
+	}
+
+	return cs;
+}
+

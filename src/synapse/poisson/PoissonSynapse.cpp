@@ -113,7 +113,17 @@ void * PoissonSynapse::packup()
 	p->pMean = _mean.data();
 	p->is_view = true;
 	p->pState = (curandState*)malloc(sizeof(curandState) * _num);
-	
+	p->pPoissonGenerator = (std::poisson_distribution<int> *)malloc(sizeof(std::poisson_distribution<int>) * _num);
+	p->pGenerator = (std::mt19937 *)malloc(sizeof(std::mt19937) * _num);
+
+	std::random_device rd;
+    // std::mt19937 gen(rd());
+
+	srand(time(0));
+	for (size_t i = 0; i < _num; ++i) {  // init all poisson generator
+		p->pPoissonGenerator[i] = std::poisson_distribution<int>(p->pMean[i]);
+		p->pGenerator[i].seed(rd());
+	}
 	// for (size_t i = 0; i < _num; ++i) {
 	// 	curand_init(i, i, i, p->pState[i]); 
 	// }

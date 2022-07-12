@@ -25,41 +25,41 @@ depth=300
 run_time=10.0
 
 # strong scale
-# for node_num in 1 2 3 4 5 6 7 8
-# do
-#     dir_name="strong_forward_$node_num"
-#     mkdir $dir_name
-#     cd $dir_name
-#     echo "runtime: " $run_time
-#     echo "START: " $node_num
-#     echo "PARAMETER: " $neuron_num $(($node_num * 2))
-
-#     # rm -rf ./pattern_circle_iaf_mpi_*
-#     # ../../build/bin/pattern_forward_iaf_mpi $depth $neuron_num $(($node_num * 2)) > ./tmp.log 
-#     mpirun -n $node_num --hostfile ../../openmpi1.config -mca btl_tcp_if_include eno1 ../../spack_run.sh ../../build/bin/pattern_forward_iaf_mpi_run $depth $neuron_num $run_time
-
-#     echo "FINISH: " $node_num "!"
-#     cd ..
-# done
-
-# weak scale
-for node_num in 2 3 4 5 6 7 8
+for node_num in 1 2 3 4 5 6 7 8
 do
-    dir_name="weak_forward_$node_num"
+    dir_name="strong_forward_$node_num"
     mkdir $dir_name
     cd $dir_name
+    echo "runtime: " $run_time
+    echo "START: " $node_num
+    echo "PARAMETER: " $neuron_num $(($node_num * 2))
 
-    echo "START: " $node_num "!"
-    
-    ../../../build/bin/pattern_forward_iaf_mpi $(($depth * $node_num)) $neuron_num  $(($node_num * 2)) > ./tmp.log 
-    
-    # with multi-level
-    mpirun -n $node_num --hostfile ../../../openmpi1.config -mca btl_tcp_if_include eno1 ../../../spack_run.sh ../../../build/bin/pattern_forward_iaf_mpi_run $(($depth * $node_num)) $neuron_num $run_time
-    
-    # without multi-level
-    # mpirun -n $(($node_num * 2)) --hostfile ../../../openmpi.config -mca btl_tcp_if_include eno1 ../../../spack_run.sh ../../../build/bin/pattern_forward_iaf_mpi_run $(($depth * $node_num)) $neuron_num $run_time
-    
+    # rm -rf ./pattern_circle_iaf_mpi_*
+    # ../../../build/bin/pattern_forward_iaf_mpi $depth $neuron_num $(($node_num * 2)) > ./tmp.log 
+    mpirun -n $node_num --hostfile ../../../openmpi1.config -mca btl_tcp_if_include eno1 ../../../spack_run.sh ../../../build/bin/pattern_forward_iaf_mpi_run $depth $neuron_num $run_time 1
+
     echo "FINISH: " $node_num "!"
     cd ..
 done
+
+# weak scale
+# for node_num in 1 2 3 4 5 6 7 8
+# do
+#     dir_name="weak_forward_$node_num"
+#     mkdir $dir_name
+#     cd $dir_name
+
+#     echo "START: " $node_num "!"
+    
+#     # ../../../build/bin/pattern_forward_iaf_mpi $(($depth * $node_num)) $neuron_num  $(($node_num * 2)) > ./tmp.log 
+    
+#     # with multi-level
+#     mpirun -n $node_num --hostfile ../../../openmpi1.config -mca btl_tcp_if_include eno1 ../../../spack_run.sh ../../../build/bin/pattern_forward_iaf_mpi_run $(($depth * $node_num)) $neuron_num $run_time 1
+    
+#     # without multi-level
+#     # mpirun -n $(($node_num * 2)) --hostfile ../../../openmpi.config -mca btl_tcp_if_include eno1 ../../../spack_run.sh ../../../build/bin/pattern_forward_iaf_mpi_run $(($depth * $node_num)) $neuron_num $run_time
+    
+#     echo "FINISH: " $node_num "!"
+#     cd ..
+# done
 

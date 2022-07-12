@@ -43,7 +43,7 @@ int main(int argc, char **argv)
         }
 
         const real scale = 1e3;
-        const real w = 3.5 * scale;
+        const real w = 3.0 * scale;  
 
         real *weight = getConstArray((real)w / N / (pop_num - 1), N * N);
 

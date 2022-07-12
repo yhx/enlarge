@@ -9,5 +9,6 @@
 
 CrossMap * convert2crossmap(CrossNodeMap * cnm);
 CrossSpike * convert2crossspike(CrossNodeData *cnd, int proc_rank, int gpu_num);
+CrossSpike * convert2crossspike2(CrossNodeData *cnd, int proc_rank, int gpu_num, int thread_num);
 
 #endif //CONVERT_H

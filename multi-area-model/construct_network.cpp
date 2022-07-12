@@ -5,9 +5,13 @@
 
 using namespace std;
 
-const char *FILE_NETWORK = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.network_0.20_0.117";         // 存储网络结构的文件
-const char *FILE_WEIGHT = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.weight_merge_0.20_0.117";
-const char *FILE_POISSON = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.poisson_weight_0.20_0.117";  // 存储poisson分布的文件
+// const char *FILE_NETWORK = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.network_0.20_0.117";         // 存储网络结构的文件
+// const char *FILE_WEIGHT = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.weight_merge_0.20_0.117";
+// const char *FILE_POISSON = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.poisson_weight_0.20_0.117";  // 存储poisson分布的文件
+
+const char *FILE_NETWORK = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.network_0.30_0.16";         // 存储网络结构的文件
+const char *FILE_WEIGHT = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.weight_merge_0.30_0.16";
+const char *FILE_POISSON = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.poisson_weight_0.30_0.16";  // 存储poisson分布的文件
 
 // const char *FILE_NETWORK = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.network_0.01";         // 存储网络结构的文件
 // const char *FILE_WEIGHT = "/archive/share/linhui/new_bsim/bsim/nest_network/nest.weight_merge_0.01";
@@ -106,6 +110,8 @@ int main(int argc, char **argv) {
     int node_id = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &node_id);
 
+    const int parts = atoi(argv[1]);  // 划分为几个节点运行程序
+
     Network net(dt);
     cout << "node id: " << node_id << endl;
 
@@ -142,7 +148,7 @@ int main(int argc, char **argv) {
     MNSim mn(&net, dt);
 
     if (node_id == 0) {
-        int parts = 16;
+        // int parts = 16;
         SplitType split = SynapseBalance;
         const char * name = "multi_area_model_20_117";
         mn.build_net(parts, split, name);

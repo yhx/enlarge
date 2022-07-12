@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 	Network c(dt);
 
     if (node_id == 0) {
-        Population *g[N + 1];
+        Population *g[pop_num + 1];
 
         const int diff_num = 5000;
         for (int i = 0; i < pop_num; ++i) {
@@ -35,12 +35,14 @@ int main(int argc, char **argv)
                 0.0, -68.56875477, 0.0, 0.0, 0.0, 0.0));
         }
 
-        real *delay = getConstArray((real)2*dt, N * N);
+        real *delay = getConstArray((real)2 * dt, N * N);  // 原本是2
 
         const real scale = 1e3;
-        const real w = 3.5 * scale;
+        const real w = 5.0 * scale;
 
         real *weight = getConstArray((real)w / N / (pop_num - 1), N * N);
+        enum SpikeType type = Inh;
+        SpikeType *inh_con = getConstArray(type, N * N);
 
         for (int i = 0; i < pop_num; ++i) {
             for (int j = 0; j < pop_num; ++j) {

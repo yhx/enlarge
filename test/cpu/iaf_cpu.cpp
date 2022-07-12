@@ -47,7 +47,7 @@ int main(int argc, char **argv)
 	delArray(weight_p);
 	delArray(inh_con);
 
-	STSim st(&c, dt);	// cpu
+	SGSim st(&c, dt);	// cpu
 	st.run(run_time);
 
 	end = clock(); //time(NULL);

@@ -5,6 +5,11 @@
 
 void updateIAF(Connection *connection, void *_data, real *buffer, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t offset, int time)
 {
+	// for (size_t i = 0; i < num; ++i) {
+	// 	std::cout << buffer[i + offset] << " ";
+	// }
+	// std::cout << std::endl;
+
 	IAFData *data = (IAFData *)_data;
 	int currentIdx = time % (connection->maxDelay+1);
 	for (size_t nid = 0; nid < num; nid++) {  // for all neuron number
@@ -32,6 +37,7 @@ void updateIAF(Connection *connection, void *_data, real *buffer, uinteger_t *fi
 		
 		// the spikes arriving at T+1 have an immediate effect on the state of the neuron
 		real weighted_spikes_ex = buffer[gnid];
+		// TODO: fix gnid+num for multi-type neurons
 		real weighted_spikes_in = buffer[gnid + num];
 
 		// std::cout << "buffer: " << buffer[gnid] << " " << buffer[gnid+num] << std::endl;

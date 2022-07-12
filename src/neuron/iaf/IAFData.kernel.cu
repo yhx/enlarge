@@ -19,6 +19,11 @@ __global__ void update_all_iaf_neuron(Connection *connection, IAFData *data, rea
 	__syncthreads();
 
 	size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
+	// if (tid == 0) {
+	// 	for (size_t i = 0; i < num; ++i) {
+	// 		printf("%.2lf ", buffer[i + offset]);
+	// 	}
+	// }
 	for (size_t idx = 0; idx < num; idx += blockDim.x * gridDim.x) {
 		bool fired = false;
 		uinteger_t testLoc = 0;
@@ -60,7 +65,8 @@ __global__ void update_all_iaf_neuron(Connection *connection, IAFData *data, rea
 				}
 				// firedTable[firedTableSizes[currentIdx] + firedTableCap * currentIdx] = gnid;
 				// firedTableSizes[currentIdx]++;
-	
+				
+				// TODO: fix refrac time
 				data->pRefracStep[nid] = data->pRefracTime[nid];
 				data->pV_m[nid] = data->pV_reset[nid];
 			} 
@@ -113,5 +119,9 @@ __global__ void update_all_iaf_neuron(Connection *connection, IAFData *data, rea
 
 void cudaUpdateIAF(Connection *conn, void *data, real *buffer, uinteger_t *firedTable, uinteger_t *firedTableSizes, size_t firedTableCap, size_t num, size_t offset, int time, BlockSize *pSize)
 {
+	// for (size_t i = 0; i < num; ++i) {
+	// 	printf("%lf ", buffer[i + offset]);
+	// }
+	// printf("\n");
 	update_all_iaf_neuron<<<pSize->gridSize, pSize->blockSize>>>(conn, (IAFData*)data, buffer, firedTable, firedTableSizes, firedTableCap, num, offset, time);
 }

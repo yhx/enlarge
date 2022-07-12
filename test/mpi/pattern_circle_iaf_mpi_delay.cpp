@@ -44,14 +44,15 @@ int main(int argc, char **argv)
                 0.0, -68.56875477, 0.0, 0.0, 0.0, 0.0));
 
         real *delay = getConstArray((real)delay_num*dt, N * N);
-
+        
+        // delay-aware
         for (int i = 0; i < N * N; ++i) {
             delay[i] = ((i % delay_num) + 1) * dt;
         }
 
         const real scale = 1e3;
-        const real w1_2 = 2.4 * scale;
-        const real w2_3 = 2.9 * scale;
+        const real w1_2 = 2.1 * scale;
+        const real w2_3 = 2.2 * scale;
         const real w3_1 = -1.0 * scale;
 
         real *weight1_2 = getConstArray((real)w1_2 / N, N * N);

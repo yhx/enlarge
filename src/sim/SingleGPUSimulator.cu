@@ -108,6 +108,12 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 	vector<int> firedInfo;
 	printf("Start runing for %d cycles\n", sim_cycle);
 	struct timeval ts, te;
+#ifdef PROF
+	double *t_neuron = malloc_c<double>(pNetCPU->nTypeNum);
+	double *t_synapse = malloc_c<double>(pNetCPU->sTypeNum);
+
+	struct timeval tss, tee;
+#endif
 	gettimeofday(&ts, NULL);
 	for (int time=0; time<sim_cycle; time++) {
 		//printf("Cycle: %d ", time);
@@ -121,12 +127,28 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 		cudaDeviceSynchronize();
 
 		for (int i=0; i<nTypeNum; i++) {
+#ifdef PROF
+			gettimeofday(&tss, NULL);
+#endif
 			cudaUpdateType[c_pNetGPU->pNTypes[i]](c_pNetGPU->ppConnections[i], c_pNetGPU->ppNeurons[i], g_buffer->_data, g_buffer->_fire_table, g_buffer->_fired_sizes, totalNeuronNum, c_pNetGPU->pNeuronNums[i+1]-c_pNetGPU->pNeuronNums[i], c_pNetGPU->pNeuronNums[i],time, &updateSize[c_pNetGPU->pNTypes[i]]);
+#ifdef PROF
+			cudaDeviceSynchronize();
+			gettimeofday(&tee, NULL);
+			t_neuron[i] += (double)(tee.tv_sec - tss.tv_sec) + (double)(tee.tv_usec-tss.tv_usec)/1000000.0;;
+#endif
 		}
 		cudaDeviceSynchronize();
 
 		for (int i=0; i<sTypeNum; i++) {
+#ifdef PROF
+			gettimeofday(&tss, NULL);
+#endif
 			cudaUpdateType[c_pNetGPU->pSTypes[i]](c_pNetGPU->ppConnections[i], c_pNetGPU->ppSynapses[i], g_buffer->_data, g_buffer->_fire_table, g_buffer->_fired_sizes, totalNeuronNum, c_pNetGPU->pSynapseNums[i+1]-c_pNetGPU->pSynapseNums[i], c_pNetGPU->pSynapseNums[i], time, &updateSize[c_pNetGPU->pSTypes[i]]);
+#ifdef PROF
+			cudaDeviceSynchronize();
+			gettimeofday(&tee, NULL);
+			t_synapse[i] += (double)(tee.tv_sec - tss.tv_sec) + (double)(tee.tv_usec-tss.tv_usec)/1000000.0;;
+#endif
 		}
 
 
@@ -138,11 +160,12 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 		COPYFROMGPU(&copySize, g_buffer->_fired_sizes + currentIdx, 1);
 		assert(copySize <= totalNeuronNum); 
 		COPYFROMGPU(buffer._fire_table, g_buffer->_fire_table + (totalNeuronNum*currentIdx), copySize);
-		
-		for (size_t i = 0; i < nTypeNum; i++) {
-			real *c_g_vm = cudaGetVNeuron[pNetCPU->pNTypes[i]](c_pNetGPU->ppNeurons[i]);
-			COPYFROMGPU(c_vm, c_g_vm, c_pNetGPU->pNeuronNums[i+1] - c_pNetGPU->pNeuronNums[i]);
-			log_array(v_file, c_vm, pNetCPU->pNeuronNums[i+1] - pNetCPU->pNeuronNums[i]);
+		if (time % 10 == 9) {
+			for (size_t i = 0; i < nTypeNum; i++) {
+				real *c_g_vm = cudaGetVNeuron[pNetCPU->pNTypes[i]](c_pNetGPU->ppNeurons[i]);
+				COPYFROMGPU(c_vm, c_g_vm, c_pNetGPU->pNeuronNums[i+1] - c_pNetGPU->pNeuronNums[i]);
+				log_array(v_file, c_vm, pNetCPU->pNeuronNums[i+1] - pNetCPU->pNeuronNums[i]);
+			}
 		}
 		// COPYFROMGPU(c_vm, c_g_vm, c_pNetGPU->pNeuronNums[copy_idx+1]-c_pNetGPU->pNeuronNums[copy_idx]);
 		// log_array(v_file, c_vm, pNetCPU->pNeuronNums[copy_idx+1] - pNetCPU->pNeuronNums[copy_idx]);
@@ -184,12 +207,26 @@ int SingleGPUSimulator::run(real time, FireInfo &log)
 		seconds = seconds - 1;
 	}
 
+	
+
 	printf("Simulation finesed in %ld:%ld:%ld.%06lds\n", hours, minutes, seconds, uSeconds);
 
 	for (int i=0; i<nTypeNum; i++) {
 		cudaLogRateNeuron[pNetCPU->pNTypes[i]](pNetCPU->ppNeurons[i], c_pNetGPU->ppNeurons[i],  "gpu");
 	}
 
+#ifdef PROF
+	printf("neuron time: \n");
+	for (int i = 0; i < pNetCPU->nTypeNum; ++i) {
+		printf("%d %lf ", pNetCPU->pNTypes[i], t_neuron[i]);
+	}
+	printf("\n");
+	printf("synapse time: \n");
+	for (int i = 0; i < pNetCPU->sTypeNum; ++i) {
+		printf("%d %lf ", pNetCPU->pSTypes[i], t_synapse[i]);
+	}
+	printf("\n");
+#endif
 
 	// if (log.find("count") != log.end()) {
 
